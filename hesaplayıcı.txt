@@ -1,0 +1,46 @@
+	public void addPath2(double x,double y){
+		if(!arr.isEmpty()){
+			int lastpos=arr.size()-1;
+			double lastposx=arr.get(lastpos).getX();
+			double lastposy=arr.get(lastpos).getY();
+			
+			double distance=Lib.distance(lastposx, lastposy, x, y);
+			double time=distance/speed;
+			double xa=0;
+			double ya=0;
+			
+			Line l=new Line(x,y,lastposx,lastposy);
+			double m=l.getM();
+			double a=l.getA();
+			double c=lastposx;
+			double d=lastposy;
+			
+			for(int num=1;num<=time;num++){
+			
+				double x2coeff=1+m*m;
+				double xcoeff=2*m*a-2*c-2*m*d;
+				double coeff=a*a-2*a*d+c*c+d*d-speed*speed*num*num;
+				
+				Polynomial p=new Polynomial(x2coeff, xcoeff, coeff);
+				p.calculate();
+				if(p.getr1() ==-1 && p.getr2()==-1){
+					System.out.println("PROBLEM in uav.java");
+				}
+				
+				if(p.getr1()==-1){
+					xa=p.getr2();
+				}
+				if(p.getr2()==-1){
+					xa=p.getr1();
+				}
+			
+				ya=m*xa+a;
+				
+				arr.add(new PointP(xa,ya));
+				
+			}//end of for
+			
+		}//end of if
+		
+		arr.add(new PointP(x,y));
+	}
