@@ -1,5 +1,9 @@
 package routing;
 
+/*
+ * This class is for holding information for encounters
+ * who has encountered with who when and how many times!
+ */
 public class Encounter {
 
 	//these integers are for the id of the nodes

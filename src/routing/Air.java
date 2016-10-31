@@ -7,10 +7,13 @@ public class Air {
 
 	private ArrayList<Message> messages;
 	
+	//Air object constructor
+	//Air will have messages
 	public Air(){
 		messages=new ArrayList<Message>();
 	}
 	
+	//adding message to air
 	public boolean addMessage(Message mes){
 		
 		if(Erroneous.noError()){
@@ -33,6 +36,7 @@ public class Air {
 	}
 
 	//Eavesdropping message retrieval
+	//only used for eavesdropping!
 	public ArrayList<Message> receiveEnvironmentMessages(String time){
 		ArrayList<Message> ret=new ArrayList<Message>();
 		for(int i=0;i<messages.size();i++){

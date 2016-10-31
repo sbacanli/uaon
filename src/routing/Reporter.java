@@ -9,24 +9,39 @@ public class Reporter {
 
 	static String fname;
 	static BufferedWriter bw;
+	//number of received messages
 	static int numberOfReceived=0;
+	//number of acknowledgements
 	static int numberOfAcks=0;
+	//number of dropped messages
+	//this is because of the error ratio in Erroneous class
 	static int numberOfDropped=0;
+	//number of messages sent!
+	//number of messages sent=number of received+dropped+acks
 	static int numberOfSent=0;
+	//number of messages which are added to buffer!
+	// not all messages are added to buffer
+	//a node may receive a message but it might be in the buffer already
 	static int numberOfAddedToBuffer=0;
 	//static BufferedWriter[] r;
+	
+	//Output folder name set to Outputs
 	static String foldername="Outputs";
 	
 	
+	//the written filename will be in fact the parameters of the simulation
+	//that will be someVariable_Value_someVariable_Value etc...
 	public static void init(String params){
 		foldername=foldername+"_"+params;
 		File fold=new File(foldername);
 		if(!fold.exists()  || !fold.isDirectory()){
 			fold.mkdir();
 		}
+		//set all of the parameters to Zero
 		resetNumbers();
 	}
 	
+	//set all of the parameters to Zero
 	public static void resetNumbers(){
 		numberOfAddedToBuffer=0;
 		numberOfDropped=0;
@@ -34,6 +49,9 @@ public class Reporter {
 		numberOfSent=0;
 		numberOfAcks=0;
 	}
+	
+	//the sender receiver and time is given to these methods but they are not used
+	//For future implementations these values can be found and this class can be further extended
 	
 	public static void addPacketSent(int sender,int receiver,String time){
 		numberOfSent++;
@@ -52,6 +70,10 @@ public class Reporter {
 		numberOfReceived++;
 	}
 
+	
+	//that method is for reporting the cases where the receiver's buffer is full
+	//that method is not called in the simulator now
+	//for further development that case might be used!
 	public static void bufferFull(int id,String time){
 		/*
 		String line="bufferFull for node "+id+" time "+time; 
@@ -63,6 +85,8 @@ public class Reporter {
 		//*/
 	}
 	
+	//reads the fname(exact path should be given) to String ArrayList
+	//each element will be line
 	public static ArrayList<String> readTrace(String fname){
 		ArrayList<String> a=new ArrayList<String>();
 		String line;
@@ -79,7 +103,6 @@ public class Reporter {
 	}
 	
 	public static void closeFile(){
-		writePacketInfo();
 		try{
 			bw.close();
 		}catch(Exception e){
@@ -95,7 +118,7 @@ public class Reporter {
 				StringTokenizer st=new StringTokenizer(s.get(i));
 				while(st.hasMoreTokens()){
 					String nt=st.nextToken();
-					System.out.print(nt+" ");
+					//System.out.print(nt+" ");
 					bwriter.write(nt+"\t");
 				}
 				System.out.println();
@@ -107,6 +130,7 @@ public class Reporter {
 		}
 	}
 	
+	//Writes the String to the filename
 	public static void writeToFile(String fileName,String s){
 		BufferedWriter bwriter;
 		try{
@@ -118,6 +142,7 @@ public class Reporter {
 		}
 	}	
 	
+	//returns the string representation of the parameters
 	public static String writePacketInfo(){
 		String res="************STATS************\r\n"+
 		numberOfReceived+" packets received\r\n"+
@@ -128,46 +153,10 @@ public class Reporter {
 		"*****************************\r\n";
 		return res;
 	}
-
-	/*
-	public static void openfilesFolder(String foldername,String fname,int num){
-		File f=new File(foldername);
-		if(!f.exists() || f.isDirectory()){
-			f.mkdir();
-		}
-		
-		r=new BufferedWriter[num+1];
-		for(int i=1;i<r.length;i++){
-			try{
-				r[i]=new BufferedWriter(new FileWriter(foldername+"/"+fname+"_"+i+".txt"));
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-		
-	}
-	
-	public static void writeToFolder(int num,String s){
-		try{
-			r[num].write(s);
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
-	
-	public static void closefilesFolder(){
-		for(int i=1;i<r.length;i++){
-			try{
-				r[i].close();
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-		
-	}
-	*/
 	
 	//writes message_delays and success rates
+	//writes to text file called all.txt
+	//with a tab between delay and success rate result paths
 	public static void writeAllTextFile(){
 		String fnameDelay=foldername+"/Message_Delays.txt";
 		String fnameSuccess=foldername+"/success_rate.txt";
@@ -184,6 +173,8 @@ public class Reporter {
 		}
 	}
 	
+	//the key method
+	//writes the results (message delay or success rates to the specified file)
 	public static void writeArrayToFile(double[] arr,String s){
 		//String all="Message Delay Time for each message \r\n";
 		String all="";
@@ -200,18 +191,4 @@ public class Reporter {
 		writeToFile(s, all);
 	}
 	
-	/*
-	public static void main(String[] args){
-		double[] arr={0.01,0.25,0.5,0.75,0.99};
-		
-		for(int i=0;i<arr.length;i++){
-			for(int j=0;j<arr.length;j++){
-				for(int k=0;k<arr.length;k++){
-					Simulator.p("java -jar Simulator.jar trace.txt -1 1.0 -1 100 -1 "+
-							arr[i]+" "+arr[j]+" 0 "+arr[k]+" 100");
-				}
-			}
-		}
-	}
-	//*/
 }
