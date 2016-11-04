@@ -11,8 +11,8 @@ public class Node extends Positionable{
 	public ArrayList<Encounter> encounterHistory;
 	public int nodeId;	
 	
-	public Node(int nid,int numRecords,int maxh,int maxw){
-		super(numRecords,maxh,maxw);
+	public Node(int nid,int maxh,int maxw){
+		super(maxh,maxw);
 		setScreenSpeed(10);
 		setRealSpeed(1);
 		encounterHistory=new ArrayList<Encounter>();

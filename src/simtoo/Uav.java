@@ -12,7 +12,7 @@ public class Uav extends Positionable{
 
 	
 	Uav(int uid,double speedx,double xpos,double ypos,int xlim,int ylim){
-		super(100000000,ylim,xlim);
+		super(ylim,xlim);
 		super.setScreenSpeed(speedx);
 		encounterHistory=new ArrayList<Encounter>();
 		initialX=xpos;
@@ -24,8 +24,8 @@ public class Uav extends Positionable{
 		return uid;
 	}
 	
-	public void fillPath(){
-		Spiral s=new Spiral(5,initialX,initialY,getMAXWIDTH(),getMAXHEIGHT());
+	public void fillPath(int a){
+		Spiral s=new Spiral(a,initialX,initialY,getMAXWIDTH(),getMAXHEIGHT());
 		s.fill();
 		ArrayList<PointP> arr=s.getPoints();
 		if(arr==null){
@@ -34,6 +34,8 @@ public class Uav extends Positionable{
 		for(int i=0;i<arr.size();i++){
 			addPathWithScreenCoordinates(arr.get(i).getX(),arr.get(i).getY());
 		}
+		addPathWithScreenCoordinates(initialX,initialY);
+		
 	}
 	
 	public void encounterWithNode(int time,int nodeid){

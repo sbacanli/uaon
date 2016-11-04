@@ -17,7 +17,7 @@ public class Simulator {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		height= screenSize.height-10;
 		width = screenSize.width-10;
-		COMMDISTANCE=Datas.RealToVirtualDistance(10);
+		COMMDISTANCE=Datas.RealToVirtualDistance(100);
 		nodesSize=39;
 		//random=true;
 		random=false;
@@ -37,6 +37,10 @@ public class Simulator {
 		random=true;
 	}
 	
+	public void unSetRandom(){
+		random=false;
+	}
+	
 	public void checkNodesDistances(Uav uavt,ArrayList<Node> nodesg, int time){
 		double xuav=uavt.getRealPosition(time).getX();
         double yuav=uavt.getRealPosition(time).getY();
@@ -51,6 +55,7 @@ public class Simulator {
 						if(Lib.distance(x, y, otherx, othery) <= COMMDISTANCE){
 							nodesg.get(j).encounter(time, nodesg.get(i).getId());
 							nodesg.get(i).encounter(time, nodesg.get(j).getId());
+							Lib.p("nodes encountered");
 							
 						}
 		        	}
@@ -58,6 +63,7 @@ public class Simulator {
 	        	
 	        	if(Lib.distance(xuav, yuav, x, y) <= COMMDISTANCE){
 	      			uavt.encounterWithNode(time,nodesg.get(i).getId());
+	      			Lib.p("Uav encountered");
 	      		}
 	        }
 	}

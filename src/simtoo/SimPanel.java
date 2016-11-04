@@ -42,7 +42,6 @@ public class SimPanel extends JPanel implements MouseListener{
 		
 		
 		data=new Datas(numrecord,height,width);
-
 		Datas.calculateMaxes("NewYork/maxes.txt");
 			
 		
@@ -51,18 +50,18 @@ public class SimPanel extends JPanel implements MouseListener{
 		setBackground(Color.LIGHT_GRAY);
 		
 		time=0;
-		setNumRecord(100);
+		setNumRecord(numrecord);
 		addMouseListener(this);
 
 		r=new Random();
 		nodesSize=sim.getNodesSize();
 		nodes=new ArrayList<Node>(nodesSize);
 		for(int i=0;i<nodesSize;i++){
-			nodes.add(new Node(i+1,getNumRecord(),height,width));
+			nodes.add(new Node(i+1,height,width));
 			if(!israndom){
 				nodes.get(i).setPoints(data.readRealDataForNode("NewYork\\NewYork_30sec_0"+(i+1)+".txt"));
 			}else{
-				nodes.get(i).fillRandomPositions();
+				nodes.get(i).fillRandomPositions(35);
 			}
 		}
 		
@@ -76,7 +75,7 @@ public class SimPanel extends JPanel implements MouseListener{
 		
 		//create uav with speed 900 and id=1
 		uav=new Uav(1,2900,width/2,height/2,width,height);
-		uav.fillPath();
+		uav.fillPath(5);
 		/*
 		uav.addPath(0,100);
 		uav.addPath(120,200);
@@ -84,10 +83,16 @@ public class SimPanel extends JPanel implements MouseListener{
 		uav.addPath(320,400);
 		uav.addPath(140.01,100.09);
 		*/
-		
+		System.out.println(numrecord+" SET EDILEN  DEGER *************************");
 		TimerListener tm=new TimerListener(numrecord,this);
 		Timer timer = new Timer(1000/UPDATE_RATE, tm);
         timer.start();
+        ArrayList<Position> pts=uav.getPoints();
+        /*
+        for(int i=0;i<pts.size();i++){
+        	Lib.p(pts.get(i).getScreenX()+" "+pts.get(i).getScreenY());
+        }
+        */
      
 	}
 	
@@ -111,7 +116,6 @@ public class SimPanel extends JPanel implements MouseListener{
         t.translate(x, y); // x/y set here, ball.x/y = double, ie: 10.33
         t.scale(0.1, 0.1); // scale = 1 
         g2d.drawImage(img11,t, null);
-
       
 	}
 	
@@ -123,8 +127,8 @@ public class SimPanel extends JPanel implements MouseListener{
         for(int i=0;i<nodes.size();i++){
         	double x=0;
         	double y=0;
-        	x=nodes.get(i).getScreenPosition(time).getX();
-        	y=nodes.get(i).getScreenPosition(time).getY();		
+        	x=nodes.get(i).getScreenPosition(time%nodes.size()).getX();
+        	y=nodes.get(i).getScreenPosition(time%nodes.size()).getY();		
 	        	
         	
         	Shape node = new Ellipse2D.Double(x, y, nodesize, nodesize); 
@@ -189,6 +193,7 @@ public class SimPanel extends JPanel implements MouseListener{
     		currentdataline=0;
     		this.parent=parent;
     		this.recordnum=recordnum;
+    		System.out.println(recordnum+" recornum burda******************");
     	}
     	
     	public int getCurrentDataLine(){
@@ -201,24 +206,11 @@ public class SimPanel extends JPanel implements MouseListener{
     	
         public void actionPerformed(ActionEvent e) {
             currentdataline++;
-            if (currentdataline >= recordnum) {
+            if (currentdataline > recordnum) {
                 ((Timer)e.getSource()).stop();
+                Lib.p("Simulation stopped as record number reached to "+recordnum+" "+currentdataline);
             }
-            /*
-            ArrayList<ArrayList<PointP>> points=data.dataLine(time);
-            //second check for out of bounds
-            if(points==null){
-            	((Timer)e.getSource()).stop();
-            	Lib.p("Simulation ended.Data finished");
-            }else{
-            	//Updating the points of nodes with 
-                for(int i=0;i<points.size();i++){
-                	parent.getNodes().get(i).setX(points.get(i).getX());
-                	parent.getNodes().get(i).setY(points.get(i).getY());
-                	
-                }
-            }
-            */
+          
             parent.repaint();
         }
         

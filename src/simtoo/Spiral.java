@@ -24,12 +24,12 @@ public class Spiral {
 		//x(t) = at cos(t), y(t) = at sin(t)
 		double x=a*t*Math.cos(t)+xstart;
 		double y=a*t*Math.sin(t)+ystart;
-		/*
+		//*
 		if(x>xlim || y>ylim){
 			Lib.p("Limits done for spiral");
 			return null;
 		}
-		*/
+		//*/
 		return new PointP(x,y);
 	}
 	
@@ -41,6 +41,7 @@ public class Spiral {
 			if(p!=null)
 				arr.add(p);
 		}
+		
 		
 	}
 	

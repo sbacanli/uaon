@@ -28,9 +28,8 @@ public class Positionable {
 		private ArrayList<Position> pointsp;
 		
 		
-		public Positionable(int numRecords,int maxh,int maxw){
+		public Positionable(int maxh,int maxw){
 			r=new Random();
-			this.numRecords=numRecords;
 			//fillPositions();
 			time=0;
 			speed=1;
@@ -49,6 +48,10 @@ public class Positionable {
 			return MAXHEIGHT;
 		}
 		
+		public ArrayList<Position> getPoints(){
+			return pointsp;
+		}
+		
 		public void setRealSpeed(double s){
 			speed=s;
 		}
@@ -61,15 +64,22 @@ public class Positionable {
 			pointsp=arr;
 		}
 		
-		public void fillRandomPositions(){
+		public void fillRandomPositions(int numberOfPoints){
 			double xgen=0;
 			double ygen=0;
-			while(pointsp.size()<numRecords){
+			int count=1;
+			double xgenfirst=r.nextDouble()*MAXWIDTH;
+			double ygenfirst=r.nextDouble()*MAXHEIGHT;
+			addPathWithScreenCoordinates(xgenfirst,ygenfirst);
+			while(count<numberOfPoints){
 				xgen=r.nextDouble()*MAXWIDTH;
 				ygen=r.nextDouble()*MAXHEIGHT;
 				addPathWithScreenCoordinates(xgen,ygen);
 				System.gc();
+				count++;
 			}
+			addPathWithScreenCoordinates(xgenfirst,ygenfirst);
+			//this one makes a loop 
 		}
 		
 		public void addPathWithScreenCoordinates(double xcalc,double ycalc){
@@ -103,10 +113,7 @@ public class Positionable {
 					
 					addPositionWithScreen(xa,ya);
 					
-					//no need to add more than limit of records
-					if(pointsp.size()>=numRecords){
-						return;
-					}
+				
 				}//end of for
 				addPositionWithScreen(xcalc,ycalc);
 			}//end of if
@@ -148,10 +155,6 @@ public class Positionable {
 					
 					addPositionWithReal(xa,ya);
 					
-					//no need to add more than limit of records
-					if(pointsp.size()>=numRecords){
-						return;
-					}
 				}//end of for
 				addPositionWithReal(xreal,yreal);
 			}//end of if
