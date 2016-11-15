@@ -12,12 +12,15 @@ public class Message {
 	private static int staticmesid=0;
 	private int packetId;
 	private int messageId;
+	//the given messageId which is given in constructor
 	private String time;
-	private int tts;
-	private int remaining;
-	private String expirationTime;
-	private int hopCount;
+	private int tts;//number of packets to be sent as setted
+	private int remaining;// remaining number of packets to be sent
+	private String expirationTime;// expiration time for the message
+	private int hopCount;// hop count for the message
+	//how many times it has been sent
 	private int prevPacketId;
+	
 	
 	//this is used in sending the vector packet in epidemic routing
 	//also for asking to send the message again
@@ -32,7 +35,8 @@ public class Message {
 		messageId=messageid;
 		remaining=-1;
 		tts=-1;
-		expirationTime="-1";
+		expirationTime="-1";//this is the number in seconds
+		//that number states the expiration time of the message
 		hopCount=0;
 	}
 	

@@ -129,6 +129,7 @@ public class RoutingNode{
 					}
 				}
 				
+				//after deleting the expired messages if the buffer is still full
 				if(isBufferFull()){
 					/*the expired messages are deleted but there is still not enough space
 					 the policy is least recently received which will be the first one in the buffer
@@ -151,7 +152,7 @@ public class RoutingNode{
 						*/
 					}
 					
-				}
+				}//end of isBufferFull()
 				
 			}
 			messageBuffer.add(message);
@@ -231,6 +232,9 @@ public class RoutingNode{
 		return sum;
 	}
 	
+	//number of unique message ids
+	//in fact the messages with same message ids are not stored, only 1 copy for each message 
+	//but this function is checking the unique ones
 	public String allids(){
 		String all="";
 		ArrayList<Integer> a=new ArrayList<Integer>();
