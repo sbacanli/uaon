@@ -9,20 +9,18 @@ public class Encounter {
 	//these integers are for the id of the nodes
 	private int sender,receiver;
 	private int time;
-	private int encounterCount;
+
 	
 	public Encounter(){
 		sender=-1;
 		receiver=-1;
 		time=-1;
-		encounterCount=1;
 	}
 	
 	public Encounter(int senderg,int receiverg,int timegiven){
 		sender=senderg;
 		receiver=receiverg;
 		time=timegiven;
-		encounterCount=1;
 	}
 	
 	//copy constructor
@@ -30,7 +28,6 @@ public class Encounter {
 		sender=e.sender;
 		receiver=e.receiver;
 		time=e.time;
-		encounterCount=e.encounterCount;
 	}
 	
 	public int getTime(){
@@ -49,11 +46,4 @@ public class Encounter {
 		return receiver;
 	}
 	
-	public void incEncounterCount(){
-		encounterCount++;
-	}
-	
-	public int getEncounterCount(){
-		return encounterCount;
-	}
 }

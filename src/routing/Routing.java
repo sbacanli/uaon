@@ -36,6 +36,9 @@ public abstract class Routing {
 		}
 		
 		public Air getAir(){
+			if(air==null){
+				System.out.println("Air is null");
+			}
 			return air;
 		}
 		

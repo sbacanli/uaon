@@ -1,7 +1,6 @@
 package simtoo;
 
 import java.util.*;
-import java.awt.Point;
 import java.io.*;
 
 public class Datas {

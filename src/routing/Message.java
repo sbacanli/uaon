@@ -136,7 +136,10 @@ public class Message {
 			}else{
 				System.out.println("Remaining is less than or equal to 0");
 			}
-		}		
+		}
+		//if TTS is not enabled two possibilities
+		//the message has no TTS value
+		//the message is a protocol message
 	}
 	
 	//if remaining is more than 0 and isnotexpired
@@ -199,8 +202,10 @@ public class Message {
 		return false;
 	}
 	
-	//given there is a message that contains vector of message ids
+	//takes the message text that contains vector of message ids
 	// that will return the ids in the int array
+	//that message is a protocol message that contains only message ids
+	//it is used in session communication between nodes
 	public ArrayList<Integer> getVectorArray(){
 		String s=getMessageText();
 		ArrayList<Integer> ret=new ArrayList<Integer>();

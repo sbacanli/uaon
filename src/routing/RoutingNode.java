@@ -339,7 +339,7 @@ public class RoutingNode{
 				sent.incHop();
 				return sendMessage(a,sent,time);
 			}else{
-				System.out.println("PROBLEM in Node.java. message not sendable");
+				System.out.println("PROBLEM in Node.java. message not sendable from buffer");
 			}
 			
 		}
@@ -369,6 +369,9 @@ public class RoutingNode{
 	
 	public boolean addtoBuffer(Message m,String time){
 		if(m.getId()<0){
+			//negative id messages are protocol messages.
+			//they are processed and used in deciding to forward or not
+			//but they are not expected to be stored.
 			System.out.println("PROBLEM in Node.java: Trying to add neg id message to buffer");
 			return false;
 		}
@@ -383,6 +386,10 @@ public class RoutingNode{
 		//there is no like that message in the air
 		// or the buffer is full
 		//probably problem 
+		//boolean value will always return true. now this function can not return false
+		//but if the addMessageToBuffer(m,time) method gets changed this is a checking mechanism
+		// IT IS SUGGESTED THAT DO NOT CHANGE THIS METHOD
+		//
 		return false;
 	}
 	
@@ -393,6 +400,8 @@ public class RoutingNode{
 			return null;
 		}
 		Reporter.addPacketReceived(message.getSender(),message.getReceiver(),time);
+		//if the message id is not positive that condition will be handled by the below method
+		// it is already integrated.
 		receiveRealMessage(message,time);
 		return message;
 		
@@ -410,6 +419,8 @@ public class RoutingNode{
 			boolean b=addtoBuffer(message, time);
 		
 			if(!b){
+				//if the message id is positive it means it is not protocol message
+				//it should have been added to buffer 
 				System.out.println("Can not add to buffer PROBLEM in Node.java");
 				//return null;//cant add to buffer so no message
 				//maybe buffer is full and replacement cant be happened

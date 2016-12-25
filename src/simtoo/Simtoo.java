@@ -10,7 +10,7 @@ public class Simtoo {
 		// TODO Auto-generated method stub
 		
 		Simulator sim=new Simulator();
-		sim.setRandom();
+		sim.unSetRandom();
 		
 		JFrame j=new JFrame("Simtoo");	
 		j.setLayout(new BorderLayout());
