@@ -13,16 +13,20 @@ import javax.swing.*;
 import java.util.*;
 import javax.swing.Timer;
 
+import routing.*;
+
 public class SimPanel extends JPanel implements MouseListener{
 
 	Timer timer;
 	
 	ArrayList<Node> nodes;
+	ArrayList<RoutingNode>  routingNodes;
 	int nodesSize;
 	private final int UPDATE_RATE = 50;
 	int time;
-	Uav uav;
 	
+	Uav uav;
+	RoutingNode uavRouting;
 	Random r;
 	
 	Datas data;
@@ -56,8 +60,11 @@ public class SimPanel extends JPanel implements MouseListener{
 		r=new Random();
 		nodesSize=sim.getNodesSize();
 		nodes=new ArrayList<Node>(nodesSize);
+		routingNodes = new ArrayList<RoutingNode>(nodesSize);
+		
 		for(int i=0;i<nodesSize;i++){
 			nodes.add(new Node(i+1,height,width));
+			routingNodes.add(new RoutingNode(i+1));
 			if(!israndom){
 				nodes.get(i).setPoints(data.readRealDataForNode("NewYork\\NewYork_30sec_0"+(i+1)+".txt"));
 			}else{
@@ -76,6 +83,9 @@ public class SimPanel extends JPanel implements MouseListener{
 		//create uav with speed 900 and id=1
 		uav=new Uav(1,2900,width/2,height/2,width,height);
 		uav.fillPath(5);
+		
+		uavRouting=new RoutingNode(-1);
+		
 		/*
 		uav.addPath(0,100);
 		uav.addPath(120,200);
@@ -151,7 +161,7 @@ public class SimPanel extends JPanel implements MouseListener{
         Graphics2D g2 = (Graphics2D) g;
         drawFigures(g2);
 
-        sim.checkNodesDistances(uav,nodes,time);
+        sim.checkNodesDistances(uav,uavRouting ,nodes,routingNodes,time);
       
 
     }

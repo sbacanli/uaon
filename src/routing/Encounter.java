@@ -8,19 +8,21 @@ public class Encounter {
 
 	//these integers are for the id of the nodes
 	private int sender,receiver;
-	private int time;
+	private int time,ftime;
 
 	
 	public Encounter(){
 		sender=-1;
 		receiver=-1;
 		time=-1;
+		ftime=-1;
 	}
 	
 	public Encounter(int senderg,int receiverg,int timegiven){
 		sender=senderg;
 		receiver=receiverg;
 		time=timegiven;
+		ftime=-1;
 	}
 	
 	//copy constructor
@@ -36,6 +38,14 @@ public class Encounter {
 	
 	public void setTime(int timet){
 		time=timet;
+	}
+	
+	public int getFinishTime(){
+		return ftime;
+	}
+	
+	public void setFinishTime(int timet){
+		ftime=timet;
 	}
 	
 	public int getSenderId(){

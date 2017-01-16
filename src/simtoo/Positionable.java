@@ -1,5 +1,5 @@
 package simtoo;
-import routing.*;
+
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -8,7 +8,7 @@ import java.util.Random;
 
 public class Positionable {
 
-		public ArrayList<Encounter> encounterHistory;
+	
 		public int nodeId;
 		double speed;//   in terms of  m/sec
 		double screenspeed;//in terms of pixels

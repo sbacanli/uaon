@@ -1,13 +1,13 @@
 package routing;
 
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 public class RoutingNode{
 
 	private int id;
 	private ArrayList<Message> messageBuffer;
-	private ArrayList<Encounter> encList;
+	private ArrayList<Encounter> contacts;
+	private ArrayList<Encounter> encounterHistory;
 	private ArrayList<Integer> sents;//not used
 	private int limit;//buffer limit
 	private boolean isIdle;
@@ -15,13 +15,13 @@ public class RoutingNode{
 	private String mempolicy="lrr";//message removing policy in memory
 	private boolean gotNewPacket;
 	private double probToSend;
-	private int densityAC;
+
 	//policy for deleting a message in the buffer if buffer is full
 	
 	
-	RoutingNode(int givenid){
+	public RoutingNode(int givenid){
 		id=givenid;
-		encList=new ArrayList<Encounter>();
+		contacts=new ArrayList<Encounter>();
 		messageBuffer=new ArrayList<Message>();
 		isIdle=false;
 		sents=new ArrayList<Integer>();//not used
@@ -30,7 +30,7 @@ public class RoutingNode{
 		lastEnc=null;
 		gotNewPacket=false;
 		probToSend=1;
-		densityAC=0;
+
 	}	
 	
 	public boolean gotNewPacket(){
@@ -41,15 +41,6 @@ public class RoutingNode{
 		gotNewPacket=g;
 	}
 	
-	//Density routing methods
-	public int getDensityAC(){
-		return densityAC;
-	}
-	
-	public void setDensityAC(int ac){
-		densityAC=ac;
-	}
-	//density routing
 	
 	public ArrayList<Message> getMessageBuffer(){
 		return messageBuffer;
@@ -468,50 +459,37 @@ public class RoutingNode{
 	/**********Contact Related Methods******************/
 	/**********Contact Related Methods******************/
 	/**********Contact Related Methods******************/
-	/**We are using Encounter object for recording current contacts
-	 * This Encounter object is also used by PROPHET 
-	 * It is advised that if PROPHET is going to be extended
-	 * Don't use these methods as it will make an impact to consistency of the code*/
-	public int getOldestContact(){
-		if(encList.isEmpty()){
-			return -1;
-		}
-		
-		int min=encList.get(0).getTime();
-		for(int i=1;i<encList.size();i++){
-			if(encList.get(i).getTime()<min)
-			{
-				min=encList.get(i).getTime();
-			}
-		}
-		return min;
-	}
-	
+	/**We are using Encounter object for recording current contacts**/
+
 	public void addContact(int idcon,int time){
-		for(int i=0;i<encList.size();i++){
-			if(encList.get(i).getReceiverId()==idcon)
+		//sender is always this node
+		for(int i=0;i<contacts.size();i++){
+			if(contacts.get(i).getReceiverId()==idcon)
 			{
 				// already exists
+				System.out.println("Contact started when there was contact in RoutingNode.java"+
+						"\r\n current node "+getId()+" contact node "+idcon);
 				return;
 			}
 		}
+		
 		//it doesn't exist
 		Encounter e=new Encounter(getId(),idcon,time);
-		encList.add(e);
+		contacts.add(e);
 	}
 	
 	public void removeContact(int idcon){
-		if(!encList.isEmpty()){
-			for(int i=0;i<encList.size();i++){
-				if(encList.get(i).getReceiverId()==idcon)
+		if(!contacts.isEmpty()){
+			for(int i=0;i<contacts.size();i++){
+				if(contacts.get(i).getReceiverId()==idcon)
 				{
-					encList.remove(i);
+					contacts.remove(i);
 					return;
 				}
 			}
 			//System.out.println("Contact not found in Node.java removeContact");
 		}else{
-			//System.out.println("Contact List is empty. problem in Node.java"+id+" "+idcon+"time "+time);
+			System.out.println("Contact List is empty. problem in Node.java"+id+" "+idcon);
 			//possibly again intersecting contacts
 			//we wont give an error that will make the intersecting contact like this
 			// if this is the case
@@ -524,8 +502,8 @@ public class RoutingNode{
 	}
 	
 	public boolean isInContactWith(int idcon){
-		for(int i=0;i<encList.size();i++){
-			if(encList.get(i).getReceiverId()==idcon)
+		for(int i=0;i<contacts.size();i++){
+			if(contacts.get(i).getReceiverId()==idcon)
 			{
 				return true;
 			}
@@ -534,12 +512,53 @@ public class RoutingNode{
 	}
 	
 	public int getNeighborCount(){
-		return encList.size();
+		return contacts.size();
 	}
 
 	/**********Contact Related Methods******************/
 	/**********Contact Related Methods******************/
 	/**********Contact Related Methods******************/
+	
+	/**********Encounter Related Methods******************/
+	/**********Encounter Related Methods******************/
+	/**********Encounter Related Methods******************/
+	
+	public int encounterTimesWith(int nodeId){
+		int num=0;
+		for(int i=0;i<encounterHistory.size();i++){
+			if(encounterHistory.get(i).getReceiverId()==nodeId)
+			{
+				num++;
+			}
+		}
+		return num;
+	}
+	
+	public void finishEncounter(int nodeId,int time){
+		for(int i=0;i<encounterHistory.size();i++){
+			if(encounterHistory.get(i).getReceiverId()==nodeId && 
+					encounterHistory.get(i).getFinishTime() == -1)
+			{
+				encounterHistory.get(i).setFinishTime(time);
+			}
+		}
+	}
+	
+	public void addEncounter(int nodeId,int time){
+		Encounter e=new Encounter(getId(),nodeId,time);
+		encounterHistory.add(e);
+	}
+	
+	
+	public int getEncounterCount(){
+		return encounterHistory.size();
+	}
+	
+	/**********Encounter Related Methods******************/
+	/**********Encounter Related Methods******************/
+	/**********Encounter Related Methods******************/
+	
+	
 	
 	/***************************************************/
 	/**********EAVESDROPPING METHODS********************/
