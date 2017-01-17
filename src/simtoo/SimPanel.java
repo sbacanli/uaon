@@ -22,7 +22,7 @@ public class SimPanel extends JPanel implements MouseListener{
 	ArrayList<Node> nodes;
 	ArrayList<RoutingNode>  routingNodes;
 	int nodesSize;
-	private final int UPDATE_RATE = 50;
+	private final int UPDATE_RATE = 5;
 	int time;
 	
 	Uav uav;
@@ -97,7 +97,7 @@ public class SimPanel extends JPanel implements MouseListener{
 		TimerListener tm=new TimerListener(numrecord,this);
 		Timer timer = new Timer(1000/UPDATE_RATE, tm);
         timer.start();
-        ArrayList<Position> pts=uav.getPoints();
+        //ArrayList<Position> pts=uav.getPoints();
         /*
         for(int i=0;i<pts.size();i++){
         	Lib.p(pts.get(i).getScreenX()+" "+pts.get(i).getScreenY());
@@ -137,8 +137,8 @@ public class SimPanel extends JPanel implements MouseListener{
         for(int i=0;i<nodes.size();i++){
         	double x=0;
         	double y=0;
-        	x=nodes.get(i).getScreenPosition(time%nodes.size()).getX();
-        	y=nodes.get(i).getScreenPosition(time%nodes.size()).getY();		
+        	x=nodes.get(i).getScreenPosition().getX();
+        	y=nodes.get(i).getScreenPosition().getY();		
 	        	
         	
         	Shape node = new Ellipse2D.Double(x, y, nodesize, nodesize); 
@@ -146,12 +146,28 @@ public class SimPanel extends JPanel implements MouseListener{
         }
         
         //draw the UAV
-        double xuav=uav.getScreenPosition(time).getX();
-        double yuav=uav.getScreenPosition(time).getY();
+        double xuav=uav.getScreenPosition().getX();
+        double yuav=uav.getScreenPosition().getY();
+        
         /*
-        Shape uav=new Rectangle2D.Double(xuav, yuav, uavsize, uavsize);
-        g2.draw(uav);
+        if(xuav==width/2 && yuav==height/2){
+    		System.out.println("Time is this one "+time);
+    		System.out.println("length is "+uav.positionsLength());
+        	
+    		//uav.clearPositions();
+    		//uav.fillPath(500);
+    	}
         */
+        //*
+        	if(xuav==width/2 && yuav==height/2 && time != 0){
+        		System.out.println("Time is this one "+time);
+        		uav.clearPositions();        		
+        		uav.fillPath(100);
+        		
+        		System.out.println("FÝLLED");	
+        	}
+        //*/
+        
         drawImage("drone.png", g2,xuav, yuav);
         
         

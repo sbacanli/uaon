@@ -38,10 +38,11 @@ public class Uav extends Positionable{
 		
 	}
 	
+	//*
 	public void encounterWithNode(int time,int nodeid){
 		encounterHistory.add(new Encounter(nodeid,getId(),time));
-		Lib.p(nodeid+" node encountered with UAV");
+		//Lib.p(nodeid+" node encountered with UAV");
 	}
-		
+	//*/	
 		
 }

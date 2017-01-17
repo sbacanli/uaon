@@ -56,19 +56,19 @@ public class Simulator {
 	}
 	
 	public void checkNodesDistances(Uav uavt,RoutingNode uavr,ArrayList<Node> nodesg,ArrayList<RoutingNode> routingNodes, int time){
-		double xuav=uavt.getRealPosition(time).getX();
-        double yuav=uavt.getRealPosition(time).getY();
+		double xuav=uavt.getRealPosition().getX();
+        double yuav=uavt.getRealPosition().getY();
         
 		   for(int i=0;i<nodesg.size();i++){
 			    RoutingNode r1=routingNodes.get(i);
-	        	double x=nodesg.get(i).getRealPosition(time).getX();
-	        	double y=nodesg.get(i).getRealPosition(time).getY();
+	        	double x=nodesg.get(i).getRealPosition().getX();
+	        	double y=nodesg.get(i).getRealPosition().getY();
 	        	for(int j=0;j<i;j++){
 	        		
 					RoutingNode r2=routingNodes.get(j);
 	        		if(i != j){
-						double otherx=nodesg.get(j).getRealPosition(time).getX();
-						double othery=nodesg.get(j).getRealPosition(time).getY();
+						double otherx=nodesg.get(j).getRealPosition().getX();
+						double othery=nodesg.get(j).getRealPosition().getY();
 						if(Lib.distance(x, y, otherx, othery) <= COMMDISTANCE){
 							
 							//if they are not in contact let us make them in contact

@@ -26,6 +26,7 @@ public class Positionable {
 		double num=0;
 		final int MAXHEIGHT,MAXWIDTH;
 		private ArrayList<Position> pointsp;
+		int pointsiterator;
 		
 		
 		public Positionable(int maxh,int maxw){
@@ -37,6 +38,7 @@ public class Positionable {
 			MAXHEIGHT=maxh;
 			MAXWIDTH=maxw;
 			pointsp=new ArrayList<Position>();
+			pointsiterator=0;
 			
 		}
 		
@@ -83,8 +85,8 @@ public class Positionable {
 		}
 		
 		public void addPathWithScreenCoordinates(double xcalc,double ycalc){
-			if(pointsp.size() !=0){
-				int lastpos=pointsp.size()-1;
+			if(positionsLength() !=0){
+				int lastpos=positionsLength()-1;
 				lastposx=pointsp.get(lastpos).getScreenX();
 				lastposy=pointsp.get(lastpos).getScreenY();
 
@@ -125,7 +127,7 @@ public class Positionable {
 		
 		//since the area will be very small latitude and longitude may be used like cartesian coordinate system
 		public void addPathWithRealCoordinates(double xreal,double yreal){
-			if(pointsp.size() !=0){
+			if(positionsLength() !=0){
 				int lastpos=pointsp.size()-1;
 				lastposx=pointsp.get(lastpos).getRealX();
 				lastposy=pointsp.get(lastpos).getRealY();
@@ -168,36 +170,37 @@ public class Positionable {
 		public void addPositionWithScreen(double xscreen,double yscreen){
 			double xreal=Datas.convertToRealX(xscreen);
 			double yreal=Datas.convertToRealY(yscreen);
-			pointsp.add(new Position(pointsp.size()+1,xscreen,yscreen,xreal,yreal));				
+			pointsp.add(new Position(positionsLength()+1,xscreen,yscreen,xreal,yreal));				
 		}
 		
 		public void addPositionWithReal(double xreal,double yreal){
 			double xscreen=Datas.convertToScreenX(xreal);
 			double yscreen=Datas.convertToScreenY(yreal);
-			pointsp.add(new Position(pointsp.size()+1,xscreen,yscreen,xreal,yreal));	
+			pointsp.add(new Position(positionsLength()+1,xscreen,yscreen,xreal,yreal));	
 		}
 			
-		public PointP getScreenPosition(int time){
+		public PointP getScreenPosition(){
 			if(pointsp==null)
 			{
-				Lib.p("Points Arraylist is null");
+				Lib.p("Points Arraylist is null on Positionable.java");
 			}
 			if(pointsp.isEmpty())
 			{
-				Lib.p("Points Arraylist is empty");
+				Lib.p("Points Arraylist is empty on Positionable.java");
 			}
-			for(int i=0;i<pointsp.size();i++){
-				if(pointsp.get(i).getTime()==time)
-				{
-					return new PointP(pointsp.get(i).getScreenX(),pointsp.get(i).getScreenY());
-				}
-			}	
+			if(pointsiterator>=positionsLength()){
+				return new PointP(pointsp.get(positionsLength()-1).getScreenX(),
+						pointsp.get(positionsLength()-1).getScreenY());
+			}
 			
-			//last position will be given
-			return pointsp.get(pointsp.size()-1).getScreenPoint();
+			PointP p=new PointP(pointsp.get(pointsiterator).getScreenX(),
+					pointsp.get(pointsiterator).getScreenY());
+	
+			pointsiterator++;
+			return p;
 		}
 		
-		public PointP getRealPosition(int time){
+		public PointP getRealPosition(){
 			if(pointsp==null)
 			{
 				Lib.p("Points Arraylist is null");
@@ -207,14 +210,16 @@ public class Positionable {
 				Lib.p("Points Arraylist is empty");
 			}
 			
-			for(int i=0;i<pointsp.size();i++){
-				if(pointsp.get(i).getTime()==time)
-				{
-					return new PointP(pointsp.get(i).getRealX(),pointsp.get(i).getRealY());
-				}
-			}
-			//last position will be given
-			return pointsp.get(pointsp.size()-1).getRealPoint();
+			PointP p=null;
+			if(pointsiterator>=positionsLength()){
+				p = new PointP(pointsp.get(positionsLength()-1).getRealX(),
+						pointsp.get(positionsLength()-1).getRealY());
+			}else{
+				p = new PointP(pointsp.get(pointsiterator).getRealX(),
+						pointsp.get(pointsiterator).getRealY());
+			}				
+			pointsiterator++;
+			return p;
 		}
 			
 			
@@ -237,6 +242,15 @@ public class Positionable {
 			}
 		}
 		
+		public void clearPositions(){
+			if(!pointsp.isEmpty()){
+				pointsp.clear();
+				pointsiterator=0;
+			}
+		}
 		
+		public int positionsLength(){
+			return pointsp.size();
+		}
 	
 }
