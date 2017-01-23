@@ -10,6 +10,7 @@ public class Uav extends Positionable{
 	double initialX,initialY;
 	int uid;
 
+
 	
 	Uav(int uid,double speedx,double xpos,double ypos,int xlim,int ylim){
 		super(ylim,xlim);
@@ -18,6 +19,7 @@ public class Uav extends Positionable{
 		initialX=xpos;
 		initialY=ypos;
 		this.uid=uid;
+		
 	}
 	
 	public int getId(){

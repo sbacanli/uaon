@@ -27,7 +27,7 @@ public class Positionable {
 		final int MAXHEIGHT,MAXWIDTH;
 		private ArrayList<Position> pointsp;
 		int pointsiterator;
-		
+		boolean routeFinished;
 		
 		public Positionable(int maxh,int maxw){
 			r=new Random();
@@ -39,7 +39,11 @@ public class Positionable {
 			MAXWIDTH=maxw;
 			pointsp=new ArrayList<Position>();
 			pointsiterator=0;
-			
+			routeFinished=false;
+		}
+		
+		public boolean isRouteFinished(){
+			return routeFinished;
 		}
 		
 		public int getMAXWIDTH(){
@@ -188,6 +192,13 @@ public class Positionable {
 			{
 				Lib.p("Points Arraylist is empty on Positionable.java");
 			}
+			
+			if(pointsiterator<positionsLength()-1){
+				routeFinished=false;
+			}else{
+				routeFinished=true;
+			}
+			
 			if(pointsiterator>=positionsLength()){
 				return new PointP(pointsp.get(positionsLength()-1).getScreenX(),
 						pointsp.get(positionsLength()-1).getScreenY());

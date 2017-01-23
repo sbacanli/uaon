@@ -10,20 +10,33 @@ public class Reporter {
 	static String fname;
 	static BufferedWriter bw;
 	//number of received messages
-	static int numberOfReceived=0;
-	//number of acknowledgements
-	static int numberOfAcks=0;
-	//number of dropped messages
+	static int numberOfReceivedByUAV=0;
+	static int numberOfAcksByUAV=0;
 	//this is because of the error ratio in Erroneous class
-	static int numberOfDropped=0;
+	static int numberOfDroppedByUAV=0;
 	//number of messages sent!
 	//number of messages sent=number of received+dropped+acks
-	static int numberOfSent=0;
+	static int numberOfSentByUAV=0;
 	//number of messages which are added to buffer!
 	// not all messages are added to buffer
 	//a node may receive a message but it might be in the buffer already
-	static int numberOfAddedToBuffer=0;
-	//static BufferedWriter[] r;
+	static int numberOfAddedToBufferByUAV=0;
+
+	
+	static int numberOfReceivedByNodes=0;
+	//number of acknowledgements
+	static int numberOfAcksByNodes=0;
+	//number of dropped messages
+	//this is because of the error ratio in Erroneous class
+	static int numberOfDroppedByNodes=0;
+	//number of messages sent!
+	//number of messages sent=number of received+dropped+acks
+	static int numberOfSentByNodes=0;
+	//number of messages which are added to buffer!
+	// not all messages are added to buffer
+	//a node may receive a message but it might be in the buffer already
+	static int numberOfAddedToBufferByNodes=0;
+
 	
 	//Output folder name set to Outputs
 	static String foldername="Outputs";
@@ -43,31 +56,54 @@ public class Reporter {
 	
 	//set all of the parameters to Zero
 	public static void resetNumbers(){
-		numberOfAddedToBuffer=0;
-		numberOfDropped=0;
-		numberOfReceived=0;
-		numberOfSent=0;
-		numberOfAcks=0;
+		numberOfAddedToBufferByNodes=0;
+		numberOfDroppedByNodes=0;
+		numberOfReceivedByNodes=0;
+		numberOfSentByNodes=0;
+		numberOfAcksByNodes=0;
+		numberOfAddedToBufferByUAV=0;
+		numberOfDroppedByUAV=0;
+		numberOfReceivedByUAV=0;
+		numberOfSentByUAV=0;
+		numberOfAcksByUAV=0;
 	}
 	
 	//the sender receiver and time is given to these methods but they are not used
 	//For future implementations these values can be found and this class can be further extended
 	
 	public static void addPacketSent(int sender,int receiver,String time){
-		numberOfSent++;
+		if(sender <0 ){
+			numberOfSentByUAV++;
+		}else{
+			numberOfSentByNodes++;
+		}
 	}
 	
-	public static void addPacketAddedToBuffer(int receiver,int sender,String time){
-		numberOfAddedToBuffer++;
+	public static void addPacketAddedToBuffer(int sender,int receiver,String time){
+		if(receiver <0 ){
+			numberOfAddedToBufferByUAV++;
+		}else{
+			numberOfAddedToBufferByNodes++;
+		}
+		
 	}
 	
 	public static void addPacketDropped(int sender,int receiver,String time){
-		numberOfDropped++;
+		if(sender <0 ){
+			numberOfDroppedByUAV++;
+		}else{
+			numberOfDroppedByNodes++;
+		}
 	}
 	
 	public static void addPacketReceived(int sender,int receiver,String time){
 		//addAckSent(sender,receiver,time);
-		numberOfReceived++;
+		if(receiver <0 ){
+			numberOfReceivedByUAV++;
+		}else{
+			numberOfReceivedByNodes++;
+		}
+		
 	}
 
 	
@@ -145,10 +181,10 @@ public class Reporter {
 	//returns the string representation of the parameters
 	public static String writePacketInfo(){
 		String res="************STATS************\r\n"+
-		numberOfReceived+" packets received\r\n"+
-		numberOfAddedToBuffer+" packets added to Buffer\r\n"+
-		numberOfDropped+" packets dropped\r\n"+
-		numberOfSent+" packets sent\r\n"+
+		numberOfReceivedByNodes+" packets received\r\n"+
+		numberOfAddedToBufferByNodes+" packets added to Buffer\r\n"+
+		numberOfDroppedByNodes+" packets dropped\r\n"+
+		numberOfSentByNodes+" packets sent\r\n"+
 		//numberOfAcks+" packets sent\r\n"+
 		"*****************************\r\n";
 		return res;

@@ -159,13 +159,20 @@ public class SimPanel extends JPanel implements MouseListener{
     	}
         */
         //*
-        	if(xuav==width/2 && yuav==height/2 && time != 0){
+        	if(uav.isRouteFinished()){
         		System.out.println("Time is this one "+time);
         		uav.clearPositions();        		
         		uav.fillPath(100);
-        		
+        		ArrayList<Position> pts=uav.getPoints();
+                //*
+                for(int i=0;i<pts.size();i++){
+                	Lib.p(pts.get(i).getScreenX()+" "+pts.get(i).getScreenY());
+                }
+                //*/
+                uav.routeFinished=false;
         		System.out.println("FÝLLED");	
         	}
+        	
         //*/
         
         drawImage("drone.png", g2,xuav, yuav);

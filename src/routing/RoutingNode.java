@@ -371,7 +371,7 @@ public class RoutingNode{
 		//this above function should return true as it is responsible for
 		//replacement policy etc..
 		if(b){
-			Reporter.addPacketAddedToBuffer(m.getReceiver(),m.getSender(),time);
+			Reporter.addPacketAddedToBuffer(m.getSender(),m.getReceiver(),time);
 			return true;
 		}
 		//there is no like that message in the air

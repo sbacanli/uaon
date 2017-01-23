@@ -16,6 +16,7 @@ public class Simulator {
 	Air air;
 	Routing nodeRouting;
 	Routing uavRouting;
+	String parameters="SimulationONE";
 	
 	public Simulator()
 	{
@@ -29,6 +30,7 @@ public class Simulator {
 		uavRouting=new Probabilistic(air,1);
 		//random=true;
 		random=false;
+		Reporter.init(parameters);
 	}
 	
 	public void setNodeRouting(Routing rout){
@@ -76,10 +78,15 @@ public class Simulator {
 								r2.addContact(r1.getId(), time); 
 								r1.addContact(r2.getId(), time);								
 								r2.addEncounter(r1.getId(), time); 
-								r1.addEncounter(r2.getId(), time); 
-							}
+								r1.addEncounter(r2.getId(), time);
+								
+								
+								//first touch happened
+								nodeRoute(r1,r2,time+"");
+							}//else it means they are still in contact from last time
+							//this  is a continueing contact
 							
-							nodeRoute(r1,r2,time+"");
+							
 							
 							Lib.p("nodes encountered");
 							
@@ -95,23 +102,26 @@ public class Simulator {
 						}
 						
 		        	}
-	        	}
+	        	}//end of node comparison with each other
 	        	
 	        	if(Lib.distance(xuav, yuav, x, y) <= COMMDISTANCE){
 	        		
 	        	//uAV nin routing node karsýlýgý olmalý
 	        		
-	      			uavt.encounterWithNode(time,nodesg.get(i).getId());
+	        		if(!uavr.isInContactWith(routingNodes.get(i).getId())){
+	        		
+	        			uavt.encounterWithNode(time,nodesg.get(i).getId());
 	      			
-	      			r1.addContact(uavr.getId(), time);
-	      			r1.addEncounter(uavr.getId(), time);
+	      				r1.addContact(uavr.getId(), time);
+	      				r1.addEncounter(uavr.getId(), time);
 	      			
-	      			uavr.addContact(r1.getId(), time);
-	      			uavr.addEncounter(r1.getId(), time);
+	      				uavr.addContact(r1.getId(), time);
+	      				uavr.addEncounter(r1.getId(), time);
 	      			
-	      			uavRoute(uavr,r1,time+"");
-	      			Lib.p("Uav encountered");
-	      			
+	      				uavRoute(uavr,r1,time+"");
+	      				Lib.p("Uav encountered");
+	        		}
+	        		
 	      		}else{
 	      			if(r1.isInContactWith(uavr.getId())){
 	      				r1.removeContact(uavr.getId());
