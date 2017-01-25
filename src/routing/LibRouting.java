@@ -8,7 +8,7 @@ import java.util.Calendar;
 import java.util.Random;
 
 
-public class Lib {
+public class LibRouting {
 	
 	//given the mean (lambda) it creates poisson random variables
 	public static int getPoisson(double lambda) {

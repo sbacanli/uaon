@@ -10,11 +10,11 @@ public class Simtoo {
 		// TODO Auto-generated method stub
 		
 		Simulator sim=new Simulator();
-		sim.setRandom();
+		sim.unSetRandom();
 		
 		JFrame j=new JFrame("Simtoo");	
 		j.setLayout(new BorderLayout());
-		SimPanel simp=new SimPanel(sim);
+		SimPanel simp=new SimPanel(sim.getRandom(),sim.getNodesSize(),sim.getCommDist());
 		j.add(simp, BorderLayout.CENTER);
 
 		j.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -76,35 +76,42 @@ public class Datas {
 	
 	
 	public static void calculateMaxes(String fname){
-		BufferedReader br=null;
-		String line=null;
-		int i=0;
-		try{
-			br=new BufferedReader(new FileReader(new File(fname)));
-			while( (line=br.readLine()) !=null ){
-				StringTokenizer st=new StringTokenizer(line," ");
-				st.nextToken();
-				st.nextToken();
-				if(i==0){
-					//minx
-					minx=Double.parseDouble(st.nextToken());
-				}else if(i==1){
-					//miny
-					miny=Double.parseDouble(st.nextToken());
-				}else if(i==2){
-					//maxX
-					maxx=Double.parseDouble(st.nextToken());
-				}else{
-					//maxY
-					maxy=Double.parseDouble(st.nextToken());
-				}
-				
-				i++;
+		
+		if(!(Datas.getMaxX()==0 || Datas.getMaxY()==0 || Datas.getMinY()==0 || Datas.getMinX()==0) ){
+			//the maxes file does not change while running
+			//if it is calculated before no need to calculate again	
+			BufferedReader br=null;
+			String line=null;
+			int i=0;
+			try{
+				br=new BufferedReader(new FileReader(new File(fname)));
+				while( (line=br.readLine()) !=null ){
+					StringTokenizer st=new StringTokenizer(line," ");
+					st.nextToken();
+					st.nextToken();
+					if(i==0){
+						//minx
+						minx=Double.parseDouble(st.nextToken());
+					}else if(i==1){
+						//miny
+						miny=Double.parseDouble(st.nextToken());
+					}else if(i==2){
+						//maxX
+						maxx=Double.parseDouble(st.nextToken());
+					}else{
+						//maxY
+						maxy=Double.parseDouble(st.nextToken());
+					}
+					
+					i++;
+				}//enf of while check
+				br.close();
+			}catch(Exception e){
+				Lib.p(e.toString());
 			}
-			br.close();
-		}catch(Exception e){
-			Lib.p(e.toString());
-		}
+			
+		}//end of if check
+		
 	}
 	
 	

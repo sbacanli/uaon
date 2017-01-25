@@ -220,7 +220,7 @@ public class Reporter {
 			//at this time the delay will be 0
 			//don't write the message if delay is 0
 			if(arr[i] != 0){
-				all=all+Lib.precstr(Lib.prec(arr[i], 4),4)+"\r\n";
+				all=all+LibRouting.precstr(LibRouting.prec(arr[i], 4),4)+"\r\n";
 			}
 		}
 				
