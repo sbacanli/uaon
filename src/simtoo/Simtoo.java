@@ -9,8 +9,11 @@ public class Simtoo {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		Simulator sim=new Simulator();
-		sim.unSetRandom();
+		Options op=new Options("config.txt");
+		
+		
+		Simulator sim=new Simulator(op);
+
 		
 		JFrame j=new JFrame("Simtoo");	
 		j.setLayout(new BorderLayout());

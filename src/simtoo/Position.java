@@ -8,6 +8,10 @@ public class Position {
 	
 	
 	public Position(int time,double screenx,double screeny,double xx,double yy){
+		if(Double.isNaN(screenx) || Double.isNaN(screeny) || Double.isNaN(xx) || Double.isNaN(yy)){
+			Lib.p("Position's screenx,screeny,realx,realy is NaN");
+			System.exit(-1);
+		}
 		this.time=time;
 		screenp=new PointP(screenx,screeny);
 		real=new PointP(xx,yy);

@@ -6,15 +6,27 @@ public class PointP {
 	private double y;
 	
 	public PointP(double x,double y){
+		if (Double.isNaN(x) || Double.isNaN(y) ){
+			Lib.p("PointP's x or y is NaN in the constructor");
+			System.exit(-1);
+		}
 		this.x=x;
 		this.y=y;
 	}
 
 	public double getX() {
+		if (Double.isNaN(x)) {
+			Lib.p("PointP's x is NaN");
+			System.exit(-1);
+		}
 		return x;
 	}
 	
 	public double getY() {
+		if (Double.isNaN(y)) {
+			Lib.p("PointP's y is NaN");
+			System.exit(-1);
+		}
 		return y;
 	}
 	

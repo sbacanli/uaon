@@ -7,39 +7,39 @@ import java.util.StringTokenizer;
 
 public class Reporter {
 
-	static String fname;
-	static BufferedWriter bw;
+	private static String fname;
+	private static BufferedWriter bw;
 	//number of received messages
-	static int numberOfReceivedByUAV=0;
-	static int numberOfAcksByUAV=0;
+	private static int numberOfReceivedByUAV=0;
+	private static int numberOfAcksByUAV=0;
 	//this is because of the error ratio in Erroneous class
-	static int numberOfDroppedByUAV=0;
+	private static int numberOfDroppedByUAV=0;
 	//number of messages sent!
 	//number of messages sent=number of received+dropped+acks
-	static int numberOfSentByUAV=0;
+	private static int numberOfSentByUAV=0;
 	//number of messages which are added to buffer!
 	// not all messages are added to buffer
 	//a node may receive a message but it might be in the buffer already
-	static int numberOfAddedToBufferByUAV=0;
+	private static int numberOfAddedToBufferByUAV=0;
 
 	
-	static int numberOfReceivedByNodes=0;
+	private static int numberOfReceivedByNodes=0;
 	//number of acknowledgements
-	static int numberOfAcksByNodes=0;
+	private static int numberOfAcksByNodes=0;
 	//number of dropped messages
 	//this is because of the error ratio in Erroneous class
-	static int numberOfDroppedByNodes=0;
+	private static int numberOfDroppedByNodes=0;
 	//number of messages sent!
 	//number of messages sent=number of received+dropped+acks
-	static int numberOfSentByNodes=0;
+	private static int numberOfSentByNodes=0;
 	//number of messages which are added to buffer!
 	// not all messages are added to buffer
 	//a node may receive a message but it might be in the buffer already
-	static int numberOfAddedToBufferByNodes=0;
+	private static int numberOfAddedToBufferByNodes=0;
 
 	
 	//Output folder name set to Outputs
-	static String foldername="Outputs";
+	private static String foldername="Outputs";
 	
 	
 	//the written filename will be in fact the parameters of the simulation
@@ -68,9 +68,22 @@ public class Reporter {
 		numberOfAcksByUAV=0;
 	}
 	
+	public static int getNumberOfSentByUAV(){
+		return numberOfSentByUAV;
+	}
+	
+	public static int getNumberOfSentByNodes(){
+		return numberOfSentByNodes;
+	}
+
+	public static void writePacketsSents(){
+		String s1=getNumberOfSentByUAV()+"\r\n";
+		writeToFile("Packets_UAV.txt",s1);
+		String s2=getNumberOfSentByNodes()+"\r\n";
+		writeToFile("Packets_Nodes.txt",s2);
+	}
 	//the sender receiver and time is given to these methods but they are not used
 	//For future implementations these values can be found and this class can be further extended
-	
 	public static void addPacketSent(int sender,int receiver,String time){
 		if(sender <0 ){
 			numberOfSentByUAV++;
@@ -225,6 +238,15 @@ public class Reporter {
 		}
 				
 		writeToFile(s, all);
+	}
+	
+	public static void writeArrayListToFile(ArrayList<Double> srate,String fname){
+		String all="";
+		for(int i=0;i<srate.size();i++){
+			all += LibRouting.precstr(LibRouting.prec(srate.get(i).doubleValue(),4),4)+"\r\n";
+		}
+		
+		writeToFile(fname, all);
 	}
 	
 }

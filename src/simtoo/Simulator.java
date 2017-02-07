@@ -17,23 +17,25 @@ public class Simulator {
 	Air air;
 	static Routing nodeRouting;
 	static Routing uavRouting;
-	String parameters="SimulationONE";
+	String simulationName;
 	int realDistance;
 	
-	public Simulator()
+	public Simulator(Options op)
 	{
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		height= screenSize.height-10;
 		width = screenSize.width-10;
-		realDistance=100;
-		COMMDISTANCE=Datas.RealToVirtualDistance(realDistance);
-		nodesSize=39;
 		air=new Air();
-		nodeRouting=new Probabilistic(air,0.1);
-		uavRouting=new Probabilistic(air,1);
-		//random=true;
-		random=false;
-		Reporter.init(parameters);
+		
+		realDistance=op.getParamInt("CommDistance");
+		nodesSize=op.getParamInt("numberOfNodes");
+		nodeRouting=new Probabilistic(air,op.getParamDouble("nodeProbability"));
+		uavRouting=new Probabilistic(air,op.getParamDouble("uavProbability"));
+		simulationName=op.getParamString("SimulationName");
+		random=op.getParamBoolean("randomMobility");
+		
+		COMMDISTANCE=Datas.RealToVirtualDistance(realDistance);
+		Reporter.init(simulationName);
 	}
 	
 	public void setNodeRouting(Routing rout){

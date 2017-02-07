@@ -33,6 +33,8 @@ public class RoutingNode{
 
 	}	
 	
+	
+	
 	public boolean gotNewPacket(){
 		return gotNewPacket;
 	}

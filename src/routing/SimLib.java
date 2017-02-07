@@ -109,15 +109,6 @@ public class SimLib {
 		return sratearr;		
 	}
 	
-	public static void writeArrayListToFile(ArrayList<Double> srate,String fname){
-		String all="";
-		for(int i=0;i<srate.size();i++){
-			all += LibRouting.precstr(LibRouting.prec(srate.get(i).doubleValue(),4),4)+"\r\n";
-		}
-		
-		Reporter.writeToFile(fname, all);
-	}
-	
 	public static double averageSuccessRate(ArrayList<Double> srate){
 		double sum=0;
 		

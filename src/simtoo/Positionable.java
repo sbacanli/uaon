@@ -28,7 +28,7 @@ public class Positionable {
 		private ArrayList<Position> pointsp;
 		int pointsiterator;
 		boolean routeFinished;
-		
+
 		public Positionable(int maxh,int maxw){
 			r=new Random();
 			//fillPositions();
@@ -171,16 +171,36 @@ public class Positionable {
 		}
 		
 		//given screen coordinates it will add real position to positions array
-		public void addPositionWithScreen(double xscreen,double yscreen){
-			double xreal=Datas.convertToRealX(xscreen);
-			double yreal=Datas.convertToRealY(yscreen);
-			pointsp.add(new Position(positionsLength()+1,xscreen,yscreen,xreal,yreal));				
+		public void addPositionWithScreen(double xscreengiven,double yscreengiven){
+			if(Double.isNaN(xscreengiven) || Double.isNaN(yscreengiven)){
+				Lib.p("Positionable addPositionWithScreen one of the screen variables are NaN");
+				Lib.p("screengivenx"+xscreengiven+"screengiveny"+yscreengiven);
+				System.exit(-1);
+			}
+			double xrealgiven=Datas.convertToRealX(xscreengiven,MAXWIDTH);
+			double yrealgiven=Datas.convertToRealY(yscreengiven,MAXHEIGHT);
+			if(Double.isNaN(xrealgiven) || Double.isNaN(yrealgiven)){
+				Lib.p("Positionable addPositionWithScreen one of the generated real variables are NaN");
+				Lib.p("xrealgiven "+xrealgiven+" yrealgiven "+yrealgiven);
+				System.exit(-1);
+			}
+			pointsp.add(new Position(positionsLength()+1,xscreengiven,yscreengiven,xrealgiven,yrealgiven));				
 		}
 		
-		public void addPositionWithReal(double xreal,double yreal){
-			double xscreen=Datas.convertToScreenX(xreal);
-			double yscreen=Datas.convertToScreenY(yreal);
-			pointsp.add(new Position(positionsLength()+1,xscreen,yscreen,xreal,yreal));	
+		public void addPositionWithReal(double xrealgiven,double yrealgiven){
+			if(Double.isNaN(xrealgiven) || Double.isNaN(yrealgiven)){
+				Lib.p("Positionable addPositionWithReal one of the real variables are NaN");
+				Lib.p("xrealgiven "+xrealgiven+" yrealgiven "+yrealgiven);
+				System.exit(-1);
+			}
+			double xscreengiven=Datas.convertToScreenX(xrealgiven,MAXWIDTH);
+			double yscreengiven=Datas.convertToScreenY(yrealgiven,MAXHEIGHT);
+			if(Double.isNaN(xscreengiven) || Double.isNaN(yscreengiven)){
+				Lib.p("Positionable addPositionWithReal one of the generated screen variables are NaN");
+				Lib.p("screengivenx"+xscreengiven+"screengiveny"+yscreengiven);
+				System.exit(-1);
+			}
+			pointsp.add(new Position(positionsLength()+1,xscreengiven,yscreengiven,xrealgiven,yrealgiven));	
 		}
 			
 		public PointP getScreenPosition(){

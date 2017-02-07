@@ -46,7 +46,7 @@ public class Message {
 	}*/
 	
 	//real message
-	Message(int gprevPacketId,int senderId,int receiverId,String mes,int messageid,
+	public Message(int gprevPacketId,int senderId,int receiverId,String mes,int messageid,
 			String timegiven,int ttsgiven,String expirationgiven,int hopcount){
 		prevPacketId=gprevPacketId;
 		this.receiverId=receiverId;
