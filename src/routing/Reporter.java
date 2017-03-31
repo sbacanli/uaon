@@ -4,11 +4,14 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import simtoo.Lib;
+//e.printStackTrace lines exist in this file.
+
 
 public class Reporter {
 
 	private static String fname;
-	private static BufferedWriter bw;
+	private static BufferedWriter bwriter;
 	//number of received messages
 	private static int numberOfReceivedByUAV=0;
 	private static int numberOfAcksByUAV=0;
@@ -78,21 +81,24 @@ public class Reporter {
 
 	public static void writePacketsSents(){
 		String s1=getNumberOfSentByUAV()+"\r\n";
-		writeToFile("Packets_UAV.txt",s1);
+		writeToFile("NumberOfPacketsSentBy_UAV.txt",s1);
 		String s2=getNumberOfSentByNodes()+"\r\n";
-		writeToFile("Packets_Nodes.txt",s2);
+		writeToFile("NumberOfPacketsSentBy_Nodes.txt",s2);
 	}
 	//the sender receiver and time is given to these methods but they are not used
 	//For future implementations these values can be found and this class can be further extended
 	public static void addPacketSent(int sender,int receiver,String time){
+		Lib.p("Reporter addPacketSent is working");
 		if(sender <0 ){
 			numberOfSentByUAV++;
 		}else{
 			numberOfSentByNodes++;
 		}
+		Lib.p("Reporter class: Number of sents");
 	}
 	
 	public static void addPacketAddedToBuffer(int sender,int receiver,String time){
+		Lib.p("Reporter addPacketaddedTobuffer is working");
 		if(receiver <0 ){
 			numberOfAddedToBufferByUAV++;
 		}else{
@@ -102,6 +108,7 @@ public class Reporter {
 	}
 	
 	public static void addPacketDropped(int sender,int receiver,String time){
+		Lib.p("Reporter addPacketDropped is working");
 		if(sender <0 ){
 			numberOfDroppedByUAV++;
 		}else{
@@ -111,6 +118,7 @@ public class Reporter {
 	
 	public static void addPacketReceived(int sender,int receiver,String time){
 		//addAckSent(sender,receiver,time);
+		Lib.p("Reporter addPacketReceived is working");
 		if(receiver <0 ){
 			numberOfReceivedByUAV++;
 		}else{
@@ -153,14 +161,13 @@ public class Reporter {
 	
 	public static void closeFile(){
 		try{
-			bw.close();
+			bwriter.close();
 		}catch(Exception e){
-			e.printStackTrace();
+			Lib.p(e.toString());
 		}
 	}
 	
 	public static void writeTrace(ArrayList<String> s,String fname){
-		BufferedWriter bwriter;
 		try{
 			bwriter=new BufferedWriter(new FileWriter(fname));
 			for(int i=0;i<s.size();i++){
@@ -170,7 +177,7 @@ public class Reporter {
 					//System.out.print(nt+" ");
 					bwriter.write(nt+"\t");
 				}
-				System.out.println();
+				
 				bwriter.write("\r\n");
 			}
 			
@@ -181,18 +188,18 @@ public class Reporter {
 	
 	//Writes the String to the filename
 	public static void writeToFile(String fileName,String s){
-		BufferedWriter bwriter;
+
 		try{
 			bwriter=new BufferedWriter(new FileWriter(foldername+"/"+fileName,true));
 			bwriter.write(s);
 			bwriter.close();
 		}catch(Exception e){
-			e.printStackTrace();
+			Lib.p(e.toString());
 		}
 	}	
 	
 	//returns the string representation of the parameters
-	public static String writePacketInfo(){
+	public static String PacketInfo(){
 		String res="************STATS************\r\n"+
 		numberOfReceivedByNodes+" packets received\r\n"+
 		numberOfAddedToBufferByNodes+" packets added to Buffer\r\n"+

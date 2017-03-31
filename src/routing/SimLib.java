@@ -81,10 +81,10 @@ public class SimLib {
 	}
 	
 	/*** Success rate related functions      ****************/
-	//for given a message number: the number of messages sent in the simulation for broadcasting
+	//for given total number of messages: the number of messages sent in the simulation for broadcasting
 	//and the list of all nodes it finds the success rates of the each message
-	public static ArrayList<Double> successRate(final int messageNumber,ArrayList<RoutingNode> nodes){
-		double[] srate=new double[messageNumber];
+	public static ArrayList<Double> successRate(final int numberOfmessages,ArrayList<RoutingNode> nodes){
+		double[] srate=new double[numberOfmessages];
 		
 		ArrayList<Double> sratearr=new ArrayList<Double>();
 		for(int i=0;i<nodes.size();i++){
@@ -154,11 +154,12 @@ public class SimLib {
 				
 				boolean entered=false;
 				
-				//there should be at least one packet whose sender id is -1
+				//there should be at least one packet whose sender id is 0
+				//negative ids are for UAV, positive ones are for nodes
 				//stating that this is the first packet created
 				//the others will be the sent ones
 				for(int j=0;!entered && j<m.size();j++){
-					if(m.get(j).getSender()<0)
+					if(m.get(j).getSender()==0)
 					{
 						firstPacketTime=Integer.parseInt(m.get(j).getTime());	
 						entered=true;

@@ -24,19 +24,16 @@ public class Positionable {
 		double xa=0;
 		double ya=0;
 		double num=0;
-		final int MAXHEIGHT,MAXWIDTH;
 		private ArrayList<Position> pointsp;
 		int pointsiterator;
 		boolean routeFinished;
 
-		public Positionable(int maxh,int maxw){
+		public Positionable(){
 			r=new Random();
 			//fillPositions();
 			time=0;
 			speed=1;
 			screenspeed=10;
-			MAXHEIGHT=maxh;
-			MAXWIDTH=maxw;
 			pointsp=new ArrayList<Position>();
 			pointsiterator=0;
 			routeFinished=false;
@@ -46,15 +43,7 @@ public class Positionable {
 			return routeFinished;
 		}
 		
-		public int getMAXWIDTH(){
-			return MAXWIDTH;
-		}
-		
-		public int getMAXHEIGHT(){
-			return MAXHEIGHT;
-		}
-		
-		public ArrayList<Position> getPoints(){
+		public ArrayList<Position> getPositions(){
 			return pointsp;
 		}
 		
@@ -70,25 +59,21 @@ public class Positionable {
 			pointsp=arr;
 		}
 		
-		public void fillRandomPositions(int numberOfPoints){
-			double xgen=0;
-			double ygen=0;
-			int count=1;
-			double xgenfirst=r.nextDouble()*MAXWIDTH;
-			double ygenfirst=r.nextDouble()*MAXHEIGHT;
-			addPathWithScreenCoordinates(xgenfirst,ygenfirst);
-			while(count<numberOfPoints){
-				xgen=r.nextDouble()*MAXWIDTH;
-				ygen=r.nextDouble()*MAXHEIGHT;
-				addPathWithScreenCoordinates(xgen,ygen);
-				System.gc();
-				count++;
+		public void addPathsWithRealCoordinatesAll(ArrayList<PointP> path,Datas mydata){
+			for(int i=0;i<path.size();i++){
+				PointP p=path.get(i);
+				addPathWithRealCoordinates(p.getX(),p.getY(),mydata);
 			}
-			addPathWithScreenCoordinates(xgenfirst,ygenfirst);
-			//this one makes a loop 
 		}
 		
-		public void addPathWithScreenCoordinates(double xcalc,double ycalc){
+		public void addPathsWithScreenCoordinatesAll(ArrayList<PointP> path,Datas mydata){
+			for(int i=0;i<path.size();i++){
+				PointP p=path.get(i);
+				addPathWithScreenCoordinates(p.getX(),p.getY(),mydata);
+			}
+		}
+		
+		public void addPathWithScreenCoordinates(double xcalc,double ycalc,Datas mydata){
 			if(positionsLength() !=0){
 				int lastpos=positionsLength()-1;
 				lastposx=pointsp.get(lastpos).getScreenX();
@@ -96,9 +81,10 @@ public class Positionable {
 
 				
 				distance=Lib.distance(lastposx, lastposy, xcalc, ycalc);
-				timecalc=(distance/screenspeed);
+				timecalc=(distance/screenspeed);// meter/sec 
 				double xdistance=Math.abs(lastposx-xcalc);
 				double ydistance=Math.abs(lastposy-ycalc);
+				
 				
 				for(int k=1;k<=timecalc;k++){
 					num=k/timecalc;
@@ -116,23 +102,22 @@ public class Positionable {
 						ya=lastposy+num*ydistance;
 					}
 					
+					Position p=mydata.getPositionWithScreen(xa,ya);
+					addPosition(p);
 					
-					addPositionWithScreen(xa,ya);
-					
-				
 				}//end of for
-				addPositionWithScreen(xcalc,ycalc);
-			}//end of if
-			else{
-				addPositionWithScreen(xcalc,ycalc);			
+				
 			}
+			
+			Position p=mydata.getPositionWithScreen(xcalc,ycalc);	
+			addPosition(p);
 			
 		}
 		
 		//since the area will be very small latitude and longitude may be used like cartesian coordinate system
-		public void addPathWithRealCoordinates(double xreal,double yreal){
+		public void addPathWithRealCoordinates(double xreal,double yreal,Datas mydata){
 			if(positionsLength() !=0){
-				int lastpos=pointsp.size()-1;
+				int lastpos=positionsLength()-1;
 				lastposx=pointsp.get(lastpos).getRealX();
 				lastposy=pointsp.get(lastpos).getRealY();
 
@@ -159,48 +144,19 @@ public class Positionable {
 					}
 					
 					
-					addPositionWithReal(xa,ya);
-					
+					Position p=mydata.getPositionWithReal(xa,ya);
+					addPosition(p);
 				}//end of for
-				addPositionWithReal(xreal,yreal);
+				
 			}//end of if
-			else{
-				addPositionWithReal(xreal,yreal);			
-			}
 			
+			Position p=mydata.getPositionWithReal(xreal,yreal);			
+			addPosition(p);
 		}
 		
-		//given screen coordinates it will add real position to positions array
-		public void addPositionWithScreen(double xscreengiven,double yscreengiven){
-			if(Double.isNaN(xscreengiven) || Double.isNaN(yscreengiven)){
-				Lib.p("Positionable addPositionWithScreen one of the screen variables are NaN");
-				Lib.p("screengivenx"+xscreengiven+"screengiveny"+yscreengiven);
-				System.exit(-1);
-			}
-			double xrealgiven=Datas.convertToRealX(xscreengiven,MAXWIDTH);
-			double yrealgiven=Datas.convertToRealY(yscreengiven,MAXHEIGHT);
-			if(Double.isNaN(xrealgiven) || Double.isNaN(yrealgiven)){
-				Lib.p("Positionable addPositionWithScreen one of the generated real variables are NaN");
-				Lib.p("xrealgiven "+xrealgiven+" yrealgiven "+yrealgiven);
-				System.exit(-1);
-			}
-			pointsp.add(new Position(positionsLength()+1,xscreengiven,yscreengiven,xrealgiven,yrealgiven));				
-		}
-		
-		public void addPositionWithReal(double xrealgiven,double yrealgiven){
-			if(Double.isNaN(xrealgiven) || Double.isNaN(yrealgiven)){
-				Lib.p("Positionable addPositionWithReal one of the real variables are NaN");
-				Lib.p("xrealgiven "+xrealgiven+" yrealgiven "+yrealgiven);
-				System.exit(-1);
-			}
-			double xscreengiven=Datas.convertToScreenX(xrealgiven,MAXWIDTH);
-			double yscreengiven=Datas.convertToScreenY(yrealgiven,MAXHEIGHT);
-			if(Double.isNaN(xscreengiven) || Double.isNaN(yscreengiven)){
-				Lib.p("Positionable addPositionWithReal one of the generated screen variables are NaN");
-				Lib.p("screengivenx"+xscreengiven+"screengiveny"+yscreengiven);
-				System.exit(-1);
-			}
-			pointsp.add(new Position(positionsLength()+1,xscreengiven,yscreengiven,xrealgiven,yrealgiven));	
+		public void addPosition(Position p){
+			p.setTime(positionsLength()+1);
+			pointsp.add(p);
 		}
 			
 		public PointP getScreenPosition(){
@@ -241,14 +197,19 @@ public class Positionable {
 				Lib.p("Points Arraylist is empty");
 			}
 			
+			if(pointsiterator<positionsLength()-1){
+				routeFinished=false;
+			}else{
+				routeFinished=true;
+			}
+			
 			PointP p=null;
 			if(pointsiterator>=positionsLength()){
-				p = new PointP(pointsp.get(positionsLength()-1).getRealX(),
+				return new PointP(pointsp.get(positionsLength()-1).getRealX(),
 						pointsp.get(positionsLength()-1).getRealY());
-			}else{
-				p = new PointP(pointsp.get(pointsiterator).getRealX(),
-						pointsp.get(pointsiterator).getRealY());
-			}				
+			}
+			p = new PointP(pointsp.get(pointsiterator).getRealX(),pointsp.get(pointsiterator).getRealY());
+				
 			pointsiterator++;
 			return p;
 		}

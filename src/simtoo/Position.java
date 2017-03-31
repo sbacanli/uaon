@@ -23,6 +23,7 @@ public class Position {
 		real=new PointP(rp.getX(),rp.getY());
 	}
 	
+	//This is not used and encouraged not to be used.
 	private Position(){
 		time=-1;
 		screenp=null;
@@ -55,5 +56,13 @@ public class Position {
 	
 	public int getTime(){
 		return time;
+	}
+	
+	public void setTime(int timeg){
+		time=timeg;
+	}
+	
+	public String toString(){
+		return "Position is "+time+" realX "+real.getX()+" realY "+real.getY()+" screenX "+screenp.getX()+" screenY "+screenp.getY();
 	}
 }

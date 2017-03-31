@@ -15,12 +15,25 @@ public class Computer {
 		arrcopy.add(uavRouting);
 		
 		ArrayList<Double> elems=SimLib.successRate(numberofMessages,arrcopy);
-		Reporter.writeArrayListToFile(elems,"success_rates.txt");
+		if(elems.isEmpty()){
+			Lib.p("success rates are empty");
+		}else{
+			Reporter.writeArrayListToFile(elems,"success_rates.txt");
+		}
+		
 		
 		double[] arr=SimLib.MessageDelayArray(numberofMessages, arrcopy);
-		Reporter.writeArrayToFile(arr, "message_delays.txt");
+		if(arr.length==0){
+			Lib.p("Message Delays are empty");
+		}else{
+			Reporter.writeArrayToFile(arr, "message_delays.txt");
+		}
 		
-		Reporter.writePacketsSents();
+		if(Reporter.getNumberOfSentByNodes() !=0 || Reporter.getNumberOfSentByUAV() !=0){
+			Reporter.writePacketsSents();
+		}
+		
+		Lib.p(Reporter.PacketInfo());
 		
 	}
 	

@@ -20,10 +20,13 @@ public class Options {
 		try (BufferedReader br = new BufferedReader(new FileReader(conf))) {
 		    String line;
 		    while ((line = br.readLine()) != null) {
-		       StringTokenizer st=new StringTokenizer(line,":");
-		          String s1=st.nextToken();
-		          String s2=st.nextToken();
-		          hm.put(s1, s2);
+		    	if(!line.startsWith("//")){
+		    		StringTokenizer st=new StringTokenizer(line,":");
+		    		String s1=st.nextToken();
+		    		String s2=st.nextToken();
+		    		hm.put(s1, s2);
+		    	}
+		    	// lines starting with // are comment lines and they are ignored
 		    }
 		}catch(Exception e){
 			Lib.p(e.toString());
@@ -52,20 +55,20 @@ public class Options {
     
     public int getParamInt(String s){
     	if(hm.isEmpty()){
-    		Lib.p("ERROR: config file empty for call getParamInt in class Options");
+    		Lib.p("ERROR: config file empty for call getParamInt in class Options for option "+s);
     		return -999;
     	}
     	
     	if(hm.get(s) !=null){
     		return Integer.parseInt(hm.get(s));
     	}
-    	Lib.p("ERROR: config file empty for call getParamInt in class Options");
+    	Lib.p("ERROR: config file empty for call getParamInt in class Options for option "+s);
     	return -999;
     }
     
     public boolean getParamBoolean(String s){
     	if(hm.isEmpty()){
-    		Lib.p("ERROR: config file empty for call getParamBoolean in class Options");
+    		Lib.p("ERROR: config file empty for call getParamBoolean in class Options for option "+s);
     		return false;
     	}
     	
@@ -73,13 +76,13 @@ public class Options {
     		return hm.get(s).equalsIgnoreCase("yes");
     	}
 
-		Lib.p("ERROR: Entry not found for call getParamBoolean in class Options");
+		Lib.p("ERROR: Entry not found for call getParamBoolean in class Options for option "+s);
     	return false;
     }
     
     public String getParamString(String s){
     	if(hm.isEmpty()){
-    		Lib.p("ERROR: config file empty for call getParamString in class Options");
+    		Lib.p("ERROR: config file empty for call getParamString in class Options for option "+s);
     		return null;
     	}
     	

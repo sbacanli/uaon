@@ -9,9 +9,9 @@ public class Spiral {
 	double a;
 	double xstart,ystart;
 	ArrayList<PointP> arr;
-	int xlim,ylim;
+	double xlim,ylim;
 	
-	public Spiral(double a,double xstart, double ystart,int xlim,int ylim){
+	public Spiral(double a,double xstart, double ystart,double xlim,double ylim){
 		this.a=a;
 		this.xstart=xstart;
 		this.ystart=ystart;
@@ -25,7 +25,7 @@ public class Spiral {
 		double x=a*t*Math.cos(t)+xstart;
 		double y=a*t*Math.sin(t)+ystart;
 		//*
-		if(x>xlim || y>ylim){
+		if(x>xlim || y>ylim || y<0 || x<0){
 			Lib.p("Limits done for spiral");
 			return null;
 		}

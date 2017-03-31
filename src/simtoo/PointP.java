@@ -47,5 +47,8 @@ public class PointP {
 		}
 	}
 	
+	public String toString(){
+		return x+", "+y;
+	}
 	
 }

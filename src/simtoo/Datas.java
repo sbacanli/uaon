@@ -7,50 +7,77 @@ public class Datas {
 
 	Random r;
 	int linenumlimit=0;
-	static int width;
-	static int height;
+	static int widthOfScreen;
+	static int heightOfScreen;
 	ArrayList<ArrayList<Double>> arr;
-	static double minx;
-	static double miny;
-	static double maxy;
-	static double maxx;
+	double minx;
+	double miny;
+	double maxy;
+	double maxx;
 	
 	
-	public Datas(int linen,int h,int w){
-		linenumlimit=linen;
-		width=w;
-		height=h;
+	public Datas(int h,int w){
+		linenumlimit=1000;
+		//width and height of the screen
+		widthOfScreen=w;
+		heightOfScreen=h;
+		
 		r=new Random();
 		arr=new ArrayList<ArrayList<Double>>();
-		minx=-1;
-		miny=-1;
-		maxx=10000;
-		maxy=10000;
+		minx=0;
+		miny=0;
+		maxx=0;
+		maxy=0;
 		
 	}
 	
-	/*
-	public static void readData(String fname){
+	public ArrayList<PointP> fillRandomPositions(int numberOfPoints){
+		ArrayList<PointP> pts=new ArrayList<PointP>();
+		
+		double xgen=0;
+		double ygen=0;
+		int count=1;
+		double xgenfirst=(r.nextDouble()*(maxx-minx))+minx;
+		double ygenfirst=(r.nextDouble()*(maxy-miny))+miny;
+		pts.add(new PointP(xgenfirst,ygenfirst));
+		while(count<numberOfPoints){
+			xgen=(r.nextDouble()*(maxx-minx))+minx;
+			ygen=(r.nextDouble()*(maxy-miny))+miny;
+			pts.add(new PointP(xgen,ygen));
+			count++;
+		}
+		pts.add(new PointP(xgenfirst,ygenfirst));
+		//this one makes a loop 
+		
+		return pts;
+	}
+	
+	//*
+	
+	public void calculateMaxesByProcessing(String folderName){
+		File f=new File(folderName);
+		File[] files=f.listFiles();
+		for(int i=0;i<files.length;i++){
+			readData(files[i].getPath());
+		}
+	}
+	
+	
+	private void readData(String fname){
 		BufferedReader br=null;
 		String line=null;
-		int i=0;
+
 		try{
 			br=new BufferedReader(new FileReader(new File(fname)));
+			System.out.println(fname);
 			while( (line=br.readLine()) !=null ){
-				arr.add(new ArrayList<Double>());
+
 				StringTokenizer st=new StringTokenizer(line," ");
 				double time=Double.parseDouble(st.nextToken());
 				double xcord=Double.parseDouble(st.nextToken());
 				double ycord=Double.parseDouble(st.nextToken());
-				arr.get(i).add(time);
-				arr.get(i).add(xcord);
-				arr.get(i).add(ycord);
-				if(i==0){
-					maxx=xcord;
-					maxy=ycord;
-					minx=xcord;
-					miny=ycord;
-				}
+
+				
 				if(xcord>maxx){
 					maxx=xcord;
 				}
@@ -64,7 +91,6 @@ public class Datas {
 					miny=ycord;
 				}
 				
-				i++;
 			}
 			
 		}catch(Exception e){
@@ -72,50 +98,59 @@ public class Datas {
 		}
 		
 	}
-	*/
 	
+	//*/
 	
-	public static void calculateMaxes(String fname){
-		
-		if(!(Datas.getMaxX()==0 || Datas.getMaxY()==0 || Datas.getMinY()==0 || Datas.getMinX()==0) ){
-			//the maxes file does not change while running
-			//if it is calculated before no need to calculate again	
-			BufferedReader br=null;
-			String line=null;
-			int i=0;
-			try{
-				br=new BufferedReader(new FileReader(new File(fname)));
-				while( (line=br.readLine()) !=null ){
-					StringTokenizer st=new StringTokenizer(line," ");
-					st.nextToken();
-					st.nextToken();
-					if(i==0){
-						//minx
-						minx=Double.parseDouble(st.nextToken());
-					}else if(i==1){
-						//miny
-						miny=Double.parseDouble(st.nextToken());
-					}else if(i==2){
-						//maxX
-						maxx=Double.parseDouble(st.nextToken());
-					}else{
-						//maxY
-						maxy=Double.parseDouble(st.nextToken());
-					}
-					
-					i++;
-				}//enf of while check
-				br.close();
-			}catch(Exception e){
-				Lib.p(e.toString());
-			}
-			
-		}//end of if check
-		
+	public void calculateMaxesForScreen(){
+		miny=0;
+		minx=0;
+		maxx=widthOfScreen;
+		maxy=heightOfScreen;
+	}
+	
+	//folder name for the dataset should be given
+	public void calculateMaxes(String fname){
+		calculateMaxesByProcessing(fname);
+	}
+	
+	private void readMaxes(String fname){
+		//the maxes file does not change while running
+				//if it is calculated before no need to calculate again	
+				BufferedReader br=null;
+				String line=null;
+				int i=0;
+				try{
+					br=new BufferedReader(new FileReader(new File(fname)));
+					while( (line=br.readLine()) !=null ){
+						StringTokenizer st=new StringTokenizer(line," ");
+						st.nextToken();
+						st.nextToken();
+						if(i==0){
+							//minx
+							minx=Double.parseDouble(st.nextToken());
+						}else if(i==1){
+							//miny
+							miny=Double.parseDouble(st.nextToken());
+						}else if(i==2){
+							//maxX
+							maxx=Double.parseDouble(st.nextToken());
+						}else{
+							//maxY
+							maxy=Double.parseDouble(st.nextToken());
+						}
+						
+						i++;
+					}//enf of while check
+					br.close();
+				}catch(Exception e){
+					Lib.p(e.toString());
+				}
 	}
 	
 	
 	//reads the real data for the node position to Position ArrayList
+	//the data structure will be like that
+	//timeAsNumberofSeconds Xcord YCord
 	public ArrayList<Position> readRealDataForNode(String fname){
 		BufferedReader br=null;
 		String line=null;
@@ -155,8 +190,8 @@ public class Datas {
 							realy=prevycord-h*differencey;
 						}
 						
-						double calcx=convertToScreenX(realx,width);
-						double calcy=convertToScreenY(realy,height);
+						double calcx=convertToScreenX(realx);
+						double calcy=convertToScreenY(realy);
 						
 						arrposition.add(new Position(
 										prevtime+h*differenceTime,// updated time
@@ -168,20 +203,86 @@ public class Datas {
 					}//end of for
 				
 				}//end of if
-				double calcx=convertToScreenX(xcord,width);
-				double calcy=convertToScreenY(ycord,height);
+				double calcx=convertToScreenX(xcord);
+				double calcy=convertToScreenY(ycord);
 				arrposition.add(new Position((int)time,calcx,calcy,xcord,ycord));
 				i++;
 			}//end of while
 			br.close();
 		}catch(Exception e){
 			Lib.p(e.toString()+"\n\n problem in reading file "+fname);
-			e.printStackTrace();
-			System.out.println(e.getCause());
+			Lib.p(e.getCause().toString());
 		}
 		return arrposition;
 	}	
 	
+	public double convertToScreenX(double geoX){
+		if(Double.isNaN(geoX)){
+			Lib.p("ERROR:Datas' convertToScreenX is NaN");
+			System.exit(-1);
+		}
+		return (geoX * (double)(widthOfScreen) )/(maxx-minx);
+	}
+	
+	public double convertToScreenY(double geoY){
+		if(Double.isNaN(geoY)){
+			Lib.p("ERROR:Datas' convertToScreenY is NaN");
+			System.exit(-1);
+		}
+		return (geoY * (double)(heightOfScreen) )/(maxy-miny);
+	}
+	
+	public double convertToRealX(double screenX){
+		if(Double.isNaN(screenX)){
+			Lib.p("ERROR:Datas' convertToRealX is NaN");
+			System.exit(-1);
+		}
+		
+		return (screenX * (maxx-minx) )/(double)(widthOfScreen);
+	}
+	
+	//given screen coordinates it will return a position whose time is -1
+	public Position getPositionWithScreen(double xscreengiven,double yscreengiven){
+		if(Double.isNaN(xscreengiven) || Double.isNaN(yscreengiven)){
+			Lib.p("Positionable addPositionWithScreen one of the screen variables are NaN");
+			Lib.p("screengivenx"+xscreengiven+"screengiveny"+yscreengiven);
+			System.exit(-1);
+		}
+		double xrealgiven=convertToRealX(xscreengiven);
+		double yrealgiven=convertToRealY(yscreengiven);
+		if(Double.isNaN(xrealgiven) || Double.isNaN(yrealgiven)){
+			Lib.p("Positionable addPositionWithScreen one of the generated real variables are NaN");
+			Lib.p("xrealgiven "+xrealgiven+" yrealgiven "+yrealgiven);
+			System.exit(-1);
+		}
+		return new Position(-1,xscreengiven,yscreengiven,xrealgiven,yrealgiven);				
+	}
+	
+	//gien real coordinates it will return a position whose time is -1
+	public Position getPositionWithReal(double xrealgiven,double yrealgiven){
+		if(Double.isNaN(xrealgiven) || Double.isNaN(yrealgiven)){
+			Lib.p("Positionable addPositionWithReal one of the real variables are NaN");
+			Lib.p("xrealgiven "+xrealgiven+" yrealgiven "+yrealgiven);
+			System.exit(-1);
+		}
+		double xscreengiven=convertToScreenX(xrealgiven);
+		double yscreengiven=convertToScreenY(yrealgiven);
+		if(Double.isNaN(xscreengiven) || Double.isNaN(yscreengiven)){
+			Lib.p("Positionable addPositionWithReal one of the generated screen variables are NaN");
+			Lib.p("screengivenx"+xscreengiven+"screengiveny"+yscreengiven);
+			System.exit(-1);
+		}
+		return new Position(-1,xscreengiven,yscreengiven,xrealgiven,yrealgiven);	
+	}
+	
+	public double convertToRealY(double screenY){
+		if(Double.isNaN(screenY)){
+			Lib.p("ERROR:Datas' convertToRealY is NaN");
+			System.exit(-1);
+		}
+		
+		return (screenY * (maxy-miny) )/(double)(heightOfScreen);
+	}
 	/*
 	public ArrayList<Position> readRealDataForNodeDateFormatted(String fname){
 		BufferedReader br=null;
@@ -276,43 +377,6 @@ public class Datas {
 	}
 	*/
 	
-	public static double convertToScreenX(double geoX,double widthgiven){
-		if(Double.isNaN(geoX)){
-			Lib.p("ERROR:Datas' convertToScreenX is NaN");
-			System.exit(-1);
-		}
-		return (geoX * (double)(widthgiven) )/(maxx-minx);
-	}
-	
-	public static double convertToScreenY(double geoY,double heightgiven){
-		if(Double.isNaN(geoY)){
-			Lib.p("ERROR:Datas' convertToScreenY is NaN");
-			System.exit(-1);
-		}
-		return (geoY * (double)(heightgiven) )/(maxy-miny);
-	}
-	
-	public static double convertToRealX(double screenX, double widthgiven){
-		if(Double.isNaN(screenX)){
-			Lib.p("ERROR:Datas' convertToRealX is NaN");
-			System.exit(-1);
-		}
-		Lib.p("screenx "+screenX+" maxX "+maxx+" minX "+minx+" width "+(double)width);
-		
-		return (screenX * (maxx-minx) )/(double)(widthgiven);
-	}
-	
-	public static double convertToRealY(double screenY,double heightgiven){
-		if(Double.isNaN(screenY)){
-			Lib.p("ERROR:Datas' convertToRealY is NaN");
-			System.exit(-1);
-		}
-		
-		Lib.p("screeny "+screenY+" maxY "+maxy+" minY "+miny+" height "+(double)heightgiven);
-		
-		return (screenY * (maxy-miny) )/(double)(heightgiven);
-	}
-	
 	public ArrayList<PointP> dataLine(int line){
 		
 		if(line>linenumlimit)
@@ -320,8 +384,8 @@ public class Datas {
 		
 		ArrayList<PointP> p=new ArrayList<PointP>();
 		for(int i=0;i<10;i++){
-			int x1=r.nextInt(width);
-			int y1=r.nextInt(height);
+			int x1=r.nextInt(widthOfScreen);
+			int y1=r.nextInt(heightOfScreen);
 			p.add(new PointP(x1+0.0,y1+0.0));
 		}
 		return p;
@@ -329,35 +393,31 @@ public class Datas {
 
 	public void setWidth(int w) {
 		if(w<1){
-			Lib.p("PROBLEM in setting width");
+			Lib.p("Datas: PROBLEM in setting width");
 			System.exit(-1);
 		}
-		width=w;
+		widthOfScreen=w;
 	}
 
 	public void setHeight(int h) {
 		if(h<1){
-			Lib.p("PROBLEM in setting height");
+			Lib.p("Datas: PROBLEM in setting height");
 			System.exit(-1);
 		}
-		height=h;
+		heightOfScreen=h;
 	}
 	
-	public static  double VirtualToRealDistance(int dist){
-		Datas.calculateMaxes("NewYork/maxes.txt");
-		return  dist*(Datas.getMaxX()-Datas.getMinX())/ (double)width;
-		
-	}
-	
-	
-	public static double RealToVirtualDistance(int dist){
-		Datas.calculateMaxes("NewYork/maxes.txt");
-		return  (dist * (double)width)/(Datas.getMaxX()-Datas.getMinX());
-
+	public double VirtualToRealDistance(int dist){
+		return  dist*(getMaxX()-getMinX()) / (double)widthOfScreen;
 	}
 	
 	
-	public static double getMinX(){
+	public double RealToVirtualDistance(int dist){
+		return  (dist * (double)widthOfScreen) / (getMaxX()-getMinX());
+	}
+	
+	
+	public double getMinX(){
 		if (Double.isNaN(minx)) {
 			Lib.p("Datas's getMinX is NaN");
 			System.exit(-1);
@@ -365,7 +425,7 @@ public class Datas {
 		return minx;
 	}
 	
-	public static double getMinY(){
+	public double getMinY(){
 		if (Double.isNaN(miny)) {
 			Lib.p("Datas's getMinY is NaN");
 			System.exit(-1);
@@ -373,7 +433,7 @@ public class Datas {
 		return miny;
 	}
 	
-	public static double getMaxX(){
+	public double getMaxX(){
 		if (Double.isNaN(maxx)) {
 			Lib.p("Datas's getMaxX is NaN");
 			System.exit(-1);
@@ -381,7 +441,7 @@ public class Datas {
 		return maxx;
 	}
 	
-	public static double getMaxY(){
+	public double getMaxY(){
 		if (Double.isNaN(maxy)) {
 			Lib.p("Datas's getMaxY is NaN");
 			System.exit(-1);
@@ -389,5 +449,15 @@ public class Datas {
 		return maxy;
 	}
 	
+	public double getWidth(){
+		return widthOfScreen;
+	}
+	
+	public double getHeight(){
+		return heightOfScreen;
+	}
+	public String toString(){
+		return "Data maxX "+getMaxX()+" MaxY "+getMaxY()+" MinX "+getMinX()+" MinY "+getMinY()+" width "+getWidth()+" height "+getHeight();
+	}
 	
 }

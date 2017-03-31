@@ -1,5 +1,8 @@
 package simtoo;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+
 public class Lib {
 
 	
@@ -7,11 +10,22 @@ public class Lib {
 		return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
 	}
 	
-    public static void p(String x){
-		System.out.println(x);
+    public static void p(Object x){
+		System.out.println(x.toString());
+		BufferedWriter bwriter=null;
+		try{
+			bwriter=new BufferedWriter(new FileWriter("Report.txt",true));
+			bwriter.write(x+"\r\n");
+			bwriter.close();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
 	}
 	
     public static double realdistance(double lat1,double lon1,double lat2,double lon2) {
+    	return distance(lat1,lon1,lat2,lon2);
+    	/*
     	double R = 6371; // Radius of the earth in km
     	double dLat = deg2rad(lat2-lat1);  // deg2rad below
     	double dLon = deg2rad(lon2-lon1); 
@@ -21,7 +35,8 @@ public class Lib {
     			Math.sin(dLon/2) * Math.sin(dLon/2); 
     	double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
     	double d = R * c; // Distance in km
-    	return d;
+    	return d*1000;
+    	*/
     }
 
 	public static double deg2rad(double deg) {

@@ -1,6 +1,10 @@
 package routing;
 
+import simtoo.*;
 import java.util.ArrayList;
+
+import simtoo.Lib;
+import simtoo.Position;
 
 public class RoutingNode{
 
@@ -22,6 +26,7 @@ public class RoutingNode{
 	public RoutingNode(int givenid){
 		id=givenid;
 		contacts=new ArrayList<Encounter>();
+		encounterHistory=new ArrayList<Encounter>();
 		messageBuffer=new ArrayList<Message>();
 		isIdle=false;
 		sents=new ArrayList<Integer>();//not used
@@ -30,7 +35,6 @@ public class RoutingNode{
 		lastEnc=null;
 		gotNewPacket=false;
 		probToSend=1;
-
 	}	
 	
 	
@@ -215,12 +219,15 @@ public class RoutingNode{
 	//return the all messages in the buffer
 	public String getAllBuffer(){
 		String sum="";
-		for(int i=0;i<messageBuffer.size();i++){
-			sum =sum+messageBuffer.get(i)+"\r\n***************\r\n";
-		}
-		if(sum.equals("")){
+		if(messageBuffer.isEmpty()){
+			Lib.p("Message Buffer Empty for Node " + getId());
 			return null;
 		}
+		
+		for(int i=0;i<messageBuffer.size();i++){
+			sum =sum+messageBuffer.get(i).toString()+"\r\n***************\r\n";
+		}
+		
 		
 		return sum;
 	}
@@ -239,7 +246,7 @@ public class RoutingNode{
 			}
 		}
 		if(messageBuffer.size() != a.size()){
-			System.out.println("Node.java allids method problem");
+			System.out.println("RoutingNode.java allids method problem");
 		}
 		return all;
 	}
@@ -285,7 +292,7 @@ public class RoutingNode{
 	public void sendMessageFromBufferDiffTTS(Air a,int messageId,int receiverId,String time,int tts){
 		Message found=getMessageFromBuffer(messageId);
 		if(found == null){
-			System.out.println("PROBLEM in Node.java. No message with that id");
+			System.out.println("PROBLEM in RoutingNode.java. No message with that id");
 		}else{
 			//message found in buffer
 			//now we will create a copy of the message if it is suitable to create a copy of it
@@ -312,7 +319,7 @@ public class RoutingNode{
 	public boolean sendMessageFromBuffer(Air a,int messageId,int receiverId,String time){
 		Message found=getMessageFromBuffer(messageId);
 		if(found == null){
-			System.out.println("PROBLEM in Node.java. No message with that id");
+			System.out.println("PROBLEM in RoutingNode.java. No message with that id");
 		}else{
 			//message found in buffer
 			//now we will create a copy of the message if it is suitable to create a copy of it
@@ -332,7 +339,7 @@ public class RoutingNode{
 				sent.incHop();
 				return sendMessage(a,sent,time);
 			}else{
-				System.out.println("PROBLEM in Node.java. message not sendable from buffer");
+				System.out.println("PROBLEM in RoutingNode.java. message not sendable from buffer");
 			}
 			
 		}
@@ -344,11 +351,12 @@ public class RoutingNode{
 	public boolean sendMessage(Air air,Message m,String time){
 		int receiverNodeId=m.getReceiver();
 		if(air==null){
-			System.out.println("air null problem in node.java");
+			System.out.println("air null problem in Routingnode.java");
 		}
 		
 		//node sent the message. It may be dropped or received but it sent already
 		
+		Lib.p("RoutingNode addPackets sent");
 		Reporter.addPacketSent(getId(), receiverNodeId, time);
 		
 		if(air.addMessage(m) == false){
@@ -365,7 +373,7 @@ public class RoutingNode{
 			//negative id messages are protocol messages.
 			//they are processed and used in deciding to forward or not
 			//but they are not expected to be stored.
-			System.out.println("PROBLEM in Node.java: Trying to add neg id message to buffer");
+			System.out.println("PROBLEM in RoutingNode.java: Trying to add neg id message to buffer");
 			return false;
 		}
 		
@@ -392,6 +400,7 @@ public class RoutingNode{
 			//there is no message or message dropped
 			return null;
 		}
+		Lib.p("RoutingNode receiveMessagefucntion is working");
 		Reporter.addPacketReceived(message.getSender(),message.getReceiver(),time);
 		//if the message id is not positive that condition will be handled by the below method
 		// it is already integrated.
@@ -414,7 +423,7 @@ public class RoutingNode{
 			if(!b){
 				//if the message id is positive it means it is not protocol message
 				//it should have been added to buffer 
-				System.out.println("Can not add to buffer PROBLEM in Node.java");
+				System.out.println("Can not add to buffer PROBLEM in RoutingNode.java");
 				//return null;//cant add to buffer so no message
 				//maybe buffer is full and replacement cant be happened
 				//this case is in fact practically shouldnt be possible
@@ -463,7 +472,7 @@ public class RoutingNode{
 	/**********Contact Related Methods******************/
 	/**We are using Encounter object for recording current contacts**/
 
-	public void addContact(int idcon,int time){
+	public void addContact(int idcon,Position p,int time){
 		//sender is always this node
 		for(int i=0;i<contacts.size();i++){
 			if(contacts.get(i).getReceiverId()==idcon)
@@ -476,7 +485,7 @@ public class RoutingNode{
 		}
 		
 		//it doesn't exist
-		Encounter e=new Encounter(getId(),idcon,time);
+		Encounter e=new Encounter(getId(),idcon,p,time);
 		contacts.add(e);
 	}
 	
@@ -491,7 +500,7 @@ public class RoutingNode{
 			}
 			//System.out.println("Contact not found in Node.java removeContact");
 		}else{
-			System.out.println("Contact List is empty. problem in Node.java"+id+" "+idcon);
+			System.out.println("Contact List is empty. problem in RoutingNode.java"+id+" "+idcon);
 			//possibly again intersecting contacts
 			//we wont give an error that will make the intersecting contact like this
 			// if this is the case
@@ -525,10 +534,27 @@ public class RoutingNode{
 	/**********Encounter Related Methods******************/
 	/**********Encounter Related Methods******************/
 	
+	public Encounter lastEncounterWith(int nodeId){
+		Encounter e=null;
+		for(int i=encounterHistory.size()-1;i>-1;i--){
+			e=encounterHistory.get(i);
+			
+			//look for unfinished encounters
+			if( (e.getReceiverId()==nodeId || e.getSenderId()==nodeId) && e.getFinishingTime() == -1)
+			{
+				Lib.p("RoutinNode class position is: "+i);
+				return e;
+			}
+		}
+		return e;
+	}
+	
 	public int encounterTimesWith(int nodeId){
 		int num=0;
+		Encounter e=null;
 		for(int i=0;i<encounterHistory.size();i++){
-			if(encounterHistory.get(i).getReceiverId()==nodeId)
+			e=encounterHistory.get(i);
+			if(e.getReceiverId()==nodeId || e.getSenderId()==nodeId)
 			{
 				num++;
 			}
@@ -536,18 +562,21 @@ public class RoutingNode{
 		return num;
 	}
 	
-	public void finishEncounter(int nodeId,int time){
+	public Encounter finishEncounter(int nodeId,int time){
+		Encounter e=null;
 		for(int i=0;i<encounterHistory.size();i++){
-			if(encounterHistory.get(i).getReceiverId()==nodeId && 
-					encounterHistory.get(i).getFinishTime() == -1)
+			e=encounterHistory.get(i);
+			if( (e.getReceiverId()==nodeId || e.getSenderId()==nodeId) && e.getFinishingTime() == -1)
 			{
-				encounterHistory.get(i).setFinishTime(time);
+				e.setFinishingTime(time);
+				return e;
 			}
 		}
+		return e;
 	}
 	
-	public void addEncounter(int nodeId,int time){
-		Encounter e=new Encounter(getId(),nodeId,time);
+	public void addEncounter(int nodeId,Position p,int time){
+		Encounter e=new Encounter(getId(),nodeId,p,time);
 		encounterHistory.add(e);
 	}
 	
@@ -590,7 +619,7 @@ public class RoutingNode{
 					boolean b=addtoBuffer(m, time);
 				
 					if(!b){
-						System.out.println("Can not add to buffer PROBLEM in Node.java");
+						System.out.println("Can not add to buffer PROBLEM in RoutingNode.java");
 						//return null;//cant add to buffer so no message
 						//maybe buffer is full and replacement cant be happened
 						//this case is in fact practically shouldnt be possible
@@ -598,7 +627,7 @@ public class RoutingNode{
 				}else{
 					//Eavesdropping should only take messages with id>0
 					//if this is not the case then there is problem.
-					System.out.println("Problem in Node.java at method eavesdrop");
+					System.out.println("Problem in RoutingNode.java at method eavesdrop");
 				}
 				
 				
