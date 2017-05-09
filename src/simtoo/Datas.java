@@ -1,22 +1,27 @@
 package simtoo;
 
 import java.util.*;
+
+import routing.LibRouting;
+
 import java.io.*;
 
 public class Datas {
 
 	Random r;
 	int linenumlimit=0;
-	static int widthOfScreen;
-	static int heightOfScreen;
+	static double widthOfScreen;
+	static double heightOfScreen;
 	ArrayList<ArrayList<Double>> arr;
 	double minx;
 	double miny;
 	double maxy;
 	double maxx;
+	int maxtime;
+	int mintime;
 	
 	
-	public Datas(int h,int w){
+	public Datas(double h,double w){
 		linenumlimit=1000;
 		//width and height of the screen
 		widthOfScreen=w;
@@ -28,6 +33,8 @@ public class Datas {
 		miny=0;
 		maxx=0;
 		maxy=0;
+		maxtime=-1;
+		mintime=Integer.MAX_VALUE;
 		
 	}
 	
@@ -52,8 +59,6 @@ public class Datas {
 		return pts;
 	}
 	
-	//*
-	
 	public void calculateMaxesByProcessing(String folderName){
 		File f=new File(folderName);
 		File[] files=f.listFiles();
@@ -62,21 +67,39 @@ public class Datas {
 		}
 	}
 	
+	public int getNumberOfNodes(String folderName){
+		int num=0;
+		File f=new File(folderName);
+		File[] files=f.listFiles();
+		for(int i=0;i<files.length;i++){
+			if(files[i].getName().contains(".txt")){
+				num++;
+			}
+		}
+		return num;
+	}
 	
+	//the read file should be ordered according to time. Ascending order
+	//it finds the maximum and minimum coordinates of the file
 	private void readData(String fname){
 		BufferedReader br=null;
 		String line=null;
-
+		//boolean firstread=false;
+		double xcord,ycord,time=0;
+		
 		try{
 			br=new BufferedReader(new FileReader(new File(fname)));
-			System.out.println(fname);
 			while( (line=br.readLine()) !=null ){
 
-				StringTokenizer st=new StringTokenizer(line," ");
-				double time=Double.parseDouble(st.nextToken());
-				double xcord=Double.parseDouble(st.nextToken());
-				double ycord=Double.parseDouble(st.nextToken());
-
+				StringTokenizer st=new StringTokenizer(line);
+				time=Integer.parseInt(st.nextToken());
+				xcord=Double.parseDouble(st.nextToken());
+				ycord=Double.parseDouble(st.nextToken());
+				/*
+				if(!firstread){
+					firstread=true;
+					mintime=time;
+				}*/
 				
 				if(xcord>maxx){
 					maxx=xcord;
@@ -96,6 +119,12 @@ public class Datas {
 		}catch(Exception e){
 			Lib.p(e.toString());
 		}
+		if((int)time>maxtime){
+			maxtime=(int) time;
+		}
+		if((int)time<mintime){
+			mintime=(int) time;
+		}
 		
 	}
 	
@@ -111,6 +140,21 @@ public class Datas {
 	//folder name for the dataset should be given
 	public void calculateMaxes(String fname){
 		calculateMaxesByProcessing(fname);
+		fixHeightWidth();
+	}
+	
+	private void fixHeightWidth(){
+		double datawidth=getMaxX()-getMinX();
+		double dataheight=getMaxY()-getMinY();
+		double A=(heightOfScreen*datawidth)/dataheight;
+		double B=(widthOfScreen*dataheight)/datawidth;
+		if(A<widthOfScreen){
+			widthOfScreen=A;
+		}else{
+			heightOfScreen=B;
+		}
+				
+		
 	}
 	
 	private void readMaxes(String fname){
@@ -119,6 +163,7 @@ public class Datas {
 				BufferedReader br=null;
 				String line=null;
 				int i=0;
+				
 				try{
 					br=new BufferedReader(new FileReader(new File(fname)));
 					while( (line=br.readLine()) !=null ){
@@ -159,17 +204,21 @@ public class Datas {
 		try{
 			br=new BufferedReader(new FileReader(new File(fname)));
 			while( (line=br.readLine()) !=null ){
-				StringTokenizer st=new StringTokenizer(line," ");
-				double time=Double.parseDouble(st.nextToken());
+				StringTokenizer st=new StringTokenizer(line);
+				int time=Integer.parseInt(st.nextToken());
 				double xcord=Double.parseDouble(st.nextToken());
 				double ycord=Double.parseDouble(st.nextToken());
+				xcord=LibRouting.prec(xcord, 2);
+				ycord=LibRouting.prec(ycord, 2);
 				
 				if(i>0){
 					
 					int prevtime=arrposition.get(arrposition.size()-1).getTime();
 					double prevxcord=arrposition.get(arrposition.size()-1).getRealX();
 					double prevycord=arrposition.get(arrposition.size()-1).getRealY();
-				
+					prevxcord=LibRouting.prec(prevxcord, 2);
+					prevycord=LibRouting.prec(prevycord, 2);
+					
 					int differenceTime=(int)time-prevtime;
 					double differencex=(xcord-prevxcord)/differenceTime;
 					double differencey=(ycord-prevycord)/differenceTime;
@@ -190,8 +239,12 @@ public class Datas {
 							realy=prevycord-h*differencey;
 						}
 						
+						realx=LibRouting.prec(realx, 2);
+						realy=LibRouting.prec(realy, 2);
 						double calcx=convertToScreenX(realx);
 						double calcy=convertToScreenY(realy);
+						calcx=LibRouting.prec(calcx, 2);
+						calcy=LibRouting.prec(calcy, 2);
 						
 						arrposition.add(new Position(
 										prevtime+h*differenceTime,// updated time
@@ -203,6 +256,7 @@ public class Datas {
 					}//end of for
 				
 				}//end of if
+				
 				double calcx=convertToScreenX(xcord);
 				double calcy=convertToScreenY(ycord);
 				arrposition.add(new Position((int)time,calcx,calcy,xcord,ycord));
@@ -210,35 +264,102 @@ public class Datas {
 			}//end of while
 			br.close();
 		}catch(Exception e){
-			Lib.p(e.toString()+"\n\n problem in reading file "+fname);
-			Lib.p(e.getCause().toString());
+			Lib.p("problem in reading file "+fname);
+			Lib.p(e.toString());
+			e.printStackTrace();
 		}
 		return arrposition;
 	}	
 	
 	public double convertToScreenX(double geoX){
+		if(geoX>getMaxX() || geoX<getMinX()){
+			Lib.p("Geo X is not in the limit");
+			try{
+				Exception e=new Exception();
+				throw e;
+			}catch(Exception e){
+				e.printStackTrace();
+				System.exit(-1);
+			}
+			
+		}
+		
 		if(Double.isNaN(geoX)){
 			Lib.p("ERROR:Datas' convertToScreenX is NaN");
 			System.exit(-1);
 		}
-		return (geoX * (double)(widthOfScreen) )/(maxx-minx);
+		double createdPos=((geoX-minx) * (double)(widthOfScreen) )/(maxx-minx);
+		if(createdPos>getWidth()){
+			Lib.p("This can not HAPPEN for datas.java at convertToscreenX");
+			createdPos=Math.floor(createdPos);
+		}
+		return createdPos;
+	}
+	
+	public double convertToScreenSpeed(double realSpeed){
+		return realSpeed*getWidth()/(getMaxX()-getMinX());
 	}
 	
 	public double convertToScreenY(double geoY){
+		if(geoY>getMaxY() || geoY<getMinY()){
+			Lib.p("Geo Y is not in the limit");
+			try{
+				Exception e=new Exception();
+				throw e;
+			}catch(Exception e){
+				e.printStackTrace();
+				System.exit(-1);
+			}
+			
+		}
+		
 		if(Double.isNaN(geoY)){
 			Lib.p("ERROR:Datas' convertToScreenY is NaN");
 			System.exit(-1);
 		}
-		return (geoY * (double)(heightOfScreen) )/(maxy-miny);
+		double createdPos= ((geoY-miny) * (double)(heightOfScreen) )/(maxy-miny);
+		if(createdPos>getHeight()){
+			Lib.p("This can not HAPPEN for datas.java at convertToscreen");
+			createdPos=Math.floor(createdPos);
+		}
+		return createdPos;
 	}
 	
 	public double convertToRealX(double screenX){
+		if(screenX>getWidth() || screenX<0){
+			double oldscreenX=screenX;
+			screenX=getWidth();
+			Lib.p("screen coordinate converted from "+oldscreenX+" to "+screenX+" limit is "+getWidth());
+		}
+		
 		if(Double.isNaN(screenX)){
 			Lib.p("ERROR:Datas' convertToRealX is NaN");
 			System.exit(-1);
 		}
 		
-		return (screenX * (maxx-minx) )/(double)(widthOfScreen);
+		return (screenX * (maxx-minx) )/(double)(widthOfScreen) + minx;
+	}
+	
+	public double convertToRealY(double screenY){
+		if(screenY>getHeight() || screenY<0){
+			
+			Lib.p("Screen Y is not in the limit "+screenY+" the limit is "+getHeight());
+			try{
+				Exception e=new Exception();
+				throw e;
+			}catch(Exception e){
+				e.printStackTrace();
+				System.exit(-1);
+			}
+			
+		}
+		
+		if(Double.isNaN(screenY)){
+			Lib.p("ERROR:Datas.java convertToRealY is NaN");
+			System.exit(-1);
+		}
+		
+		return (screenY * (maxy-miny) )/(double)(heightOfScreen) + miny;
 	}
 	
 	//given screen coordinates it will return a position whose time is -1
@@ -258,7 +379,7 @@ public class Datas {
 		return new Position(-1,xscreengiven,yscreengiven,xrealgiven,yrealgiven);				
 	}
 	
-	//gien real coordinates it will return a position whose time is -1
+	//given real coordinates it will return a position whose time is -1
 	public Position getPositionWithReal(double xrealgiven,double yrealgiven){
 		if(Double.isNaN(xrealgiven) || Double.isNaN(yrealgiven)){
 			Lib.p("Positionable addPositionWithReal one of the real variables are NaN");
@@ -274,124 +395,8 @@ public class Datas {
 		}
 		return new Position(-1,xscreengiven,yscreengiven,xrealgiven,yrealgiven);	
 	}
-	
-	public double convertToRealY(double screenY){
-		if(Double.isNaN(screenY)){
-			Lib.p("ERROR:Datas' convertToRealY is NaN");
-			System.exit(-1);
-		}
-		
-		return (screenY * (maxy-miny) )/(double)(heightOfScreen);
-	}
-	/*
-	public ArrayList<Position> readRealDataForNodeDateFormatted(String fname){
-		BufferedReader br=null;
-		String line=null;
-		int i=0;
-		double maxXCord=-99999;
-		double minXCord=99999;
-		double maxYCord=-99999;
-		double minYCord=99999;
-		
-		ArrayList<Position> arrposition=new ArrayList<Position>();
-		try{
-			br=new BufferedReader(new FileReader(new File(fname)));
-			while( (line=br.readLine()) !=null ){
-				StringTokenizer st=new StringTokenizer(line," ");
-				double nodeid=Integer.parseInt(st.nextToken());
-				String date=st.nextToken();
-				double xcord=Double.parseDouble(st.nextToken());
-				double ycord=Double.parseDouble(st.nextToken());
-				
-				if(xcord>maxXCord){
-					maxXCord=xcord;
-				}
-				if(ycord>maxYCord){
-					maxYCord=xcord;
-				}
-				if(xcord<minXCord){
-					minXCord=xcord;
-				}
-				if(ycord<minYCord){
-					minYCord=xcord;
-				}
-				
-				
-				if(i>0){
-					
-					int prevtime=arrposition.get(arrposition.size()-1).getTime();
-					double prevxcord=arrposition.get(arrposition.size()-1).getRealX();
-					double prevycord=arrposition.get(arrposition.size()-1).getRealY();
-				
-					int differenceTime=(int)time-prevtime;
-					double differencex=(xcord-prevxcord)/differenceTime;
-					double differencey=(ycord-prevycord)/differenceTime;
-					
-					double realy=0;
-					double realx=0;
-					
-					for(int h=1;h<differenceTime;h++){
-						if(prevxcord<xcord){
-							realx=prevxcord+h*differencex;
-						}else{
-							realx=prevxcord-h*differencex;
-						}
-						
-						if(prevycord<ycord){
-							realy=prevycord+h*differencey;
-						}else{
-							realy=prevycord-h*differencey;
-						}
-						
-						double calcx=convertToScreenX(realx);
-						double calcy=convertToScreenY(realy);
-						
-						arrposition.add(new Position(
-										prevtime+h*differenceTime,// updated time
-										calcx,calcy, //screen coordinates
-										realx,	//real X coordinate
-										realy   //real Y coordinate
-										));
-					
-					}//end of for
-				
-				}//end of if
-				double calcx=convertToScreenX(xcord);
-				double calcy=convertToScreenY(ycord);
-				arrposition.add(new Position((int)time,calcx,calcy,xcord,ycord));
-				i++;
-			}//end of while
-			br.close();
-		}catch(Exception e){
-			Lib.p(e.toString()+"\n\n problem in reading file "+fname);
-			e.printStackTrace();
-			System.out.println(e.getCause());
-		}
-		return arrposition;
-	}
-	*/
-	
-	/*
-	private static double convertToScreen(double screendifference,double geodifference,double geo){
-		return (geo * (screendifference) )/(geodifference);
-	}
-	*/
-	
-	public ArrayList<PointP> dataLine(int line){
-		
-		if(line>linenumlimit)
-			return null;
-		
-		ArrayList<PointP> p=new ArrayList<PointP>();
-		for(int i=0;i<10;i++){
-			int x1=r.nextInt(widthOfScreen);
-			int y1=r.nextInt(heightOfScreen);
-			p.add(new PointP(x1+0.0,y1+0.0));
-		}
-		return p;
-	}
 
-	public void setWidth(int w) {
+	public void setWidth(double w) {
 		if(w<1){
 			Lib.p("Datas: PROBLEM in setting width");
 			System.exit(-1);
@@ -399,7 +404,7 @@ public class Datas {
 		widthOfScreen=w;
 	}
 
-	public void setHeight(int h) {
+	public void setHeight(double h) {
 		if(h<1){
 			Lib.p("Datas: PROBLEM in setting height");
 			System.exit(-1);
@@ -407,15 +412,14 @@ public class Datas {
 		heightOfScreen=h;
 	}
 	
-	public double VirtualToRealDistance(int dist){
-		return  dist*(getMaxX()-getMinX()) / (double)widthOfScreen;
+	public double VirtualToRealDistance(int distScr){
+		return  (distScr * (getMaxX()-getMinX())) / (widthOfScreen);
 	}
 	
 	
-	public double RealToVirtualDistance(int dist){
-		return  (dist * (double)widthOfScreen) / (getMaxX()-getMinX());
+	public double RealToVirtualDistance(double speedreal){
+		return  (speedreal * (double)widthOfScreen) / (getMaxX()-getMinX());
 	}
-	
 	
 	public double getMinX(){
 		if (Double.isNaN(minx)) {
@@ -457,7 +461,17 @@ public class Datas {
 		return heightOfScreen;
 	}
 	public String toString(){
-		return "Data maxX "+getMaxX()+" MaxY "+getMaxY()+" MinX "+getMinX()+" MinY "+getMinY()+" width "+getWidth()+" height "+getHeight();
+		return "Data maxX "+getMaxX()+" MaxY "+getMaxY()+" MinX "+getMinX()+" MinY "+getMinY()
+		+"\r\n width "+getWidth()+" height "+getHeight()
+		+"\r\n maxtime "+maxtime+" mintime "+mintime;
+	}
+	
+	public int getMinTime(){
+		return mintime;
+	}
+	
+	public int getMaxTime(){
+		return maxtime;
 	}
 	
 }

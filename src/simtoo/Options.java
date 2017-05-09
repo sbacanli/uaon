@@ -44,12 +44,14 @@ public class Options {
     
     public double getParamDouble(String s){
     	if(hm.isEmpty()){
+    		Lib.p("ERROR: config file empty for call getParamDouble in class Options for option "+s);
     		return -999.01;
     	}
     	
     	if(hm.get(s) !=null){
     		return Double.parseDouble(hm.get(s));
     	}
+    	Lib.p("ERROR: config file empty for call getParamDouble in class Options for option "+s);
     	return -999.01;
     }
     

@@ -2,7 +2,7 @@ package routing;
 
 import java.util.ArrayList;
 
-import simtoo.Lib;
+
 
 public class Epidemic extends Routing{
 
@@ -36,7 +36,7 @@ public class Epidemic extends Routing{
 		if(v.equals("all")){
 			//v is empty which means all the messages are expired in this nodes buffer
 			//nothing to send...
-			Lib.p("Epidemic: all the messages are expired!");
+			//Lib.p("Epidemic: all the messages are expired!");
 			return;
 		}
 		int messageid=-1;//that means the message is vector and it won't be put to buffer
@@ -54,7 +54,7 @@ public class Epidemic extends Routing{
 		
 		if(vd.isEmpty()){
 		//If the sender has the exactly same messages with receiver then dont do anything close communication
-			Lib.p("Epidemic: If the sender has the exactly same messages with receiver then dont do anything close communication");
+			//Lib.p("Epidemic: If the sender has the exactly same messages with receiver then dont do anything close communication");
 			return;
 		}
 		
@@ -71,7 +71,7 @@ public class Epidemic extends Routing{
 		/* Sender is sending the messages ids stated in the packet */
 		ArrayList<Integer> varray=receivedreply.getVectorArray();
 		if(varray==null){
-			System.out.println("Epidemic: Problem in Epidemic.java: This message shouldn't be empty");
+			///System.out.println("Epidemic: Problem in Epidemic.java: This message shouldn't be empty");
 			//if the receiver has sent a message it means it needs some messages
 			//if it doesn't need it wont send any message at all
 		}
@@ -90,7 +90,7 @@ public class Epidemic extends Routing{
 	}
 	
 	private Message sendreceive(RoutingNode sender,RoutingNode receiver,Message sentmes,String time){
-		Lib.p("Epidemic class sendreceive");
+		//Lib.p("Epidemic class sendreceive");
 		boolean isGot=sender.sendMessage(getAir(), sentmes, time);	
 		Message receivedmes=null;
 		if(isGot){

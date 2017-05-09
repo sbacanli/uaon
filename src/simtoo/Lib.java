@@ -6,7 +6,11 @@ import java.io.FileWriter;
 public class Lib {
 
 	
-	public static double distance(double x,double y,double x1,double y1){
+	public static double relativeDistance(double x,double y,double x1,double y1){
+		return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
+	}
+	
+	public static double screenDistance(double x,double y,double x1,double y1){
 		return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
 	}
 	
@@ -22,9 +26,17 @@ public class Lib {
 		}
 		
 	}
+    
+    public static double distance(PointP p1,PointP p2){
+		return Math.sqrt(
+				(  p1.getX()-p2.getX() )  *  (  p1.getX()-p2.getX()   )
+				+ ( p1.getY()-p2.getY() ) *  (  p1.getY()-p2.getY()   )
+				);
+	}
 	
     public static double realdistance(double lat1,double lon1,double lat2,double lon2) {
-    	return distance(lat1,lon1,lat2,lon2);
+    	p("REAL DISTANCE NOT USED!");
+    	return -1;
     	/*
     	double R = 6371; // Radius of the earth in km
     	double dLat = deg2rad(lat2-lat1);  // deg2rad below
@@ -38,9 +50,12 @@ public class Lib {
     	return d*1000;
     	*/
     }
+    
 
-	public static double deg2rad(double deg) {
+    /*This method is used in real GPS distance calculation
+	private static double deg2rad(double deg) {
 	  return deg * (Math.PI/180);
 	}
+	*/
 
 }

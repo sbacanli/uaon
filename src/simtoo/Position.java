@@ -27,7 +27,8 @@ public class Position {
 	private Position(){
 		time=-1;
 		screenp=null;
-		real=new PointP(0,0);
+		real=null;
+		Lib.p("DONT USE NO ARGUEMENT CONSTRUCTOR OF POSITION.JAVA");
 	}
 	
 	public PointP getScreenPoint(){
@@ -63,6 +64,7 @@ public class Position {
 	}
 	
 	public String toString(){
-		return "Position is "+time+" realX "+real.getX()+" realY "+real.getY()+" screenX "+screenp.getX()+" screenY "+screenp.getY();
+		return "Position is "+time+" realX "+real.getX()+" realY "+real.getY()+
+				" screenX "+screenp.getX()+" screenY "+screenp.getY();
 	}
 }

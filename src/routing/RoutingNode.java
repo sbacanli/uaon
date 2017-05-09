@@ -1,6 +1,6 @@
 package routing;
 
-import simtoo.*;
+
 import java.util.ArrayList;
 
 import simtoo.Lib;
@@ -356,7 +356,6 @@ public class RoutingNode{
 		
 		//node sent the message. It may be dropped or received but it sent already
 		
-		Lib.p("RoutingNode addPackets sent");
 		Reporter.addPacketSent(getId(), receiverNodeId, time);
 		
 		if(air.addMessage(m) == false){
@@ -369,7 +368,7 @@ public class RoutingNode{
 	}
 	
 	public boolean addtoBuffer(Message m,String time){
-		if(m.getId()<0){
+		if(m.isProtocolMessage()){
 			//negative id messages are protocol messages.
 			//they are processed and used in deciding to forward or not
 			//but they are not expected to be stored.
@@ -400,7 +399,7 @@ public class RoutingNode{
 			//there is no message or message dropped
 			return null;
 		}
-		Lib.p("RoutingNode receiveMessagefucntion is working");
+
 		Reporter.addPacketReceived(message.getSender(),message.getReceiver(),time);
 		//if the message id is not positive that condition will be handled by the below method
 		// it is already integrated.
@@ -414,7 +413,7 @@ public class RoutingNode{
 	// this message decides if the message is protocol message or not
 	//to store it in buffer
 	private void receiveRealMessage(Message message,String time){
-		if(message.getId() > 0 ){
+		if(!message.isProtocolMessage()){
 			//if the message is real message
 			//it means it is not a message vector
 		
@@ -439,8 +438,9 @@ public class RoutingNode{
 		ArrayList<Integer> v=new ArrayList<Integer>();
 		for(int i=0;i<messageBuffer.size();i++){
 			int el=messageBuffer.get(i).getId();
-			if(!v.contains(new Integer(el)) && messageBuffer.get(i).isSendable(time)){
-				v.add(el);
+			Integer intel=new Integer(el);
+			if(!v.contains(intel) && messageBuffer.get(i).isSendable(time)){
+				v.add(intel);
 			}
 		}
 		//it is possible that the node's buffer is not empty but contains all expired messages
@@ -457,8 +457,9 @@ public class RoutingNode{
 			int el=messageBuffer.get(i).getId();
 			if(messageBuffer.get(i).getPrevPacketId()==-1){
 				//it means the message is created by the node itself
-				if(!v.contains(new Integer(el)) && messageBuffer.get(i).isSendable(time)){
-					v.add(el);
+				Integer intel=new Integer(el);
+				if(!v.contains(intel) && messageBuffer.get(i).isSendable(time)){
+					v.add(intel);
 				}
 			}
 			
@@ -478,8 +479,9 @@ public class RoutingNode{
 			if(contacts.get(i).getReceiverId()==idcon)
 			{
 				// already exists
-				System.out.println("Contact started when there was contact in RoutingNode.java"+
-						"\r\n current node "+getId()+" contact node "+idcon);
+				//it is possible as when the UAV finished route it clears everything the others not
+				//System.out.println("Contact started when there was contact in RoutingNode.java"+
+				//		"\r\n current node "+getId()+" contact node "+idcon);
 				return;
 			}
 		}
@@ -500,7 +502,9 @@ public class RoutingNode{
 			}
 			//System.out.println("Contact not found in Node.java removeContact");
 		}else{
-			System.out.println("Contact List is empty. problem in RoutingNode.java"+id+" "+idcon);
+			//If UAV has finished its route it will clear the contacts. The other nodes may not clear it.
+			
+			//System.out.println("Contact List is empty. problem in RoutingNode.java"+id+" "+idcon);
 			//possibly again intersecting contacts
 			//we wont give an error that will make the intersecting contact like this
 			// if this is the case
@@ -509,6 +513,8 @@ public class RoutingNode{
 			//it will consider that this happened (taking the early finish time)
 			//1   4  15  42
 			//System.exit(1);
+			//After AUV finihes its route it clears encounters and contacts to make them consistent.
+			//In that case it is possible that some node thinks that they are still in contact.
 		}
 	}
 	
@@ -525,6 +531,10 @@ public class RoutingNode{
 	public int getNeighborCount(){
 		return contacts.size();
 	}
+	
+	public void clearContacts(){
+		contacts.clear();
+	}
 
 	/**********Contact Related Methods******************/
 	/**********Contact Related Methods******************/
@@ -540,9 +550,9 @@ public class RoutingNode{
 			e=encounterHistory.get(i);
 			
 			//look for unfinished encounters
-			if( (e.getReceiverId()==nodeId || e.getSenderId()==nodeId) && e.getFinishingTime() == -1)
+			if( (e.getReceiverId()==nodeId ) && e.getFinishingTime() == -1)
 			{
-				Lib.p("RoutinNode class position is: "+i);
+				Lib.p("RoutingNode class position is: "+i);
 				return e;
 			}
 		}
@@ -554,7 +564,7 @@ public class RoutingNode{
 		Encounter e=null;
 		for(int i=0;i<encounterHistory.size();i++){
 			e=encounterHistory.get(i);
-			if(e.getReceiverId()==nodeId || e.getSenderId()==nodeId)
+			if(e.getReceiverId()==nodeId)
 			{
 				num++;
 			}
@@ -562,11 +572,12 @@ public class RoutingNode{
 		return num;
 	}
 	
+	///encounter object has finishing time -1 if it hasn't finished yet
 	public Encounter finishEncounter(int nodeId,int time){
 		Encounter e=null;
 		for(int i=0;i<encounterHistory.size();i++){
 			e=encounterHistory.get(i);
-			if( (e.getReceiverId()==nodeId || e.getSenderId()==nodeId) && e.getFinishingTime() == -1)
+			if( (e.getReceiverId()==nodeId) && e.getFinishingTime() == -1)
 			{
 				e.setFinishingTime(time);
 				return e;
@@ -580,6 +591,24 @@ public class RoutingNode{
 		encounterHistory.add(e);
 	}
 	
+	//It will only clear the ones that are already finished.
+	public void clearEncounters(){
+		encounterHistory.clear();
+		
+		/*Encounter e=null;
+		for(int i=0;i<encounterHistory.size();i++){
+			e=encounterHistory.get(i);
+			if(e.getFinishingTime() != -1)//finished encounter
+			{
+				encounterHistory.remove(i);
+			}
+		}
+		*/
+	}
+	
+	public ArrayList<Encounter> getEncounterHistory(){
+		return encounterHistory;
+	}
 	
 	public int getEncounterCount(){
 		return encounterHistory.size();
@@ -601,7 +630,7 @@ public class RoutingNode{
 		ArrayList<Message> allmes=air.receiveEnvironmentMessages(time);
 		if(allmes==null || allmes.isEmpty()){
 			//there is no message
-			;
+
 		}
 		for(int i=0;i<allmes.size();i++){
 			Message m=allmes.get(i);

@@ -98,6 +98,10 @@ public class Message {
 		return tts;
 	}
 	
+	public boolean isProtocolMessage(){
+		return getId()<0;
+	}
+	
 	///remaining times to send
 	//updated dynamically after sending every time (giving to air)
 	public void setRemaining(int remnew){

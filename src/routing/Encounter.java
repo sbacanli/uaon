@@ -13,9 +13,6 @@ public class Encounter {
 	private int startingTime,finishingTime;
 	private Position p;
 	
-	//x and y are based on screen position it shuld be general position
-	//TODO : fix it:
-	
 	public Encounter(){
 		sender=-1;
 		receiver=-1;

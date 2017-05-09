@@ -94,6 +94,7 @@ public class LibRouting {
 		return false;
 	}
 	
+	//The method returns the given timestamp as UTC milliseconds.
 	public static int cdate(String date){
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Calendar cl = Calendar. getInstance();
@@ -102,7 +103,7 @@ public class LibRouting {
         	date1 = (Date) sdf.parse(date);
             cl.setTime(date1);
         }catch(ParseException e){
-        	System.out.println(e);
+        	System.out.println("LibRouting.java cdate is problematic: "+e);
         }
 		return (int)cl.getTimeInMillis();
 	}
