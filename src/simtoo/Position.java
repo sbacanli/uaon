@@ -66,7 +66,7 @@ public class Position implements Comparator<Position> {
 	}
 	
 	public String toString(){
-		return "Position is "+time+" realX "+real.getX()+" realY "+real.getY()+
+		return "Position's time is "+time+" realX "+real.getX()+" realY "+real.getY()+
 				" screenX "+screenp.getX()+" screenY "+screenp.getY();
 	}
 	
