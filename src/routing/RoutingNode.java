@@ -2,6 +2,12 @@ package routing;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import simtoo.Lib;
 import simtoo.Position;
@@ -19,7 +25,12 @@ public class RoutingNode{
 	private String mempolicy="lrr";//message removing policy in memory
 	private boolean gotNewPacket;
 	private double probToSend;
-
+	private ArrayList<Encounter> encounterHistoryWithNodes;
+	private HashMap<Integer,Encounter> hm;
+	//encounter history with nodes can be harvested by checking encounterHistory ArrayList
+	// but in that case it will slow down the simulator so we will be keeping another ArrayList for
+	//encounters just with nodes.
+	
 	//policy for deleting a message in the buffer if buffer is full
 	
 	
@@ -27,6 +38,7 @@ public class RoutingNode{
 		id=givenid;
 		contacts=new ArrayList<Encounter>();
 		encounterHistory=new ArrayList<Encounter>();
+		encounterHistoryWithNodes=new ArrayList<Encounter>();
 		messageBuffer=new ArrayList<Message>();
 		isIdle=false;
 		sents=new ArrayList<Integer>();//not used
@@ -35,9 +47,8 @@ public class RoutingNode{
 		lastEnc=null;
 		gotNewPacket=false;
 		probToSend=1;
-	}	
-	
-	
+		hm=new HashMap<Integer,Encounter>();
+	}		
 	
 	public boolean gotNewPacket(){
 		return gotNewPacket;
@@ -580,6 +591,18 @@ public class RoutingNode{
 			if( (e.getReceiverId()==nodeId) && e.getFinishingTime() == -1)
 			{
 				e.setFinishingTime(time);
+				if(nodeId<0){
+					Encounter e1=null;
+					//we found the node if it is not uav but node 
+					//we need to remove it from encounterHistoryWithNodes
+					for(int j=0;j<encounterHistoryWithNodes.size();j++){
+						e1=encounterHistoryWithNodes.get(j);
+						if(e1.getReceiverId()==nodeId && e1.getFinishingTime() ==-1){
+							e1.setFinishingTime(time);
+						}
+					}
+				}
+				
 				return e;
 			}
 		}
@@ -589,31 +612,78 @@ public class RoutingNode{
 	public void addEncounter(int nodeId,Position p,int time){
 		Encounter e=new Encounter(getId(),nodeId,p,time);
 		encounterHistory.add(e);
+		if(nodeId>0){
+			encounterHistoryWithNodes.add(e);
+			hm.put(nodeId, e);
+		}
 	}
 	
 	//It will only clear the ones that are already finished.
-	public void clearEncounters(){
-		encounterHistory.clear();
-		
-		/*Encounter e=null;
-		for(int i=0;i<encounterHistory.size();i++){
-			e=encounterHistory.get(i);
-			if(e.getFinishingTime() != -1)//finished encounter
+	public void clearEncounters(int encounterTimeLimit,int currentTime){
+		if(encounterTimeLimit==-1){
+			encounterHistory.clear();
+			encounterHistoryWithNodes.clear();
+			hm.clear();
+		}else{
+			for(int i=encounterHistory.size()-1;i>0;i--){
+				Encounter e=encounterHistory.get(i);
+				
+				if(e.getFinishingTime()==-1 || currentTime-e.getFinishingTime()>encounterTimeLimit){
+					encounterHistory.remove(i);
+				}
+			}
+			
+			for(int i=encounterHistoryWithNodes.size()-1;i>=0;i--){
+				Encounter e=encounterHistoryWithNodes.get(i);
+				if(e.getFinishingTime()==-1 || currentTime-e.getFinishingTime()>encounterTimeLimit){
+					encounterHistoryWithNodes.remove(i);
+				}
+			}
+			
+			Iterator<Entry<Integer, Encounter>> it = hm.entrySet().iterator();
+			while (it.hasNext())
 			{
-				encounterHistory.remove(i);
+			      Entry<Integer, Encounter> e = it.next();
+			      Encounter currentEnc=e.getValue();
+			      if(currentEnc.getFinishingTime()==-1 || currentTime-currentEnc.getFinishingTime()>encounterTimeLimit){
+			    	  it.remove();
+			      }
 			}
 		}
-		*/
+		
 	}
 	
 	public ArrayList<Encounter> getEncounterHistory(){
 		return encounterHistory;
 	}
 	
+	public ArrayList<Encounter> getEncounterHistoryWithNodes(){
+		return encounterHistoryWithNodes;
+	}
+	
 	public int getEncounterCount(){
 		return encounterHistory.size();
 	}
 	
+	public int getEncounterCountWithNodes(){
+		return encounterHistoryWithNodes.size();
+	}
+	
+	public void printHist(){
+    	for(int i=0;i<encounterHistoryWithNodes.size();i++){
+    		System.out.println(encounterHistoryWithNodes.get(i).toString());
+    	}
+    }
+	
+	public ArrayList<Integer> uniqueReceiverIdsEncounterNodes(){
+		ArrayList<Integer> recIds=new ArrayList<Integer>();
+		
+		for(Map.Entry<Integer,Encounter> m:hm.entrySet()){  
+			recIds.add(m.getKey());
+		}  
+		return recIds;
+	}
+		
 	/**********Encounter Related Methods******************/
 	/**********Encounter Related Methods******************/
 	/**********Encounter Related Methods******************/

@@ -1,19 +1,14 @@
 package simtoo;
 
-import routing.RoutingNode;
-
 public class Node extends Positionable{
 
-	private int nodeId;	
+
 	private String datafile;
-	private RoutingNode rn;
 	
-	public Node(int nid,RoutingNode rn){
-		super(nid);
-		this.rn=rn;
+	public Node(int nid,boolean isGPS){
+		super(nid,isGPS);
 		setScreenSpeed(10);
 		setRealSpeed(1);
-		nodeId=nid;
 	}
 		
 

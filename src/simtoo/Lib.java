@@ -2,6 +2,8 @@ package simtoo;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.util.ArrayList;
+
 
 public class Lib {
 
@@ -35,9 +37,7 @@ public class Lib {
 	}
 	
     public static double realdistance(double lat1,double lon1,double lat2,double lon2) {
-    	p("REAL DISTANCE NOT USED!");
-    	return -1;
-    	/*
+    	//*
     	double R = 6371; // Radius of the earth in km
     	double dLat = deg2rad(lat2-lat1);  // deg2rad below
     	double dLon = deg2rad(lon2-lon1); 
@@ -48,14 +48,28 @@ public class Lib {
     	double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
     	double d = R * c; // Distance in km
     	return d*1000;
-    	*/
+    	//*/
     }
     
 
-    /*This method is used in real GPS distance calculation
+    //This method is used in real GPS distance calculation
 	private static double deg2rad(double deg) {
 	  return deg * (Math.PI/180);
 	}
-	*/
-
+	    
+	public static void printPositions(String fname,ArrayList<Position> arr){
+		BufferedWriter bw;
+		try{
+			bw=new BufferedWriter(new FileWriter(fname));
+			
+			for(int i=0;i<arr.size();i++){
+				String str=arr.get(i).realString();
+				bw.write(str);
+				bw.newLine();
+			}
+			bw.close();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 }

@@ -8,11 +8,12 @@ import simtoo.Uav;
 
 public class Computer {
 
-	public static void run(ArrayList<Node> nodes, ArrayList<RoutingNode>  routingNodes, Uav uav, RoutingNode uavRouting,int numberofMessages){
-		Lib.p("Simulation ended");
+	public static void run(ArrayList<Node> nodes, ArrayList<RoutingNode> routingNodes, 
+			ArrayList<Uav> uav, ArrayList<RoutingNode> uavRouting,int numberofMessages){
+
 	
 		ArrayList<RoutingNode> arrcopy = new ArrayList<RoutingNode>(routingNodes);
-		arrcopy.add(uavRouting);
+		arrcopy.addAll(uavRouting);
 		
 		ArrayList<Double> elems=SimLib.successRate(numberofMessages,arrcopy);
 		if(elems.isEmpty()){
@@ -29,12 +30,13 @@ public class Computer {
 			Reporter.writeArrayToFile(arr, "message_delays.txt");
 		}
 		
-		if(Reporter.getNumberOfSentByNodes() !=0 || Reporter.getNumberOfSentByUAV() !=0){
+		if(Reporter.getNumberOfSentByNodes() !=0 || Reporter.getNumberOfSentByUAVs() !=0){
 			Reporter.writePacketsSents();
 		}
 		
 		Lib.p(Reporter.PacketInfo());
-		
+		//Lib.p(Reporter.getDistanceTravelled(uav));
+		Reporter.writeDistanceTravelled(uav);
 	}
 	
 	

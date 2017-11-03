@@ -5,7 +5,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Random;
+
+import random.Random;
 
 
 public class LibRouting {
@@ -18,7 +19,8 @@ public class LibRouting {
 		
 		do {
 			k++;
-			p *= Math.random();
+			//p *= Math.random();
+			p*=Random.get();
 		} while (p > L);
 		
 		return k - 1;
@@ -26,13 +28,14 @@ public class LibRouting {
 	
 	//uniformly distributed random number generator
 	public static int getUniform(int l){
-		Random r=new Random();
-		return r.nextInt(l)+1;
+		//Random r=new Random();
+		//return r.nextInt(l)+1;
+		//Using mersenneTwisterRandom
+		return Random.nextInt(l)+1;
 	}
 	
 	//returns message generation time and message generating node's id in the rows of array
 	public static int[][] posarr(final int numberOfMessages,int lasttime,int messageGeneratingNumberOfNodes,ArrayList<RoutingNode> nodes){
-		Random r=new Random();
 		int[][] arr=new int[numberOfMessages][2]; 
 		for(int i=0;i<numberOfMessages;i++){
 			
@@ -40,7 +43,7 @@ public class LibRouting {
 			arr[i][0]=getUniform(lasttime);
 			
 			//put the id of thhe node that is generating the message
-			arr[i][1]=nodes.get(r.nextInt(messageGeneratingNumberOfNodes)).getId();
+			arr[i][1]=nodes.get(getUniform(messageGeneratingNumberOfNodes)-1).getId();
 
 		}
 		return arr;

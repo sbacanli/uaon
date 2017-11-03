@@ -6,7 +6,7 @@ import simtoo.Position;
  * This class is for holding information for encounters
  * who has encountered with who when and how many times!
  */
-public class Encounter {
+public class Encounter implements Comparable<Encounter> {
 
 	//these integers are for the id of the nodes
 	private int sender,receiver;
@@ -85,6 +85,24 @@ public class Encounter {
 					}
 				}
 			}
+		}
+		return false;
+	}
+
+	@Override
+	public int compareTo(Encounter o) {
+		// TODO Auto-generated method stub
+		if(o.getReceiverId()==getReceiverId()) return 0;
+		if(o.getReceiverId()<getReceiverId()) return -1;
+		return 1;
+	}
+	
+	public boolean equals(Encounter s){
+		if(getReceiverId()==s.getReceiverId() && s.getSenderId()==getSenderId()){
+			return true;
+		}
+		if(getReceiverId()==s.getSenderId() && s.getReceiverId()==getSenderId()){
+			return true;
 		}
 		return false;
 	}

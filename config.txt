@@ -1,0 +1,34 @@
+SimulationName:Epidemic
+//yes or no for Random Mobility
+randomMobility:no
+//some comments here
+dataFolder:NewYork
+interUavsProbability:1.0
+interNodesProbability:1.0
+interProbability:1.0
+CommDistance:250
+Altitude:100
+numberOfNodes:-1
+numberOfUAVs:1
+//2 days as message life : 172800
+MessageLifeInSeconds:7200
+InitialSpiralRadius:200
+EncounterTimeLimit:1200
+//with every rerouting encounters less than 1200 seconds old will be deleted
+//-1 will delete all encounters
+SpeedOfUAVs:15
+MessageTimesForUAVs:300
+MessageTimesForNodes:300
+//plus or minus
+MessageErrorTimesForUAVs:15
+MessageErrorTimesForNodes:15
+//The base will be partitioned to grids which have width XDistance
+GridXDistance:2000
+//The base will be partitioned to grids which have height YDistance
+GridYDistance:2000
+Visible:no
+Shape:Random
+RectangleWidth:1000
+RectangleHeight:1000
+RandomGrid:no
+GPSDistance:no

@@ -1,102 +1,190 @@
 package simtoo;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.io.File;
 import java.util.ArrayList;
 
+import Shapes.RandomPoints;
+import Shapes.Rectangle;
+import Shapes.Shape;
+import Shapes.Spiral;
 import routing.*;
-import simtoo.Lib;
 
 public class Simulator {
 
 	final double COMMDISTANCE;
-	final int numberOfNodes;
-	boolean isRandom;
+	int numberOfNodes;
+	int numberOfUAVs;
+	boolean isRandomMobility;
 	double height;
 	double width;
 	Air air;
 	static Routing nodeRouting;
 	static Routing uavRouting;
+	static Routing interRouting;
 	String simulationName;
 	int realDistance;
 	Datas data;
 	ArrayList<Node> nodes;
 	ArrayList<RoutingNode> routingNodes;
-	Uav myuav;
-	RoutingNode routingNodeUav;
-	double speeduav;
-	int messageLifeInSeconds;
-	int numberOfPositions;
-	int spiralRadiusInitial;
-	String dataFolder; 
+	ArrayList<Uav> uavs;
+	ArrayList<RoutingNode> routingNodeUavs;
+	
+	private double speeduavReal;
+	private int messageLifeInSeconds;
+	private int numberOfPositions;
+	private int spiralRadiusInitial;
+	private String dataFolder; 
+	private int messageTimesForNodes;
+	private int messageTimesForUAVs;
+	private int messageErrorTimesForNodes;
+	private int messageErrorTimesForUAVs;
+	private int GridXDistance,GridYDistance;
+	private boolean isVisible;
+	private String shapeUAV;
+	private int aRect;
+	private int bRect;
+	private String foldername;
+	private boolean randomGrid;
+	private int altitude;
+	private int encounterTimeLimit;
+	private boolean isGPS;
+	
 	
 	public Simulator(Options op,Datas datagiven)
 	{
 		data=datagiven;
-		height=data.getHeight();
-		width=data.getWidth();
+		
 		air=new Air();
 		
 		numberOfPositions=2;
 		
-		realDistance=op.getParamInt("CommDistance");
 		numberOfNodes=op.getParamInt("numberOfNodes");
-		nodeRouting=new Probabilistic(air,op.getParamDouble("nodeProbability"));
-		uavRouting=new Probabilistic(air,op.getParamDouble("uavProbability"));
-		simulationName=op.getParamString("SimulationName");
 		dataFolder=op.getParamString("dataFolder");
-		isRandom=op.getParamBoolean("randomMobility");
+		String seperator="\\";
+		foldername=System.getProperty("user.dir")+"\\datasets"+seperator+dataFolder+seperator+"processedData";
+		
+		//getting the datafiles arraylist to be used for filling the node's movement data
+		ArrayList<File> datafiles=data.getDataFiles(foldername);
+		if(numberOfNodes==-1){
+			numberOfNodes=datafiles.size();
+		}
+		
+		isGPS=op.getParamBoolean("GPSDistance");
+		realDistance=op.getParamInt("CommDistance");
+		numberOfUAVs=op.getParamInt("numberOfUAVs");
+		nodeRouting=new Probabilistic(air,op.getParamDouble("interNodesProbability"));
+		uavRouting=new Probabilistic(air,op.getParamDouble("interUavsProbability"));
+		interRouting=new Probabilistic(air,op.getParamDouble("interProbability"));
+		simulationName=op.getParamString("SimulationName");
+		isRandomMobility=op.getParamBoolean("randomMobility");
 		messageLifeInSeconds=op.getParamInt("MessageLifeInSeconds");
+		speeduavReal=op.getParamInt("SpeedOfUAVs");
+		altitude=op.getParamInt("Altitude");
+		messageTimesForUAVs=op.getParamInt("MessageTimesForUAVs");
+		messageTimesForNodes=op.getParamInt("MessageTimesForNodes");
+		messageErrorTimesForUAVs=op.getParamInt("MessageErrorTimesForUAVs");
+		messageErrorTimesForNodes=op.getParamInt("MessageErrorTimesForNodes");
+		randomGrid=op.getParamBoolean("RandomGrid");
+		encounterTimeLimit=op.getParamInt("EncounterTimeLimit");
+		
+		
+		GridXDistance=op.getParamInt("GridXDistance");
+		GridYDistance=op.getParamInt("GridYDistance");
+		isVisible=op.getParamBoolean("Visible");
+		shapeUAV=op.getParamString("Shape");
+		if(shapeUAV.equals("Rectangle") || shapeUAV.equals("rectangle")){
+			aRect=op.getParamInt("RectangleWidth");
+			bRect=op.getParamInt("RectangleHeight");
+			if(aRect<=0 || bRect <=0){
+				Lib.p("aRect or bRect should be greater than 0");
+				System.exit(-1);
+			}
+			
+		}else if(shapeUAV.equals("spiral") || shapeUAV.equals("Spiral")){
+			spiralRadiusInitial=op.getParamInt("InitialSpiralRadius");
+		}else if(shapeUAV.equals("random") || shapeUAV.equals("Random")){
+			randomGrid=true;
+		}else{
+			Lib.p("Unknown shape type in the config file entry: Shape\r\nIt should be spiral/rectangle/random");
+			System.exit(-1);
+		}
 		
 		nodes=new ArrayList<Node>(numberOfNodes);
 		routingNodes = new ArrayList<RoutingNode>(numberOfNodes);
+		uavs=new ArrayList<Uav>(numberOfUAVs) ;
+		routingNodeUavs=new ArrayList<RoutingNode>(numberOfUAVs);
 		
 		
-	
-		String dataFileName="datasets"+"\\"+dataFolder+"\\"+dataFolder+"_30sec_0";
-		
-		if(!isRandom){
-			data.calculateMaxes(dataFolder);
+		if(!isRandomMobility){
+			data.calculateMaxes(foldername);
+			if(!isVisible){
+				data.makeAllEqual();
+			}
 		}else{	
 			data.calculateMaxesForScreen();
 		}
+		height=data.getHeight();
+		width=data.getWidth();
+		data.setGPS(isGPS);
+		//the parameters are for real coordinates, conversion should be done to virtual
+		//so that the classes can calculate
+		double aRectconverted=data.RealToVirtualDistance(aRect);
+		double bRectconverted=data.RealToVirtualDistance(bRect);
+		double spiralRadiusInitialconverted=data.RealToVirtualDistance(spiralRadiusInitial);
+		
+		for(int i=1;i<=numberOfNodes;i++){
+			RoutingNode rn=new RoutingNode(i);
+			routingNodes.add(rn);
+			nodes.add(new Node(i,isGPS));
+		}
+		
 		
 		for(int i=0;i<numberOfNodes;i++){
-			nodes.add(new Node(i+1));
-			routingNodes.add(new RoutingNode(i+1));
-			if(!isRandom){
-				if(i+1<10){
-					nodes.get(i).setPoints(data.readRealDataForNode(dataFileName+"0"+(i+1)+".txt"));
-				}else{
-					nodes.get(i).setPoints(data.readRealDataForNode(dataFileName+(i+1)+".txt"));
-				}
+			if(!isRandomMobility){
+				nodes.get(i).setPoints(data.readRealDataForNode(datafiles.get(i)));
+				nodes.get(i).setDataFile(datafiles.get(i).getName());
+				//Lib.printPositions("nodefixed"+i+".txt", nodes.get(i).getPositions());
 			}else{
 				ArrayList<PointP> path=data.fillRandomPositions(numberOfPositions);
 				nodes.get(i).addPathsWithScreenCoordinatesAll(path,data);
 			}
 			
+		}//end of for
+		
+		
+		Shape s=null;
+		for(int i=1;i<=numberOfUAVs;i++){
+			RoutingNode rn=new RoutingNode(i*-1);
+			routingNodeUavs.add(rn);
+			
+			double initialX=LibRouting.getUniform((int)width)-1;
+			double initialY=LibRouting.getUniform((int)height)-1;
+			
+			if(shapeUAV.equals("spiral") || shapeUAV.equals("Spiral")){
+				s=new Spiral(spiralRadiusInitialconverted,data.getWidth(),data.getHeight());
+			}else if(shapeUAV.equals("Rectangle") || shapeUAV.equals("rectangle")){
+				//one of the UAV will start from beginning, the other will start from end
+				if(i%2==0){
+					s=new Rectangle(true,aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
+				}else{
+					s=new Rectangle(false,aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
+				}
+				
+			}else if(shapeUAV.equals("random") || shapeUAV.equals("Random")){
+				s=new RandomPoints(data.getWidth(),data.getHeight());
+			}
+			
+			
+			Uav u=new Uav(-1*i,s,speeduavReal,altitude,initialX,initialY,data,rn,randomGrid,encounterTimeLimit);
+			u.setGriderParams(GridXDistance, GridYDistance);
+			u.fillPath(u.getInitialX(),u.getInitialY());
+			uavs.add(u);
+			
 		}
-		
-		/*
-		ArrayList<Position> pts=nodes.get(1).getPoints();
-		for(int i=0;i<pts.size();i++){
-			Lib.p(pts.get(i).toString());
-		}
-		//*/
-		
-		speeduav=30;
-		spiralRadiusInitial=50;
-		
-		myuav=new Uav(-1,speeduav,(double)width/3,(double)height/3,data);
-		//myuav=new Uav(-1,speeduav,100,100,data);
-		
-		routingNodeUav=new RoutingNode(-1);
-		myuav.fillPath(spiralRadiusInitial,myuav.initialX,myuav.initialY);
 		
 		COMMDISTANCE=data.RealToVirtualDistance(realDistance);
 		
-		
-		Reporter.init(simulationName);
+		Reporter.init(toString());
 	
 	}
 	
@@ -112,24 +200,45 @@ public class Simulator {
 		uavRouting=rout;
 	}
 	
+	public boolean isVisible(){
+		return isVisible;
+	}
+	
 	public String getSimulationName(){
 		return simulationName;
+	}
+	
+	
+	public int getMessageErrorTimesForNodes(){
+		return messageErrorTimesForNodes;
+	}
+	
+	public int getMessageErrorTimesForUAVs(){
+		return messageErrorTimesForUAVs;
+	}
+	
+	public int getMessageTimesForNodes(){
+		return messageTimesForNodes;
+	}
+	
+	public int getMessageTimesForUAVs(){
+		return messageTimesForUAVs;
 	}
 	
 	public int getNumberOfNodes(){
 		return numberOfNodes;
 	}
 	
-	public boolean isRandom(){
-		return isRandom;
+	public boolean isRandomMobility(){
+		return isRandomMobility;
 	}
 	
-	public void setRandom(){
-		isRandom=true;
+	public void setRandomMobility(){
+		isRandomMobility=true;
 	}
 	
 	public void unSetRandom(){
-		isRandom=false;
+		isRandomMobility=false;
 	}	
 	
 	public void setRealDistance(int dist){
@@ -140,6 +249,10 @@ public class Simulator {
 		return realDistance;
 	}
 	
+	public boolean isGPS(){
+		return isGPS;
+	}
+	
 	public ArrayList<Node> getNodes(){
 		return nodes;
 	}
@@ -148,12 +261,12 @@ public class Simulator {
 		return routingNodes;
 	}
 	
-	public Uav getUav(){
-		return myuav;
+	public ArrayList<Uav> getUavs(){
+		return uavs;
 	}
 	
-	public RoutingNode getUavRoutingNode(){
-		return routingNodeUav;
+	public ArrayList<RoutingNode> getUavRoutingNodes(){
+		return routingNodeUavs;
 	}
 	
 	public static void nodeRoute(RoutingNode r1,RoutingNode r2, String time){
@@ -167,8 +280,32 @@ public class Simulator {
 		uavRouting.setReceiver(r2);
 		uavRouting.send(time);
 	}
+	
+	public static void uavNodeRoute(RoutingNode uav,RoutingNode r2, String time){
+		interRouting.setSender(uav);
+		interRouting.setReceiver(r2);
+		interRouting.send(time);
+	}
 
 	public double getCommDist(){
 		return COMMDISTANCE;
+	}
+	
+	public String toString(){
+		//text+="_gx_"+GridXDistance+"_gy_"+GridYDistance;
+		String text=getSimulationName()+"_"+dataFolder;
+		if(shapeUAV.equals("Spiral")|| shapeUAV.equals("spiral")){
+			text+="_spiralR_"+spiralRadiusInitial;
+		}else if(shapeUAV.equals("Rectangle")|| shapeUAV.equals("rectangle")){
+			text+="_arect_"+aRect+"_brect_"+bRect;
+		}else{
+			
+		}
+		if(randomGrid){
+			text+="_Random";
+		}
+		return text;
+		
+		
 	}
 }

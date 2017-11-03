@@ -19,6 +19,7 @@ public class Datas {
 	double maxx;
 	int maxtime;
 	int mintime;
+	boolean isGPS;
 	
 	
 	public Datas(double h,double w){
@@ -35,7 +36,15 @@ public class Datas {
 		maxy=0;
 		maxtime=-1;
 		mintime=Integer.MAX_VALUE;
-		
+		isGPS=false;
+	}
+	
+	public boolean isGPS(){
+		return isGPS;		
+	}
+	
+	public void setGPS(boolean b){
+		isGPS=b;
 	}
 	
 	public ArrayList<PointP> fillRandomPositions(int numberOfPoints){
@@ -67,16 +76,16 @@ public class Datas {
 		}
 	}
 	
-	public int getNumberOfNodes(String folderName){
-		int num=0;
+	public ArrayList<File> getDataFiles(String folderName){
+		ArrayList<File> arr=new ArrayList<File>();
 		File f=new File(folderName);
 		File[] files=f.listFiles();
 		for(int i=0;i<files.length;i++){
 			if(files[i].getName().contains(".txt")){
-				num++;
+				arr.add(files[i]);
 			}
 		}
-		return num;
+		return arr;
 	}
 	
 	//the read file should be ordered according to time. Ascending order
@@ -143,6 +152,11 @@ public class Datas {
 		fixHeightWidth();
 	}
 	
+	public void makeAllEqual(){
+		widthOfScreen=getMaxX()-getMinX();
+		heightOfScreen=getMaxY()-getMinY();
+	}
+	
 	private void fixHeightWidth(){
 		double datawidth=getMaxX()-getMinX();
 		double dataheight=getMaxY()-getMinY();
@@ -196,28 +210,28 @@ public class Datas {
 	//reads the real data for the node position to Position ArrayList
 	//the data structure will be like that
 	//timeAsNumberofSeconds Xcord YCord
-	public ArrayList<Position> readRealDataForNode(String fname){
+	public ArrayList<Position> readRealDataForNode(File fname){
 		BufferedReader br=null;
 		String line=null;
 		int i=0;
 		ArrayList<Position> arrposition=new ArrayList<Position>();
 		try{
-			br=new BufferedReader(new FileReader(new File(fname)));
+			br=new BufferedReader(new FileReader(fname));
 			while( (line=br.readLine()) !=null ){
 				StringTokenizer st=new StringTokenizer(line);
 				int time=Integer.parseInt(st.nextToken());
 				double xcord=Double.parseDouble(st.nextToken());
 				double ycord=Double.parseDouble(st.nextToken());
-				xcord=LibRouting.prec(xcord, 2);
-				ycord=LibRouting.prec(ycord, 2);
+				xcord=LibRouting.prec(xcord, 6);
+				ycord=LibRouting.prec(ycord, 6);
 				
 				if(i>0){
 					
 					int prevtime=arrposition.get(arrposition.size()-1).getTime();
 					double prevxcord=arrposition.get(arrposition.size()-1).getRealX();
 					double prevycord=arrposition.get(arrposition.size()-1).getRealY();
-					prevxcord=LibRouting.prec(prevxcord, 2);
-					prevycord=LibRouting.prec(prevycord, 2);
+					prevxcord=LibRouting.prec(prevxcord, 6);
+					prevycord=LibRouting.prec(prevycord, 6);
 					
 					int differenceTime=(int)time-prevtime;
 					double differencex=(xcord-prevxcord)/differenceTime;
@@ -239,15 +253,15 @@ public class Datas {
 							realy=prevycord-h*differencey;
 						}
 						
-						realx=LibRouting.prec(realx, 2);
-						realy=LibRouting.prec(realy, 2);
+						realx=LibRouting.prec(realx, 6);
+						realy=LibRouting.prec(realy, 6);
 						double calcx=convertToScreenX(realx);
 						double calcy=convertToScreenY(realy);
-						calcx=LibRouting.prec(calcx, 2);
-						calcy=LibRouting.prec(calcy, 2);
+						calcx=LibRouting.prec(calcx, 6);
+						calcy=LibRouting.prec(calcy, 6);
 						
 						arrposition.add(new Position(
-										prevtime+h*differenceTime,// updated time
+										prevtime+h,// updated time
 										calcx,calcy, //screen coordinates
 										realx,	//real X coordinate
 										realy   //real Y coordinate

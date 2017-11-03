@@ -1,13 +1,14 @@
 package routing;
 
+import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.StringTokenizer;
+
+import javax.swing.text.Position;
 
 import simtoo.Lib;
-import simtoo.Node;
-import simtoo.Uav;
+
 
 public class SimLib {
 
@@ -170,21 +171,25 @@ public class SimLib {
 				{
 					//packet sent time can not be less than 0
 					System.out.println("PROBLEM in average Message Delay Calculation in SimLib.java");
+					System.out.println("METRICS: "+entered+" "+firstPacketTime);
 				}
 				
-				int s=0;
+				int timeDifferences=0;
 				for(int j=0;j<m.size();j++){
-					s=s+(Integer.parseInt(m.get(j).getTime()) - firstPacketTime);
+					timeDifferences=timeDifferences+(Integer.parseInt(m.get(j).getTime()) - firstPacketTime);
 				}
 				
-				if(s<=0){
+				///it is possible that time differences might be 0
+				//if some message is created at time 10 and also at the same time sent to some node,
+				//then the delay will be 0
+				if(timeDifferences<0){
 					System.out.println("s less than zero in SimLib PROBLEM!!");
 					for(int j=0;j<m.size();j++){
 						System.out.println(m.get(j));
 					}
 				}
 				
-				mdelay[i]=(double)s/(double)(m.size()-1);	
+				mdelay[i]=(double)timeDifferences/(double)(m.size()-1);	
 				
 			}//message is empty null >1 check
 		}
@@ -214,20 +219,6 @@ public class SimLib {
 		return sum/arr.size();
 	}
 	
-	private static RoutingNode searchrec(int id, ArrayList<RoutingNode> a, int lo, int hi) {
-        // possible key indices in [lo, hi)
-        if (hi <= lo) return null;
-        int mid = lo + (hi - lo) / 2;
-        int cmp = a.get(mid).getId()-id;
-        if      (cmp > 0) return searchrec(id, a, lo, mid);
-        else if (cmp < 0) return searchrec(id, a, mid+1, hi);
-        else              return a.get(mid);
-    }
-	
-	public static RoutingNode searchNode(int id, ArrayList<RoutingNode> a) {
-        return searchrec(id, a, 0, a.size());
-    }
-	
 	//gets remaining TTL s for the all messages for the all nodes
 	public static ArrayList<Double> remainings(ArrayList<RoutingNode> nodes){
 		ArrayList<Double> arr=new ArrayList<Double>();
@@ -244,6 +235,30 @@ public class SimLib {
 		return arr; 
 	}
 	
+	//finds the common numbers between ArrayList a and b
+	//returns the arraylist of common numbers
+	public static ArrayList<Integer> commonNumbers(ArrayList<Integer> a, ArrayList<Integer> b){
+		ArrayList<Integer> commons=new ArrayList<Integer>();
+		//if one of them is empty it means no common elements
+		if(a.isEmpty() || b.isEmpty()){
+			return commons;
+		}
+		
+		Collections.sort(a);
+		Collections.sort(b);
+		
+		for(int i=0;i<a.size();i++){
+			for(int j=0;j<b.size();j++){
+				if(a.get(i)<b.get(j)){
+					break;
+				}
+				if(a.get(i)==b.get(j)){
+					commons.add(a.get(i));
+				}
+			}
+		}
 	
+		return commons;
+	}
 	
 }

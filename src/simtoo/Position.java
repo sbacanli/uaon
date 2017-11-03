@@ -1,6 +1,8 @@
 package simtoo;
 
-public class Position {
+import java.util.Comparator;
+
+public class Position implements Comparator<Position> {
 	
 	int time;
 	PointP screenp;
@@ -66,5 +68,19 @@ public class Position {
 	public String toString(){
 		return "Position is "+time+" realX "+real.getX()+" realY "+real.getY()+
 				" screenX "+screenp.getX()+" screenY "+screenp.getY();
+	}
+	
+	public String realString(){
+		return time+"\t"+real.getX()+"\t"+real.getY();
+	}
+
+	@Override
+	public int compare(Position o1, Position o2) {
+		if(o1.time<o2.time){
+			return -1;
+		}else if(o1.time>o2.time){
+			return 1;
+		}
+		return 0;
 	}
 }

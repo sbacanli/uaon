@@ -1,66 +1,82 @@
-package simtoo;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.util.ArrayList;
+package Shapes;
 
-import simtoo.*;
+import simtoo.PointP;
 
-public class Spiral {
+
+public class Spiral extends Shape{
 	double a;
-	double xstart,ystart;
-	ArrayList<PointP> arr;
-	double xlim,ylim;
+	int radiusChange;
 	
-	public Spiral(double a,double xstart, double ystart,double xlim,double ylim){
+	public Spiral(double a,double xlim,double ylim){
+		super(xlim,ylim);
 		this.a=a;
-		this.xstart=xstart;
-		this.ystart=ystart;
-		arr=new ArrayList<PointP>();
-		this.xlim=xlim;
-		this.ylim=ylim;
+		radiusChange=100;
+	}
+
+	public double getA(){
+		return a;
 	}
 	
-	public PointP equation(double t){
+	//xstart and ystart are screen coordinates
+	private PointP equation(double t,double xstart,double ystart){
 		//x(t) = at cos(t), y(t) = at sin(t)
 		double x=a*t*Math.cos(t)+xstart;
 		double y=a*t*Math.sin(t)+ystart;
 		//*
 		if(x>xlim || y>ylim || y<0 || x<0){
-			Lib.p("Limits done for spiral");
+			//Lib.p("Limits done for spiral");
 			return null;
 		}
 		//*/
 		return new PointP(x,y);
 	}
 	
-	public void fill(){
+	//xstart and ystart are screen coordinates
+	public void fill(double xstart,double ystart){
 		double degree=Math.PI/180*10;
 		PointP p=new PointP(0,0);
 		for(double y=degree;p!=null;y=y+degree){
-			p=equation(y);
+			p=equation(y,xstart,ystart);
 			if(p!=null)
-				arr.add(p);
+				addPoint(p.getX(),p.getY());
 		}
 		
-		
 	}
 	
-	public ArrayList<PointP> getPoints(){
-		return arr;
+	public void setRadius(double c){
+		a=c;
 	}
 	
-	public void writeFile(String s){
-		BufferedWriter bw=null;
-		try{
-			bw=new BufferedWriter(new FileWriter(s));
-			for(int j=0;j<arr.size();j++){
-				bw.write(arr.get(j).getX()+"\t"+arr.get(j).getY()+"\r\n");
-			}
-			bw.close();
-		}catch(Exception e){
-			e.printStackTrace();
+	public double getRadius(){
+		return a;
+	}
+	
+	public void increaseRadius(double num){
+		a=a+num;
+	}
+	
+	public void decreaseRadius(double num){
+		a=a-num;
+		if(a<=100){
+			setRadius(radiusChange);
 		}
 	}
 	
+	public void updateFail(){
+		increaseRadius(radiusChange);
+	}
 	
+	public void updateFail(double n){
+		setRadius(n);
+	}
+	
+	public void updateSuccess(){
+		decreaseRadius(radiusChange);
+	}
+
+	@Override
+	public void fill() {
+		// TODO Auto-generated method stub
+		
+	}
 }
