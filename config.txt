@@ -2,7 +2,7 @@ SimulationName:Epidemic
 //yes or no for Random Mobility
 randomMobility:no
 //some comments here
-dataFolder:NewYork
+dataFolder:KAISTnew
 interUavsProbability:1.0
 interNodesProbability:1.0
 interProbability:1.0
@@ -26,9 +26,9 @@ MessageErrorTimesForNodes:15
 GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
-Visible:no
+Visible:yes
 Shape:Random
 RectangleWidth:1000
 RectangleHeight:1000
 RandomGrid:no
-GPSDistance:no
+isGPS:no

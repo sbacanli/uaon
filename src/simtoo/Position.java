@@ -33,6 +33,12 @@ public class Position implements Comparator<Position> {
 		Lib.p("DONT USE NO ARGUEMENT CONSTRUCTOR OF POSITION.JAVA");
 	}
 	
+	public Position(Position p){
+		time=p.time;
+		screenp=new PointP(p.getScreenX(),p.getScreenY());
+		real=new PointP(p.getRealX(),p.getRealY());
+	}
+	
 	public PointP getScreenPoint(){
 		return screenp;
 	}

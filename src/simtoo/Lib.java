@@ -72,4 +72,17 @@ public class Lib {
 			e.printStackTrace();
 		}
 	}
+	
+	private static int binarySearch(int key,ArrayList<Position> parr){
+        int lo = 0;
+        int hi = parr.size() - 1;
+        while (lo <= hi) {
+            // Key is in a[lo..hi] or not present.
+            int mid = lo + (hi - lo) / 2;
+            if      (key < parr.get(mid).getTime()) hi = mid - 1;
+            else if (key > parr.get(mid).getTime()) lo = mid + 1;
+            else return mid;
+        }
+        return -1;
+	}
 }

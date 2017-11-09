@@ -1,13 +1,10 @@
 package routing;
 
-import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import javax.swing.text.Position;
 
-import simtoo.Lib;
 
 
 public class SimLib {

@@ -61,7 +61,7 @@ public class Simulator {
 		numberOfNodes=op.getParamInt("numberOfNodes");
 		dataFolder=op.getParamString("dataFolder");
 		String seperator="\\";
-		foldername=System.getProperty("user.dir")+"\\datasets"+seperator+dataFolder+seperator+"processedData";
+		foldername=System.getProperty("user.dir")+seperator+"datasets"+seperator+dataFolder+seperator+"processedData";
 		
 		//getting the datafiles arraylist to be used for filling the node's movement data
 		ArrayList<File> datafiles=data.getDataFiles(foldername);
@@ -69,7 +69,7 @@ public class Simulator {
 			numberOfNodes=datafiles.size();
 		}
 		
-		isGPS=op.getParamBoolean("GPSDistance");
+		isGPS=op.getParamBoolean("isGPS");
 		realDistance=op.getParamInt("CommDistance");
 		numberOfUAVs=op.getParamInt("numberOfUAVs");
 		nodeRouting=new Probabilistic(air,op.getParamDouble("interNodesProbability"));
@@ -126,6 +126,8 @@ public class Simulator {
 		height=data.getHeight();
 		width=data.getWidth();
 		data.setGPS(isGPS);
+		
+		
 		//the parameters are for real coordinates, conversion should be done to virtual
 		//so that the classes can calculate
 		double aRectconverted=data.RealToVirtualDistance(aRect);
@@ -135,18 +137,14 @@ public class Simulator {
 		for(int i=1;i<=numberOfNodes;i++){
 			RoutingNode rn=new RoutingNode(i);
 			routingNodes.add(rn);
-			nodes.add(new Node(i,isGPS));
-		}
-		
-		
-		for(int i=0;i<numberOfNodes;i++){
+			Node currentNode=new Node(i,isGPS,data);
+			nodes.add(currentNode);
 			if(!isRandomMobility){
-				nodes.get(i).setPoints(data.readRealDataForNode(datafiles.get(i)));
-				nodes.get(i).setDataFile(datafiles.get(i).getName());
-				//Lib.printPositions("nodefixed"+i+".txt", nodes.get(i).getPositions());
+				currentNode.setDataFile(datafiles.get(i-1).getAbsolutePath());
+				currentNode.readData();
 			}else{
 				ArrayList<PointP> path=data.fillRandomPositions(numberOfPositions);
-				nodes.get(i).addPathsWithScreenCoordinatesAll(path,data);
+				currentNode.addPathsWithScreenCoordinatesAll(path,data);
 			}
 			
 		}//end of for
@@ -178,6 +176,7 @@ public class Simulator {
 			Uav u=new Uav(-1*i,s,speeduavReal,altitude,initialX,initialY,data,rn,randomGrid,encounterTimeLimit);
 			u.setGriderParams(GridXDistance, GridYDistance);
 			u.fillPath(u.getInitialX(),u.getInitialY());
+			//Lib.p("filled path "+u.positionsLength());
 			uavs.add(u);
 			
 		}

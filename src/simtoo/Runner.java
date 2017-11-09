@@ -9,7 +9,6 @@ import javax.swing.*;
 
 import com.sun.glass.events.WindowEvent;
 
-import routing.Reporter;
 
 public class Runner {
 

@@ -4,7 +4,6 @@ package simtoo;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -29,6 +28,8 @@ public class Positionable {
 		private boolean routeFinished;
 		private Comparator<Position> positionComparator;
 		private boolean isGPS;
+		private boolean isOnTheMap;
+		int positionsTraced;
 		
 		public Positionable(int nodeId,boolean isGPS){
 
@@ -53,7 +54,9 @@ public class Positionable {
 	            {
 	                return u1.getTime() - u2.getTime();
 	            }
-	        };		        
+	        };	 	
+	        isOnTheMap=false;
+	        positionsTraced=0;
 		}
 		
 		public int getId(){
@@ -329,28 +332,44 @@ public class Positionable {
 		//for every time getScreenPosition or getRealPosiiton is called pointsiterator increased.
 		//If we just want the current position we should call this method		
 		public Position getCurrentPositionWithTime(int giventime){
-			int ret=binarySearch(giventime,pointsp);
-			if(ret==-1){
-				return null;
+			Position returned=null;
+			
+			if(positionsLength()==0){
+				
+				setRouteFinished(true);
+				//Lib.p("routefinished for nodeId "+nodeId);
+			}else{
+				/*
+				if(giventime==getPosition(positionsLength()-1).time){
+					setRouteFinished(true);
+					Lib.p("HEY");
+					isOnTheMap=true;
+					return pointsp.get(positionsLength()-1);
+					
+					
+				}*/		
+				if(isOnTheMap){
+					returned=new Position(getPosition(0));
+					pointsp.remove(0);
+					setRouteFinished(false);
+					//Lib.p("route not finished for nodeId "+nodeId);
+				}else{
+					if(getPosition(0).time==giventime)
+					{
+						returned=new Position(getPosition(0));
+						pointsp.remove(0);
+						setRouteFinished(false);
+					}else{
+						isOnTheMap=false;
+					}
+				}
 			}
-			return pointsp.get(ret);
+				
+			return returned;
 		}
 		
 		public Position getPosition(int t){
 			return pointsp.get(t);
-		}
-		
-		private int binarySearch(int key,ArrayList<Position> parr){
-		        int lo = 0;
-		        int hi = parr.size() - 1;
-		        while (lo <= hi) {
-		            // Key is in a[lo..hi] or not present.
-		            int mid = lo + (hi - lo) / 2;
-		            if      (key < parr.get(mid).getTime()) hi = mid - 1;
-		            else if (key > parr.get(mid).getTime()) lo = mid + 1;
-		            else return mid;
-		        }
-		        return -1;
 		}
 		
 		/******************************************************/

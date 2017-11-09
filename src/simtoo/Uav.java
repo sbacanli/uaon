@@ -81,6 +81,7 @@ public class Uav extends Positionable{
 		s.fill(xpos,ypos);
 		arr=s.getPoints();
 		
+		
 		if(arr==null || arr.isEmpty()){
 			Lib.p("POSITIONS GOT EMPTY AT UAV FILLPATH");
 		}else{
@@ -119,7 +120,6 @@ public class Uav extends Positionable{
 	}
 	
 	public void reRoute(int currentTime){
-		Position lastpos=getLastPosition();
 		PointP p;
 		clearPositions();
 		
