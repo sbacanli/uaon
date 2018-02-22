@@ -2,7 +2,8 @@ SimulationName:Epidemic
 //yes or no for Random Mobility
 randomMobility:no
 //some comments here
-dataFolder:KAISTnew
+dataFolder:NewYork
+isGPS:yes
 interUavsProbability:1.0
 interNodesProbability:1.0
 interProbability:1.0
@@ -16,7 +17,7 @@ InitialSpiralRadius:200
 EncounterTimeLimit:1200
 //with every rerouting encounters less than 1200 seconds old will be deleted
 //-1 will delete all encounters
-SpeedOfUAVs:15
+SpeedOfUAVs:1
 MessageTimesForUAVs:300
 MessageTimesForNodes:300
 //plus or minus
@@ -31,4 +32,3 @@ Shape:Random
 RectangleWidth:1000
 RectangleHeight:1000
 RandomGrid:no
-isGPS:no

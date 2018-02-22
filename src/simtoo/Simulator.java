@@ -46,6 +46,7 @@ public class Simulator {
 	private String foldername;
 	private boolean randomGrid;
 	private int altitude;
+	//this is for the time limit for deleting the encounters after each route finish/
 	private int encounterTimeLimit;
 	private boolean isGPS;
 	
@@ -123,6 +124,16 @@ public class Simulator {
 		}else{	
 			data.calculateMaxesForScreen();
 		}
+		
+		/*
+		Lib.p("maxtime " +data.FindData(foldername, data.getMaxTime()+""));
+		Lib.p("mintime " +data.FindData(foldername, data.getMinTime()+""));
+		Lib.p("maxx " +data.FindData(foldername, data.getMaxX()+""));
+		Lib.p("maxy " +data.FindData(foldername, data.getMaxY()+""));
+		Lib.p(data.getMinX()+" minx " +data.FindData(foldername, data.getMinX()+"" ));
+		Lib.p(data.getMinY()+" miny " +data.FindData(foldername, data.getMinY()+""));
+		//*/
+		
 		height=data.getHeight();
 		width=data.getWidth();
 		data.setGPS(isGPS);
@@ -141,17 +152,19 @@ public class Simulator {
 			nodes.add(currentNode);
 			if(!isRandomMobility){
 				currentNode.setDataFile(datafiles.get(i-1).getAbsolutePath());
-				currentNode.readData();
+				currentNode.readData(data.getMinTime());
 			}else{
 				ArrayList<PointP> path=data.fillRandomPositions(numberOfPositions);
-				currentNode.addPathsWithScreenCoordinatesAll(path,data);
+				currentNode.addPathsWithPoints(path,data,"screen");
+				
 			}
 			
 		}//end of for
 		
 		
-		Shape s=null;
+		
 		for(int i=1;i<=numberOfUAVs;i++){
+			Shape s=null;
 			RoutingNode rn=new RoutingNode(i*-1);
 			routingNodeUavs.add(rn);
 			
@@ -175,8 +188,10 @@ public class Simulator {
 			
 			Uav u=new Uav(-1*i,s,speeduavReal,altitude,initialX,initialY,data,rn,randomGrid,encounterTimeLimit);
 			u.setGriderParams(GridXDistance, GridYDistance);
-			u.fillPath(u.getInitialX(),u.getInitialY());
-			//Lib.p("filled path "+u.positionsLength());
+			u.fillPath(u.getInitialX(),u.getInitialY(),data.getMinTime());
+			
+			//Lib.p("filled path "+u.positionsLength()+" in simulator");
+			//u.writePositions();
 			uavs.add(u);
 			
 		}

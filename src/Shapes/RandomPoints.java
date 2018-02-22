@@ -1,15 +1,11 @@
 package Shapes;
-
+import random.Random;
 
 public class RandomPoints extends Shape{
 	
 	
 	public RandomPoints(double xlim,double ylim){
 		super(xlim,ylim);
-	}
-	
-	public void fill(double xpos,double ypos){
-		addPoint(xpos,ypos);
 	}
 
 	@Override
@@ -29,9 +25,15 @@ public class RandomPoints extends Shape{
 	}
 
 	
-	@Override
 	public void fill() {
-		// TODO Auto-generated method stub
+		double xpos=Random.nextDouble()*xlim;
+		double ypos=Random.nextDouble()*ylim;
+		addPoint(xpos, ypos);
+	}
+
+	@Override
+	public void fill(double xpos, double ypos) {
+		fill();
 		
 	}
 	

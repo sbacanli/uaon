@@ -17,19 +17,12 @@ public class Positionable {
 		
 		private double lastposx;
 		private double lastposy;
-		private double timecalc;
 		private double distancetravelled;
 		
-		private double xa=0;
-		private double ya=0;
-		private double num=0;
 		private ArrayList<Position> pointsp;
-		private int pointsiterator;
 		private boolean routeFinished;
 		private Comparator<Position> positionComparator;
 		private boolean isGPS;
-		private boolean isOnTheMap;
-		int positionsTraced;
 		
 		public Positionable(int nodeId,boolean isGPS){
 
@@ -44,7 +37,6 @@ public class Positionable {
 			speed=1;//used in random mobility, will be changed if not random mobility
 			screenspeed=10;//used in random mobility, will be changed if not random mobility
 			pointsp=new ArrayList<Position>();
-			pointsiterator=0;
 			setRouteFinished(false);
 			distancetravelled=0;
 			
@@ -52,11 +44,9 @@ public class Positionable {
 	        {
 	            public int compare(Position u1, Position u2)
 	            {
-	                return u1.getTime() - u2.getTime();
+	                return (int)(u1.getTime() - u2.getTime());
 	            }
-	        };	 	
-	        isOnTheMap=false;
-	        positionsTraced=0;
+	        };	 
 		}
 		
 		public int getId(){
@@ -95,30 +85,51 @@ public class Positionable {
 			pointsp=arr;
 		}
 		
-		public void addPathsWithRealCoordinatesAll(ArrayList<PointP> path,Datas mydata){
+		public void addPathsWithPoints(ArrayList<PointP> path,Datas mydata,String op){
 			for(int i=0;i<path.size();i++){
 				PointP p=path.get(i);
-				addPathWithRealCoordinates(p.getX(),p.getY(),mydata);
+				if(op.equals("real")) {
+					addPathWithRealCoordinates(p.getX(),p.getY(),mydata);
+				}else if(op.equals("screen")) {
+					addPathWithScreenCoordinates(p.getX(),p.getY(),mydata);
+				}else {
+					Lib.p("No such option for addPathsWithPoints");
+				}
+				
 			}
 		}
 		
-		public void addPathsWithScreenCoordinatesAll(ArrayList<PointP> path,Datas mydata){
+		//option will be screen or real
+		// positions are added based on the time data so the speed is constant
+		//according to the distance and time between the positions
+		public void addPathsWithPositions(ArrayList<Position> path,Datas mydata,String op){
 			for(int i=0;i<path.size();i++){
-				PointP p=path.get(i);
-				addPathWithScreenCoordinates(p.getX(),p.getY(),mydata);
+				Position p1=path.get(i);
+				if(op.equals("real")) {
+					addPathWithRealCoordinatesWithPos(p1,mydata);
+				}else if(op.equals("screen")) {
+					addPathWithScreenCoordinatesWithPos(p1,mydata);
+				}else {
+					Lib.p("No such option for addPathsWithPositions");
+				}
+				
 			}
-		}
+		}		
 		
-		public void addPathWithScreenCoordinates(double xcalc,double ycalc,Datas mydata){
+		private void addPathWithScreenCoordinates(double xcalc,double ycalc,Datas mydata){
+			double xa=0;
+			double ya=0;
+			long timecalc;
+			double num;
 			if(positionsLength() !=0){
 				int lasttime=0;
 				int lastpos=positionsLength()-1;
 				lastposx=pointsp.get(lastpos).getScreenX();
 				lastposy=pointsp.get(lastpos).getScreenY();
-				lasttime=pointsp.get(lastpos).getTime();	
+				lasttime=(int)(pointsp.get(lastpos).getTime());	
 				
 				double distance=Lib.screenDistance(lastposx, lastposy, xcalc, ycalc);
-				timecalc=(distance/screenspeed);// meter/ meter/sec =sec 
+				timecalc=(long) (distance/screenspeed);// meter/ meter/sec =sec 
 				double xdistance=Math.abs(lastposx-xcalc);
 				double ydistance=Math.abs(lastposy-ycalc);
 				
@@ -146,30 +157,33 @@ public class Positionable {
 					
 				}//end of for
 				
-			}
-			
-			if(xcalc >mydata.getWidth() || xcalc < 0 || ycalc <0 || ycalc > mydata.getHeight()){
-				Lib.p("This can not happen");
-				Lib.p(xa+" "+ya+" "+mydata.getWidth()+" "+mydata.getHeight()+" "+xcalc+" "+ycalc+" "+lastposx+" "+lastposy);
-
 			}else{
 				Position p=mydata.getPositionWithScreen(xcalc,ycalc);	
 				p.setTime(0);
 				pointsp.add(p);
 			}
+			
+			if(xcalc >mydata.getWidth() || xcalc < 0 || ycalc <0 || ycalc > mydata.getHeight()){
+				Lib.p("This can not happen");
+				Lib.p(xa+" "+ya+" "+mydata.getWidth()+" "+mydata.getHeight()+" "+xcalc+" "+ycalc+" "+lastposx+" "+lastposy);
+			}
 		}
 		
 		//since the area will be very small latitude and longitude may be used like cartesian coordinate system
-		public void addPathWithRealCoordinates(double xreal,double yreal,Datas mydata){
+		private void addPathWithRealCoordinates(double xreal,double yreal,Datas mydata){
+			double xa=0;
+			double ya=0;
+			long timecalc;
+			double num;
 			if(positionsLength() !=0){
-				int lasttime=0;
+				long lasttime=0;
 				int lastpos=positionsLength()-1;
 				lastposx=pointsp.get(lastpos).getRealX();
 				lastposy=pointsp.get(lastpos).getRealY();
-				lasttime=pointsp.get(lastpos).getTime();	
+				lasttime=(pointsp.get(lastpos).getTime());	
 				
 				double distance=Lib.relativeDistance(lastposx, lastposy, xreal, yreal);
-				timecalc=(distance/speed);
+				timecalc=(long) (distance/speed);
 				double xdistance=Math.abs(lastposx-xreal);
 				double ydistance=Math.abs(lastposy-yreal);
 				
@@ -196,176 +210,170 @@ public class Positionable {
 					pointsp.add(p);
 				}//end of for
 				
-			}//end of if
-			
-			if(xreal >mydata.getMaxX() || xreal < mydata.getMinX() || yreal <mydata.getMinY() || yreal > mydata.getMaxY()){
-				Lib.p("This can not happen:addPathWithRealCoordinates");
 			}else{
 				Position p=mydata.getPositionWithReal(xreal,yreal);		
 				p.setTime(0);
 				pointsp.add(p);
 			}
+			//end of if
 			
-			
-		}		
-			
-		public PointP getScreenPosition(){
-			if(pointsiterator<positionsLength()){
-				setRouteFinished(false);
-			}else{
-				setRouteFinished(true);
-			}
-			
-			if(pointsp==null)
-			{
-				Lib.p("Points Arraylist is null on Positionable.java");
-			}
-			if(pointsp.isEmpty())
-			{
-				Lib.p("Points Arraylist is empty on Positionable.java");
-				Lib.p("Node id: "+nodeId+" ");
-				//some reports
-				Lib.p("--------------------------");
-				Lib.p("Report starts");
-				Lib.p("ID of node is "+nodeId+" ");
-				Lib.p("is route finished "+routeFinished);
-				Lib.p("points iterator "+pointsiterator);
-				Lib.p("size of arrayList "+positionsLength());
-				Lib.p("--------------------------");
-				System.exit(1);
-			}
-			
-			if(pointsiterator>=positionsLength()){
-				return pointsp.get(positionsLength()-1).getScreenPoint();
-			}
-			
-			pointsiterator++;
-			
-			
-			if(pointsiterator>1){
-				double lat1=pointsp.get(pointsiterator-1).getRealX();
-				double lon1=pointsp.get(pointsiterator-1).getRealY();
-				
-				double lat2=pointsp.get(pointsiterator-2).getRealX();
-				double lon2=pointsp.get(pointsiterator-2).getRealY();
-				//Lib.p("distrance Positionable");
-				if(!isGPS){
-					addDistanceTravelled(Lib.relativeDistance(lat1, lon1, lat2, lon2));
-				}else{
-					addDistanceTravelled(Lib.realdistance(lat1, lon1, lat2, lon2));
-				}
-			}
-			return pointsp.get(pointsiterator-1).getScreenPoint();
-		}
-
+			if(xreal >mydata.getMaxX() || xreal < mydata.getMinX() || yreal <mydata.getMinY() || yreal > mydata.getMaxY()){
+				Lib.p("This can not happen:addPathWithRealCoordinates");
+			}			
+		}				
 		
-		//for every time getScreenPosition or getRealPosiiton is called pointsiterator increased.
-		//If we just want the current position we should call this method		
-		public Position getCurrentPosition(){
-			if(pointsiterator==0){
-				return pointsp.get(0);
+		//the position will contain the time information
+		//screen part of the position will be used to put the coordinates to pointsp
+		private void addPathWithScreenCoordinatesWithPos(Position p,Datas mydata){
+			long timeDifference=0;
+			double xcalc=p.getScreenX();
+			double ycalc=p.getScreenY();
+			
+			double xa=0;
+			double ya=0;
+			double num;
+			if(positionsLength() !=0){
+				int lasttime=0;
+				int lastpos=positionsLength()-1;
+				lastposx=pointsp.get(lastpos).getScreenX();
+				lastposy=pointsp.get(lastpos).getScreenY();
+				lasttime=(int)(pointsp.get(lastpos).getTime());	
+				timeDifference=p.getTime()-lasttime;
+				
+				
+				//double distance=Lib.screenDistance(lastposx, lastposy, xcalc, ycalc);
+				double xdistance=Math.abs(lastposx-xcalc);
+				double ydistance=Math.abs(lastposy-ycalc);
+				
+				for(int k=1;k<=timeDifference;k++){
+					num=((double)k)/timeDifference;
+					if(lastposx>=xcalc && lastposy>=ycalc){
+						xa=lastposx-num*xdistance;
+						ya=lastposy-num*ydistance;		
+					}else if(lastposx>=xcalc && lastposy<=ycalc){
+						xa=lastposx-num*xdistance;
+						ya=lastposy+num*ydistance;
+					}else if(lastposx<=xcalc && lastposy>=ycalc){
+						xa=lastposx+num*xdistance;
+						ya=lastposy-num*ydistance;
+					}else{//lastposx<x %% lastposy<y
+						xa=lastposx+num*xdistance;
+						ya=lastposy+num*ydistance;
+					}
+					
+					Position pCreated=mydata.getPositionWithScreen(xa,ya);
+					lasttime++;
+					pCreated.setTime(lasttime);
+					pointsp.add(pCreated);
+					
+				}//end of for
+				
+			}else{
+				//this is only done if the arraylist is empty. Arraylist will be empty at the beginning of the
+				//simulation only.
+				p=mydata.getPositionWithScreen(p.getScreenX(), p.getScreenY());
+				p.setTime(mydata.getMinTime());
+				pointsp.add(p);
 			}
-			if(pointsiterator>=positionsLength()){
-				return pointsp.get(positionsLength()-1);
+			
+			if(xcalc >mydata.getWidth() || xcalc < 0 || ycalc <0 || ycalc > mydata.getHeight()){
+				Lib.p("This can not happen");
+				Lib.p(xa+" "+ya+" "+mydata.getWidth()+" "+mydata.getHeight()+" "+xcalc+" "+ycalc+" "+lastposx+" "+lastposy);
+
 			}
-			return pointsp.get(pointsiterator-1);
 		}
+		
+		//the position will contain the time information
+		//real part of the position will be used to put the coordinates to pointsp
+		private void addPathWithRealCoordinatesWithPos(Position p,Datas mydata){
+			double xreal=p.getRealX();
+			double yreal=p.getRealY();
+			double xa=0;
+			double ya=0;
+			double num;
+			if(positionsLength() !=0){
+				long lasttime=0;
+				int lastpos=positionsLength()-1;
+				lastposx=pointsp.get(lastpos).getRealX();
+				lastposy=pointsp.get(lastpos).getRealY();
+				lasttime=(pointsp.get(lastpos).getTime());	
+				long timeDifference=p.time-lasttime;
+				
+				
+				//double distance=Lib.relativeDistance(lastposx, lastposy, xreal, yreal);
+				double xdistance=Math.abs(lastposx-xreal);
+				double ydistance=Math.abs(lastposy-yreal);
+				
+				for(int k=1;k<=timeDifference;k++){
+					num=((double)k)/timeDifference;
+					if(lastposx>=xreal && lastposy>=yreal){
+						xa=lastposx-num*xdistance;
+						ya=lastposy-num*ydistance;		
+					}else if(lastposx>=xreal && lastposy<=yreal){
+						xa=lastposx-num*xdistance;
+						ya=lastposy+num*ydistance;
+					}else if(lastposx<=xreal && lastposy>=yreal){
+						xa=lastposx+num*xdistance;
+						ya=lastposy-num*ydistance;
+					}else{//lastposx<x %% lastposy<y
+						xa=lastposx+num*xdistance;
+						ya=lastposy+num*ydistance;
+					}
+					
+					Position pCreated=mydata.getPositionWithReal(xa,ya);
+					lasttime++;
+					pCreated.setTime(lasttime);
+					pointsp.add(pCreated);
+				}//end of for
+				
+			}else{
+				p=mydata.getPositionWithReal(p.getRealX(), p.getRealY());
+				p.setTime(mydata.getMinTime());
+				pointsp.add(p);
+			}	
+			//end of if
+			
+			if(xreal >mydata.getMaxX() || xreal < mydata.getMinX() || yreal <mydata.getMinY() || yreal > mydata.getMaxY()){
+				Lib.p("This can not happen:addPathWithRealCoordinates");
+			}		
+		}
+		
+		
 		
 		/***************************************************/
-		public PointP getScreenPositionWithTime(int giventime){
-			PointP returned=null;
-			
-			if(pointsiterator<positionsLength()){
-				setRouteFinished(false);
-			}else{
-				setRouteFinished(true);
-				return pointsp.get(positionsLength()-1).getScreenPoint();
-			}
-			
-			if(pointsp==null)
-			{
-				Lib.p("Points Arraylist is null on Positionable.java");
-			}
-			if(pointsp.isEmpty())
-			{
-				Lib.p("Points Arraylist is empty on Positionable.java");
-				Lib.p("Node id: "+nodeId+" ");
-				//some reports
-				Lib.p("--------------------------");
-				Lib.p("Report starts");
-				Lib.p("ID of node is "+nodeId+" ");
-				Lib.p("is route finished "+routeFinished);
-				Lib.p("points iterator "+pointsiterator);
-				Lib.p("size of arrayList "+positionsLength());
-				Lib.p("--------------------------");
-				System.exit(1);
-			}
-			
-			if(pointsp.get(pointsiterator).time == giventime){
-				returned=pointsp.get(pointsiterator).getScreenPoint();
-				pointsiterator++;
-			}else{
-				returned=null;
-			}
-			
-			
-			
-			if(pointsiterator>1){
-				double lat1=pointsp.get(pointsiterator-1).getRealX();
-				double lon1=pointsp.get(pointsiterator-1).getRealY();
-				
-				double lat2=pointsp.get(pointsiterator-2).getRealX();
-				double lon2=pointsp.get(pointsiterator-2).getRealY();
-				
-				//Lib.p("distrance Positionable");
-				if(!isGPS){
-					addDistanceTravelled(Lib.relativeDistance(lat1, lon1, lat2, lon2));
-				}else{
-					addDistanceTravelled(Lib.realdistance(lat1, lon1, lat2, lon2));
-				}
-			}
-			
-			return returned;
-		}
-
-		
 		//for every time getScreenPosition or getRealPosiiton is called pointsiterator increased.
 		//If we just want the current position we should call this method		
-		public Position getCurrentPositionWithTime(int giventime){
+		public Position getCurrentPositionWithTime(long giventime){
 			Position returned=null;
 			
 			if(positionsLength()==0){
-				
 				setRouteFinished(true);
-				//Lib.p("routefinished for nodeId "+nodeId);
-			}else{
-				/*
-				if(giventime==getPosition(positionsLength()-1).time){
-					setRouteFinished(true);
-					Lib.p("HEY");
-					isOnTheMap=true;
-					return pointsp.get(positionsLength()-1);
-					
-					
-				}*/		
-				if(isOnTheMap){
-					returned=new Position(getPosition(0));
-					pointsp.remove(0);
-					setRouteFinished(false);
-					//Lib.p("route not finished for nodeId "+nodeId);
-				}else{
-					if(getPosition(0).time==giventime)
-					{
-						returned=new Position(getPosition(0));
-						pointsp.remove(0);
-						setRouteFinished(false);
-					}else{
-						isOnTheMap=false;
-					}
-				}
-			}
-				
+			}else if(getPosition(0).time==giventime)
+			{
+				returned=new Position(getPosition(0));
+				setRouteFinished(false);
+				calculateDistance();
+				pointsp.remove(0);
+			}	
 			return returned;
+		}
+		
+		public void calculateDistance() {
+			if(!isGPS){
+				double lat1=getPosition(0).getRealX();
+				double lon1=getPosition(0).getRealY();
+				
+				double lat2=getPosition(1).getRealX();
+				double lon2=getPosition(1).getRealY();
+				addDistanceTravelled(Lib.relativeDistance(lat1, lon1, lat2, lon2));
+			}else{
+				double lat1=getPosition(0).getRealX();
+				double lon1=getPosition(0).getRealY();
+				
+				double lat2=getPosition(1).getRealX();
+				double lon2=getPosition(1).getRealY();
+				addDistanceTravelled(Lib.realdistance(lat1, lon1, lat2, lon2));
+			}
 		}
 		
 		public Position getPosition(int t){
@@ -407,14 +415,35 @@ public class Positionable {
 		}
 		
 		public void clearPositions(){
+			pointsp.clear();
+			/*
 			if(!pointsp.isEmpty()){
 				pointsp.subList(0,pointsp.size()-1).clear();
-				pointsiterator=0;
 			}
+			//*/
+		}
+		
+		public Position dequeuePosition() {
+			//Position p=new Position(getPosition(0));
+			try {
+			return pointsp.remove(0);
+			}catch(Exception e) {
+				e.printStackTrace();
+				//System.exit();
+			}
+			return null;
+			
 		}
 		
 		public int positionsLength(){
 			return pointsp.size();
 		}
-	
+		
+		public void writePositions() {
+			Lib.p("Writing positions in Positionable.java");
+			for(int i=0;i<pointsp.size();i++) {
+				Lib.p(getPosition(i).toString());
+			}
+		}
+		
 }

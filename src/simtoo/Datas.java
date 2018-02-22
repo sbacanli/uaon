@@ -8,19 +8,19 @@ import java.io.*;
 
 public class Datas {
 
-	Random r;
-	int linenumlimit=0;
+	private Random r;
+	private int linenumlimit=0;
 	static double widthOfScreen;
 	static double heightOfScreen;
-	ArrayList<ArrayList<Double>> arr;
-	double minx;
-	double miny;
-	double maxy;
-	double maxx;
-	int maxtime;
-	int mintime;
-	boolean isGPS;
-	int precision;
+	private ArrayList<ArrayList<Double>> arr;
+	private double minx;
+	private double miny;
+	private double maxy;
+	private double maxx;
+	private long maxtime;
+	private long mintime;
+	private boolean isGPS;
+	private int precision;
 	
 	public Datas(double h,double w){
 		linenumlimit=1000;
@@ -30,12 +30,12 @@ public class Datas {
 		
 		r=new Random();
 		arr=new ArrayList<ArrayList<Double>>();
-		minx=0;
-		miny=0;
-		maxx=0;
-		maxy=0;
-		maxtime=-1;
-		mintime=Integer.MAX_VALUE;
+		minx=Double.MAX_VALUE;
+		miny=Double.MAX_VALUE;
+		maxx=Double.MIN_VALUE;
+		maxy=Double.MIN_VALUE;
+		maxtime=Long.MIN_VALUE;
+		mintime=Long.MAX_VALUE;
 		isGPS=false;
 		precision=6;
 	}
@@ -82,7 +82,7 @@ public class Datas {
 		File f=new File(folderName);
 		File[] files=f.listFiles();
 		for(int i=0;i<files.length;i++){
-			if(files[i].getName().contains(".txt")){
+			if(files[i].getName().contains(".txt") && files[i].length() != 0){
 				arr.add(files[i]);
 			}
 		}
@@ -95,14 +95,15 @@ public class Datas {
 		BufferedReader br=null;
 		String line=null;
 		//boolean firstread=false;
-		double xcord,ycord,time=0;
-		
+		double xcord,ycord=0;
+		long time=0l;
+		StringTokenizer st=null;
 		try{
 			br=new BufferedReader(new FileReader(new File(fname)));
 			while( (line=br.readLine()) !=null ){
 
-				StringTokenizer st=new StringTokenizer(line);
-				time=Integer.parseInt(st.nextToken());
+				st=new StringTokenizer(line);
+				time=Long.parseLong(st.nextToken());
 				xcord=Double.parseDouble(st.nextToken());
 				ycord=Double.parseDouble(st.nextToken());
 				/*
@@ -123,27 +124,71 @@ public class Datas {
 				if(ycord<miny){
 					miny=ycord;
 				}
-				
+				if(time>maxtime){
+					maxtime= time;
+				}
+				if(time<mintime){
+					mintime=time;
+				}
+				st=null;
 			}
-			
+			st=null;
+			br.close();
 		}catch(Exception e){
-			Lib.p(e.toString());
+			e.printStackTrace();
+		}	
+	}	
+	//*/
+	
+	public String FindData(String folderName,String searched){
+		File f=new File(folderName);
+		File[] files=f.listFiles();
+		for(int i=0;i<files.length;i++){
+			String res=findDataInDataSet(files[i].getPath(),searched);
+			if(res != null) {
+				return "In file "+files[i].getPath()+" line "+res;
+			}
 		}
-		if((int)time>maxtime){
-			maxtime=(int) time;
-		}
-		if((int)time<mintime){
-			mintime=(int) time;
-		}
-		
-		maxx=LibRouting.prec(maxx, precision);
-		minx=LibRouting.prec(minx, precision);
-		miny=LibRouting.prec(miny, precision);
-		minx=LibRouting.prec(minx, precision);
-		
+		return "Not Found";
 	}
 	
-	//*/
+	private String findDataInDataSet(String fname,String searched){
+		BufferedReader br=null;
+		String line=null;
+		//boolean firstread=false;
+		double xcord,ycord=0;
+		long time=0l;
+		StringTokenizer st=null;
+		try{
+			br=new BufferedReader(new FileReader(new File(fname)));
+			while( (line=br.readLine()) !=null ){
+
+				st=new StringTokenizer(line);
+				time=Long.parseLong(st.nextToken());
+				xcord=Double.parseDouble(st.nextToken());
+				ycord=Double.parseDouble(st.nextToken());
+				if(searched.contains(".") || searched.contains(",")) {
+					double d1=Double.parseDouble(searched);
+					if(d1==xcord || d1==ycord) {
+						return line;
+					}
+				}else {
+					if(time== Long.parseLong(searched)) {
+						return line;
+					}
+				}
+				st=null;
+				
+			}
+			st=null;
+			br.close();
+		
+		}catch( IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+		
+	}
 	
 	public void calculateMaxesForScreen(){
 		miny=0;
@@ -156,6 +201,12 @@ public class Datas {
 	public void calculateMaxes(String fname){
 		calculateMaxesByProcessing(fname);
 		fixHeightWidth();
+		/*
+		maxx=LibRouting.prec(maxx, precision);
+		minx=LibRouting.prec(minx, precision);
+		miny=LibRouting.prec(miny, precision);
+		minx=LibRouting.prec(minx, precision);
+		//*/
 	}
 	
 	public void makeAllEqual(){
@@ -192,12 +243,12 @@ public class Datas {
 			
 			while(count<numberOfLinesToBeRead && (line=br.readLine())!= null){
 				st=new StringTokenizer(line);
-				int time=Integer.parseInt(st.nextToken());
+				long time=Long.parseLong(st.nextToken());
 				double xcord=Double.parseDouble(st.nextToken());
 				double ycord=Double.parseDouble(st.nextToken());
 				double calcx=convertToScreenX(xcord);
 				double calcy=convertToScreenY(ycord);
-				arrposition.add(new Position((int)time,calcx,calcy,xcord,ycord));
+				arrposition.add(new Position(time,calcx,calcy,xcord,ycord));
 				count++;
 				
 			}
@@ -271,7 +322,7 @@ public class Datas {
 			br=new BufferedReader(new FileReader(fname));
 			while( (line=br.readLine()) !=null ){
 				StringTokenizer st=new StringTokenizer(line);
-				int time=Integer.parseInt(st.nextToken());
+				long time=Long.parseLong(st.nextToken());
 				double xcord=Double.parseDouble(st.nextToken());
 				double ycord=Double.parseDouble(st.nextToken());
 				xcord=LibRouting.prec(xcord, precision);
@@ -279,13 +330,13 @@ public class Datas {
 				
 				if(i>0){
 					
-					int prevtime=arrposition.get(arrposition.size()-1).getTime();
+					long prevtime=arrposition.get(arrposition.size()-1).getTime();
 					double prevxcord=arrposition.get(arrposition.size()-1).getRealX();
 					double prevycord=arrposition.get(arrposition.size()-1).getRealY();
 					prevxcord=LibRouting.prec(prevxcord, precision);
 					prevycord=LibRouting.prec(prevycord, precision);
 					
-					int differenceTime=(int)time-prevtime;
+					int differenceTime=(int)(time-prevtime);
 					double differencex=(xcord-prevxcord)/differenceTime;
 					double differencey=(ycord-prevycord)/differenceTime;
 					
@@ -556,14 +607,14 @@ public class Datas {
 	public String toString(){
 		return "Data maxX "+getMaxX()+" MaxY "+getMaxY()+" MinX "+getMinX()+" MinY "+getMinY()
 		+"\r\n width "+getWidth()+" height "+getHeight()
-		+"\r\n maxtime "+maxtime+" mintime "+mintime;
+		+"\r\n mintime "+mintime+" maxtime "+maxtime+"\r\n"+"Simulation duration: "+(maxtime-mintime);
 	}
 	
-	public int getMinTime(){
+	public long getMinTime(){
 		return mintime;
 	}
 	
-	public int getMaxTime(){
+	public long getMaxTime(){
 		return maxtime;
 	}
 	

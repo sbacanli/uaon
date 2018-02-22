@@ -481,7 +481,7 @@ public class RoutingNode{
 	/**********Contact Related Methods******************/
 	/**We are using Encounter object for recording current contacts**/
 
-	public void addContact(int idcon,Position p,int time){
+	public void addContact(int idcon,Position p,long time){
 		//sender is always this node
 		for(int i=0;i<contacts.size();i++){
 			if(contacts.get(i).getReceiverId()==idcon)
@@ -581,7 +581,7 @@ public class RoutingNode{
 	}
 	
 	///encounter object has finishing time -1 if it hasn't finished yet
-	public Encounter finishEncounter(int nodeId,int time){
+	public Encounter finishEncounter(int nodeId,long time){
 		Encounter e=null;
 		for(int i=0;i<encounterHistory.size();i++){
 			e=encounterHistory.get(i);
@@ -606,7 +606,7 @@ public class RoutingNode{
 		return e;
 	}
 	
-	public void addEncounter(int nodeId,Position p,int time){
+	public void addEncounter(int nodeId,Position p,long time){
 		Encounter e=new Encounter(getId(),nodeId,p,time);
 		encounterHistory.add(e);
 		if(nodeId>0){
@@ -616,7 +616,7 @@ public class RoutingNode{
 	}
 	
 	//It will only clear the ones that are already finished.
-	public void clearEncounters(int encounterTimeLimit,int currentTime){
+	public void clearEncounters(int encounterTimeLimit,long currentTime){
 		if(encounterTimeLimit==-1){
 			encounterHistory.clear();
 			encounterHistoryWithNodes.clear();

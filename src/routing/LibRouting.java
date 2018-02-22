@@ -1,6 +1,7 @@
 package routing;
 
 import java.sql.Date;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -10,6 +11,12 @@ import random.Random;
 
 
 public class LibRouting {
+	
+	private static DecimalFormat dec;
+	
+	public static void init() {
+		dec = new DecimalFormat("#0.000000");
+	}
 	
 	//given the mean (lambda) it creates poisson random variables
 	public static int getPoisson(double lambda) {
@@ -61,24 +68,22 @@ public class LibRouting {
 	//precedence corrector
 	//for a given double number d,i number of numbers after the point is returned;
 	public static double prec(double d,int i){
-		int s=(int) Math.pow(10, i);
-		d=d*s;   
-		double d1=(int)d;
-		return d1/s;
+		return limitPrecision(d,i);
+		//return Double.parseDouble(dec.format(d));
+		//return Double.parseDouble(precstr(d,i));
 	}
 	
 	//gets the rounded number d to digit i
 	public static String precstr(double d,int i){
-		String f=d+"";
-		int pospoint=f.indexOf(".")+1;
-		if(pospoint==0){
-			return f+".0000";
-		}
-		int numdigits=f.length()-pospoint;
-		
-		for(int j=0;j<i-numdigits;j++)
-			f=f+"0";
-		return f;
+		return String.format("%."+i+"f", d);
+	}
+	
+	//Limit precision from 
+	//https://stackoverflow.com/questions/14845937/java-how-to-set-precision-for-double-value
+	private static double limitPrecision(double num, int maxDigitsAfterDecimal) {
+	    int multiplier = (int) Math.pow(10, maxDigitsAfterDecimal);
+	    double truncated = (double) ((long) (num * multiplier)) / multiplier;
+	    return truncated;
 	}
 	
 	//if date s1 is greater than s2 returns true else false
@@ -93,7 +98,7 @@ public class LibRouting {
         }catch(ParseException e){
         	System.out.println(e);
         }
-		System.out.println("Problem in comparison "+s1+" "+s2);
+		System.out.println("Problem in comparison "+s1+" "+s2+" LibRouting.java");
 		return false;
 	}
 	

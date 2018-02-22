@@ -9,6 +9,8 @@ import javax.swing.*;
 
 import com.sun.glass.events.WindowEvent;
 
+import routing.LibRouting;
+
 
 public class Runner {
 
@@ -30,35 +32,42 @@ public class Runner {
 				double width = screenSize.width;
 
 				//Lib.p("SCREEN "+height+" "+width);
-			
+				LibRouting.init();
 				Datas data=new Datas(height,width);
 				Simulator simulator=new Simulator(op,data);
 				
 				
 				SimPanel simpanel=new SimPanel(simulator,data,simulator.isVisible());
 				//RightPanel rp=new RightPanel(simulator);
-				JFrame j=new JFrame(simulator.getSimulationName());	
+				if(simulator.isVisible()) {
+					simpanel.startTimer();
+					JFrame j=new JFrame(simulator.getSimulationName());	
+					
+					j.setLayout(new BorderLayout());
+					j.add(simpanel, BorderLayout.CENTER);
+					//j.add(rp, BorderLayout.EAST);
+					//j.add(simpanel);
+					//j.add(rp);
+					
+					j.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+					
+					j.addWindowListener(new WindowAdapter() {
+						  public void windowClosing(WindowEvent we) {
+							  j.dispose();
+							  Lib.p("DONE");
+							  System.exit(0);
+						  }
+					});
+					
+					//j.setPreferredSize(new Dimension(700,600));
+					j.pack();
+					j.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+					j.setVisible(simulator.isVisible());
+					
+				}else {
+					simpanel.processTime();
+				}
 				
-				j.setLayout(new BorderLayout());
-				j.add(simpanel, BorderLayout.CENTER);
-				//j.add(rp, BorderLayout.EAST);
-				//j.add(simpanel);
-				//j.add(rp);
-				
-				j.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				
-				j.addWindowListener(new WindowAdapter() {
-					  public void windowClosing(WindowEvent we) {
-						  j.dispose();
-						  Lib.p("DONE");
-						  System.exit(0);
-					  }
-				});
-				
-				//j.setPreferredSize(new Dimension(700,600));
-				j.pack();
-				j.setExtendedState(JFrame.MAXIMIZED_BOTH); 
-				j.setVisible(simulator.isVisible());
 	}
 
 	public static void runinvisible(String confFile){
@@ -73,12 +82,7 @@ public class Runner {
 				
 				Datas data=new Datas(height,width);
 				Simulator simulator=new Simulator(op,data);
-				
-				TimerTask t=new invisibleRunner(simulator, data);
-				Timer timer=new Timer(true);
-				
-				int period=1;
-				timer.schedule(t, 1, period);
-				
+								SimPanel simpanel=new SimPanel(simulator,data,simulator.isVisible());
+				simpanel.processTime();
 	}
 }

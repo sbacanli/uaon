@@ -225,9 +225,11 @@ public class Reporter {
 	public static void finish(){
 		//close the file writer
 		try{
-			bwriter.close();
+			if(bwriter!=null) {
+				bwriter.close();
+			}			
 		}catch(Exception e){
-			Lib.p(e.toString());
+			e.printStackTrace();
 		}
 		//print the number of seconds/minutes of run time
 		printExecutionTime();

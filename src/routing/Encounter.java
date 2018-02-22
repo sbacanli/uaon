@@ -10,7 +10,7 @@ public class Encounter implements Comparable<Encounter> {
 
 	//these integers are for the id of the nodes
 	private int sender,receiver;
-	private int startingTime,finishingTime;
+	private long startingTime,finishingTime;
 	private Position p;
 	
 	public Encounter(){
@@ -21,7 +21,7 @@ public class Encounter implements Comparable<Encounter> {
 		p=null;
 	}
 	
-	public Encounter(int senderg,int receiverg,Position pg,int timegiven){
+	public Encounter(int senderg,int receiverg,Position pg,long timegiven){
 		sender=senderg;
 		receiver=receiverg;
 		startingTime=timegiven;
@@ -38,7 +38,7 @@ public class Encounter implements Comparable<Encounter> {
 		p=e.getPosition();
 	}
 	
-	public int getStartingTime(){
+	public long getStartingTime(){
 		return startingTime;
 	}
 	
@@ -46,11 +46,11 @@ public class Encounter implements Comparable<Encounter> {
 		startingTime=timet;
 	}
 	
-	public int getFinishingTime(){
+	public long getFinishingTime(){
 		return finishingTime;
 	}
 	
-	public void setFinishingTime(int timet){
+	public void setFinishingTime(long timet){
 		finishingTime=timet;
 	}
 	

@@ -2,7 +2,6 @@ package simtoo;
 import routing.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import Shapes.*;
 import grider.Grider;
@@ -24,8 +23,8 @@ public class Uav extends Positionable{
 	Shape s;
 	Grider g;
 	int encounterTimeLimit;
-	HashMap<String,Double> locations;
 	ArrayList<PointP> oldpoints;
+	Position prevPosition;
 	
 	Uav(int uid,Shape sg,double speedreal,int altitudegiven,
 			double xpos,double ypos,Datas givendata,RoutingNode rn,boolean rg,int encounterTimeLimit){
@@ -37,6 +36,13 @@ public class Uav extends Positionable{
 		initialX=xpos;
 		initialY=ypos;
 		mydata=givendata;
+		
+		PointP genPoint=new PointP(xpos, ypos);
+		Position posGen=new Position(mydata.getMinTime(), genPoint, genPoint);
+		ArrayList<Position> p1=new ArrayList<Position>();
+		p1.add(posGen);
+		addPathsWithPositions(p1,mydata,"screen");
+		
 		xnum=0;
 		ynum=0;
 		prevEnc=new ArrayList<Encounter>();
@@ -47,9 +53,8 @@ public class Uav extends Positionable{
 			initialParamSpiral=((Spiral) s).getA();
 		}
 		this.encounterTimeLimit=encounterTimeLimit;
-		locations=new HashMap<String,Double>();
-		locations.put("Random", (double) 1.0);
 		oldpoints=new ArrayList<PointP>();
+		prevPosition=null;
 	}
 	
 	public void setShape(Shape sg){
@@ -75,7 +80,7 @@ public class Uav extends Positionable{
 	
 
 	
-	public void fillPath(double xpos,double ypos){
+	public void fillPath(double xpos,double ypos,long time){
 		//initial X and Y coordinate on the screen
 		ArrayList<PointP> arr=null;
 		s.fill(xpos,ypos);
@@ -85,16 +90,14 @@ public class Uav extends Positionable{
 		if(arr==null || arr.isEmpty()){
 			Lib.p("POSITIONS GOT EMPTY AT UAV FILLPATH");
 		}else{
-			for(int i=0;i<arr.size();i++){
-				addPathWithScreenCoordinates(arr.get(i).getX(),arr.get(i).getY(),mydata);
-				/*
-				if(i!=arr.size()-1){
-					double ds=Lib.screenDistance(arr.get(i).getX(),arr.get(i).getY(),arr.get(i+1).getX(),arr.get(i+1).getY());
-					addDistanceTravelled(mydata.VirtualToRealDistance((int)ds));
-				}*/
-			}
+			addPathsWithPoints(arr,mydata,"screen");	
 		}
-
+		//time++;
+		
+		for(int i=0;i<getPositions().size();i++){
+			getPosition(i).setTime(time);
+			time++;
+		}
 	}
 	
 	public void setGriderParams(int xi,int yi){
@@ -119,9 +122,9 @@ public class Uav extends Positionable{
 		return p1;
 	}
 	
-	public void reRoute(int currentTime){
+	public void reRoute(long currentTime){
 		PointP p;
-		clearPositions();
+		//clearPositions();
 		
 		double newx=0;
 		double newy=0;
@@ -175,7 +178,7 @@ public class Uav extends Positionable{
 		//now they are screen coordinates
 		
 			
-		fillPath(newx,newy);
+		fillPath(newx,newy,currentTime);
 		
 		
         //setRouteFinished(false);
@@ -251,5 +254,61 @@ public class Uav extends Positionable{
 			
 		}//end of else if encounterhistorywithnodes
 	}
-		
+	
+	@Override
+	public Position getCurrentPositionWithTime(long giventime){
+		int lengthBefore=positionsLength();
+		//Lib.p("Length Before: "+positionsLength());
+		Position returned=null;
+		if(positionsLength()==1) {
+			if(getPosition(0).time==giventime)
+			{	
+				/*
+				Lib.p("TIME IS "+giventime);
+				Lib.p("first size "+positionsLength());
+				writePositions();
+	        	//*/
+				//returned=new Position(getPosition(0));
+				//THIS PART IS IMPORTANT!!!
+				//we will get the first one on the queue and we will add the remaining positions
+				// we dont remove the first one now because the added ones should continue from the first
+				//position
+				reRoute(giventime);
+				//now we need to remove the first
+				
+				returned=dequeuePosition();
+				
+				//Lib.p("sizeXXXXXX");
+				
+				/*
+				Lib.p("second size "+positionsLength());
+				writePositions();
+	        	//*/
+				
+			}else {
+				//Lib.p("Not dequeued");
+			}
+		}else {
+			if(getPosition(0).time==giventime)
+			{			
+				//returned=new Position(getPosition(0));
+				returned=dequeuePosition();
+				
+				//Lib.p("DEqued here");
+			}else {
+				//Lib.p("Not dequeued2");
+			}
+		}
+		int lengthAfter=positionsLength();
+		if(lengthBefore==lengthAfter) {
+			//Lib.p("Returned : "+returned+" size of arraylist "+positionsLength());
+		}
+		if(returned == null) {
+			Lib.p("NULL AT UAV.java NOT POSSIBLE!!!");
+			Lib.p("time is: "+giventime);
+			
+		}
+		return returned;
+	}
+	
 }

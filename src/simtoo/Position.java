@@ -4,12 +4,12 @@ import java.util.Comparator;
 
 public class Position implements Comparator<Position> {
 	
-	int time;
+	long time;
 	PointP screenp;
 	PointP real;
 	
 	
-	public Position(int time,double screenx,double screeny,double xx,double yy){
+	public Position(long time,double screenx,double screeny,double xx,double yy){
 		if(Double.isNaN(screenx) || Double.isNaN(screeny) || Double.isNaN(xx) || Double.isNaN(yy)){
 			Lib.p("Position's screenx,screeny,realx,realy is NaN");
 			System.exit(-1);
@@ -19,7 +19,7 @@ public class Position implements Comparator<Position> {
 		real=new PointP(xx,yy);
 	}
 	
-	public Position(int time,PointP scrp,PointP rp){
+	public Position(long time,PointP scrp,PointP rp){
 		this.time=time;
 		screenp=new PointP(scrp.getX(),scrp.getY());
 		real=new PointP(rp.getX(),rp.getY());
@@ -63,12 +63,12 @@ public class Position implements Comparator<Position> {
 		return real.getY();
 	}
 	
-	public int getTime(){
+	public long getTime(){
 		return time;
 	}
 	
-	public void setTime(int timeg){
-		time=timeg;
+	public void setTime(long lasttime){
+		time=lasttime;
 	}
 	
 	public String toString(){

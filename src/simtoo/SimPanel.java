@@ -6,17 +6,12 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
-
 import javax.swing.*;
-
 import java.util.*;
 import javax.swing.Timer;
 
-
-
-
 public class SimPanel extends JPanel implements MouseListener{
-
+	TimerListener tm;
 	Timer timer;
 	
 	ArrayList<Node> nodes;
@@ -25,8 +20,8 @@ public class SimPanel extends JPanel implements MouseListener{
 	ArrayList<RoutingNode> uavRoutingNodes;
 	
 
-	private final int UPDATE_RATE = 1000000;
-	public int time;
+	private final int UPDATE_RATE = 1;
+	long time;
 	
 	Random r;
 	
@@ -45,7 +40,7 @@ public class SimPanel extends JPanel implements MouseListener{
 	int routeLimit;
 	int numberOfUavs;
 	int messageTimes;
-	HashMap<Integer,Integer> schedule;
+	HashMap<Long,Integer> schedule;
 	
 	int messageTimesForNodes;
 	int messageTimesForUAVs;
@@ -57,6 +52,16 @@ public class SimPanel extends JPanel implements MouseListener{
 	boolean clearpos;
 	boolean isGPS;
 	double btwdistance;//comm distance between node and uav 
+
+	
+	//The current positions of the nodes and uavs if they are on the map at that time
+	// we are asking positions 2 places
+	//one for drawing the nodes/auvs at the current positions
+	//one for comparing the positions
+	//if we ask the position it is dequeued after the call so we are keeping track of the positions
+	//to be used by the distanceComparing functions
+	Position[] nodesPositions;
+	Position[] uavsPositions;
 	
 	public SimPanel(Simulator simulator,Datas datagiven,boolean isvisible){
 		
@@ -75,6 +80,8 @@ public class SimPanel extends JPanel implements MouseListener{
 		uavRoutingNodes=simulator.getUavRoutingNodes();
 		
 		
+		nodesPositions=new Position[nodes.size()];
+		uavsPositions=new Position[uavs.size()];
 		
 		//Virtual distance
 		COMMDIST=simulator.getCommDist(); 
@@ -89,7 +96,7 @@ public class SimPanel extends JPanel implements MouseListener{
 		messageErrorTimesForUAVs = simulator.getMessageErrorTimesForUAVs();
 	
 		
-		schedule=new HashMap<Integer,Integer>();
+		schedule=new HashMap<Long,Integer>();
 		if(messageTimesForNodes ==0 && messageTimesForUAVs ==0){
 			System.out.println("MessageTimes are all 0 \r\nPlease check config file ");
 			System.exit(-1);
@@ -101,48 +108,43 @@ public class SimPanel extends JPanel implements MouseListener{
 			addScheduleForUAVs();
 		}
 		
-		time=0;
+		setTime(mydata.getMinTime());
+		
 		numberOfRoutesCompleted=0;
 		numberOfNodes=nodes.size();
 		numberOfUavs=uavs.size();
 		
 		setPreferredSize(new Dimension((int)width,(int)height));
 		setBackground(Color.LIGHT_GRAY);
-		
-		
+				
 		addMouseListener(this);
-
 		
-		/*
-		ArrayList<Position> arr=nodes.get(2).getPositions();
-		Lib.p("uzunluk "+arr.size());
-		for(int i=1;i<arr.size();i++){
-			double lat1=arr.get(i).getRealX();
-			double lon1=arr.get(i).getRealY();
-			double lat2=arr.get(i-1).getRealY();
-			double lon2=arr.get(i-1).getRealY();
-			Lib.p(Lib.realdistance(lat1, lon1, lat2, lon2)+" is the distance");
-		}
-		//*/
 		
 		numberOfMessagesCreatedByNodes=0;
 		numberOfMessagesCreatedByUavs=0;
 		numberofCreatedMessages=0;
 		
-		TimerListener tm=new TimerListener(this);
-		Timer timer = new Timer(1000/UPDATE_RATE, tm);
-        timer.start();
-        //Information is written
+		//Information is written
         
         Lib.p(simulator.toString());
         Lib.p(mydata.toString());
         Lib.p("Number of nodes: "+nodes.size());
 	}
 		
+	public void startTimer() {
+		tm =new TimerListener(this);
+		timer = new Timer(1000/UPDATE_RATE, tm);
+        timer.start();
+	}
+	
+	public void setTime(long timegiven) {
+		time=timegiven;
+	}
+	
 	public void addScheduleForNodes(){
-		int timems=0;
+		long timems=mydata.getMinTime();
 		//will add messages in every messageTimesForNodes +- mesGenError
-		while(timems<mydata.maxtime){
+		while(timems<mydata.getMaxTime()){
 			int neg=LibRouting.getUniform(2);//if plus or minus
 			int mesGenError=LibRouting.getUniform(messageErrorTimesForNodes);
 			if(neg==1){
@@ -151,13 +153,13 @@ public class SimPanel extends JPanel implements MouseListener{
 				timems+=(messageTimesForNodes-mesGenError);
 			}
 			int idOfNode=LibRouting.getUniform(routingNodes.size());
-			schedule.put(new Integer(timems),new Integer(idOfNode));
+			schedule.put(new Long(timems),new Integer(idOfNode));
 		}
 	}
 	
 	public void addScheduleForUAVs(){
-		int timems=0;
-		while(timems<mydata.maxtime){
+		long timems=mydata.getMinTime();
+		while(timems<mydata.getMaxTime()){
 			int neg=LibRouting.getUniform(2);//if plus or minus
 			int mesGenError=LibRouting.getUniform(messageErrorTimesForUAVs);
 			if(neg==1){
@@ -167,12 +169,11 @@ public class SimPanel extends JPanel implements MouseListener{
 			}
 			//id should be negative as the UAV ids are negative
 			int idOfUAVNode=LibRouting.getUniform(uavRoutingNodes.size())*-1;
-			schedule.put(new Integer(timems),new Integer(idOfUAVNode));
+			schedule.put(new Long(timems),new Integer(idOfUAVNode));
 		}
 	}
 	
 	private void drawImage(String img1,Graphics2D g2d,double x,double y){
-		
 		Image img11 = Toolkit.getDefaultToolkit().getImage(img1);
 		
         /* draw ball image to the memory image with transformed x/y double values */
@@ -184,72 +185,91 @@ public class SimPanel extends JPanel implements MouseListener{
 	}
 	
 	public static Image iconToImage(Icon icon) {
-		   if (icon instanceof ImageIcon) {
-		      return ((ImageIcon)icon).getImage();
-		   } 
-		   else {
-		      int w = icon.getIconWidth();
-		      int h = icon.getIconHeight();
-		      GraphicsEnvironment ge = 
-		        GraphicsEnvironment.getLocalGraphicsEnvironment();
-		      GraphicsDevice gd = ge.getDefaultScreenDevice();
-		      GraphicsConfiguration gc = gd.getDefaultConfiguration();
-		      BufferedImage image = gc.createCompatibleImage(w, h);
-		      Graphics2D g = image.createGraphics();
-		      icon.paintIcon(null, g, 0, 0);
-		      g.dispose();
-		      return image;
-		   }
-		 }
+		if(icon instanceof ImageIcon) {
+			return ((ImageIcon)icon).getImage();
+		}else{
+			int w = icon.getIconWidth();
+			int h = icon.getIconHeight();
+			GraphicsEnvironment ge = 
+			GraphicsEnvironment.getLocalGraphicsEnvironment();
+			GraphicsDevice gd = ge.getDefaultScreenDevice();
+			GraphicsConfiguration gc = gd.getDefaultConfiguration();
+			BufferedImage image = gc.createCompatibleImage(w, h);
+			Graphics2D g = image.createGraphics();
+			icon.paintIcon(null, g, 0, 0);
+			g.dispose();
+			return image;
+		}
+	}
 	
 	public boolean reachedMaxTime(){
 		return mydata.getMaxTime()==time;
 	}
 	
-	public int numberOfMessagesCreated(){
+	private int numberOfMessagesCreated(){
 		return numberofCreatedMessages;
 	}
 	
 	private void drawFigures(Graphics2D g2){
 		int nodesize=15;
-		
 		//Drawing the nodes
         for(int i=0;i<nodes.size();i++){
         	double x=0;
         	double y=0;
+        	
         	Position nodepos=nodes.get(i).getCurrentPositionWithTime(time);
+        	nodesPositions[i]=nodepos;
+        	
 	        if(nodepos!=null){
-        		x=nodepos.getScreenX();
+	        	x=nodepos.getScreenX();
 	        	y=nodepos.getScreenY();		
-		        	
 	        	
 	        	Shape node = new Ellipse2D.Double(x, y, nodesize, nodesize); 
 	            int rval=(9*i+55)%256;
 	        	int gval=(6*i+35)%256;
 	        	int bval=(7*i+15)%256;
-	        	g2.setPaint(new Color(rval, gval, bval)); // a dull blue-green
+	        	g2.setPaint(new Color(0, 0, 255)); // a dull blue-green
 	            g2.fill(node);
 	            g2.draw (node);
+	            //Lib.p("for node text "+nodes.get(i).getDataFile()+" is on pos "+nodepos.toString()+" simpanel");
+	           // nodes.get(i).writePositions();
+        	}else {
+        		Lib.p("Empty for node "+nodes.get(i).getDataFile());
         	}
         }
         
         for(int i=0;i<uavs.size();i++){
         	Uav uav=uavs.get(i);
+        	/*
+        	for(int b=0;b<uav.getPositions().size();b++){
+        		System.out.println(uav.getPosition(b).toString());
+        	}
+        	*/
         	Position uavpos=uav.getCurrentPositionWithTime(time);
+        	uavsPositions[i]=uavpos;
+        	
 	        if(uavpos!=null){
-        		double xuav=uavpos.getScreenX();
+	        	
+	        	double xuav=uavpos.getScreenX();
 	        	double yuav=uavpos.getScreenY();
-	        	if(uav.isRouteFinished()){
-	        		drawImage("drone2.png", g2,xuav, yuav);
-	        	}else{
-	        		drawImage("drone.png", g2,xuav, yuav);
-	        	}
+	        	//if(uav.isRouteFinished()){
+	        	drawImage("drone.png", g2,xuav, yuav);
+	        	//}else{
+	        	//	drawImage("drone.png", g2,xuav, yuav);
+	        	//}
+	        	//uav.writePositions();
+        	}else {
+        		Lib.p("PROBLEM!!!! in simpanel.java");
+        		Lib.p("Length of the positions " +uav.getPositions().size());
+            	Lib.p("time is "+time);
+        		Lib.p(uav.getPosition(0));
+        		
         	}
         }
         
 	}
 	
-	public int getNumberOfRoutesCompleted(){
+	private int getNumberOfRoutesCompleted(){
 		return numberOfRoutesCompleted;
 	}
 
@@ -273,10 +293,11 @@ public class SimPanel extends JPanel implements MouseListener{
 	//this is called after drawing everything
 	//anything here will be done once for every time.
 	public void increaseTime(){
-		int messageGeneratorInt=0;
 		
-		if(schedule.containsKey(time)){
-			Integer messageGenerator=schedule.get(time);
+		//adding messages
+		int messageGeneratorInt=0;
+		if(schedule.containsKey(new Long(time))){
+			Integer messageGenerator=schedule.get(new Long(time));
 			messageGeneratorInt=messageGenerator.intValue();
 			//Lib.p("Message Created at "+time+" at node "+messageGeneratorInt);
 			
@@ -290,33 +311,39 @@ public class SimPanel extends JPanel implements MouseListener{
 				messageGeneratorInt=messageGeneratorInt-1;
 				addMessage(routingNodes.get(messageGeneratorInt),time);
 				numberOfMessagesCreatedByNodes++;
-			}
-				
-		}
-		
-		//routing checks for UAVs	
-		for(int i=0;i<uavs.size();i++){
-			Uav uav=uavs.get(i);
-			if(uav.isRouteFinished()){
-	    		uav.reRoute(time);
-	    		numberOfRoutesCompleted++;
-	    	}
-		}
-		
-		//the datas are read portion by portion in order to handle long files
-		for(int i=0;i<nodes.size();i++){
-			if(nodes.get(i).isRouteFinished()){
-				nodes.get(i).readData();	
-			}
+			}				
 		}
 		
 		checkAllDistances();
-		
-		//Lib.p("The time is "+time);
 		time++;
 	}
 	
-	public void addMessage(RoutingNode n,int timegiven){
+	private void updatePositions() {
+		//routing checks for UAVs	
+		for(int i=0;i<uavs.size();i++){
+			Uav uav=uavs.get(i);
+			if(uav.isRouteFinished() && uav.getPositions().size()!=0) {
+				Lib.p("PROBLEM in simpanel");
+				uav.writePositions();
+			}
+			
+			if(uav.isRouteFinished()){
+	    		uav.reRoute(time);
+	    		Lib.p("REROUTED");
+	    		/*
+	    		Lib.p("REROUTE "+uav.getId()+" "+uav.positionsLength());
+	    		for(int n=0;n<uav.positionsLength();n++) {
+	    			Lib.p(uav.getPosition(n).time);
+	    		}
+	    		//*/
+	    		
+	    		
+	    		numberOfRoutesCompleted++;
+	    	}
+		}
+	}
+	
+	public void addMessage(RoutingNode n,long timegiven){
 		//48 hours Expiration time
 		int messageID=numberofCreatedMessages+1;
 		String expiration=(timegiven+messageLifeInSeconds)+"";
@@ -341,15 +368,14 @@ public class SimPanel extends JPanel implements MouseListener{
 		checkUavNodeDistances();
 	}
 	
-	//This function should bew rewirttten
 	public void checkNodesDistances(){
 		for(int i=0;i<routingNodes.size();i++){
 			RoutingNode rn1=routingNodes.get(i);
 			Node n1=nodes.get(i);
 			
-        	Position encountern1 =n1.getCurrentPositionWithTime(time);
+        	Position encountern1 =nodesPositions[i];
         	//if the node is not in the scenes now
-        	if(encountern1 != null){
+        	if(n1.isVisible() && encountern1 != null){
 	        	double x1=encountern1.getScreenX();
 	        	double y1=encountern1.getScreenY();
 	        	
@@ -357,8 +383,8 @@ public class SimPanel extends JPanel implements MouseListener{
 					RoutingNode rn2=routingNodes.get(j);
 					Node n2=nodes.get(j);
 					
-		        	Position encountern2 =n2.getCurrentPositionWithTime(time);
-			        if(encountern2!=null){
+		        	Position encountern2 =nodesPositions[j];
+			        if(n2.isVisible() && encountern2!=null){
 		        		double x2=encountern2.getScreenX();
 			        	double y2=encountern2.getScreenY();
 			        	double distancecalc=Lib.screenDistance(x1, y1, x2, y2);
@@ -417,7 +443,7 @@ public class SimPanel extends JPanel implements MouseListener{
 			Uav u1=uavs.get(i);
 			RoutingNode ru1=uavRoutingNodes.get(i);
 			
-			Position encounteru1 =u1.getCurrentPositionWithTime(time);
+			Position encounteru1 =uavsPositions[i];
 			//if the node is not in the scenes now
 			if(encounteru1 != null){
 	        	double x1=encounteru1.getScreenX();
@@ -427,7 +453,7 @@ public class SimPanel extends JPanel implements MouseListener{
 					Uav u2=uavs.get(j);
 					RoutingNode ru2=uavRoutingNodes.get(j);
 					
-					Position encounteru2 =u2.getCurrentPositionWithTime(time);
+					Position encounteru2 =uavsPositions[j];
 					if(encounteru2!=null){
 			        	double x2=encounteru2.getScreenX();
 			        	double y2=encounteru2.getScreenY();
@@ -481,7 +507,7 @@ public class SimPanel extends JPanel implements MouseListener{
 			Uav u=uavs.get(i);
         	RoutingNode ruav=uavRoutingNodes.get(i);
         	
-        	Position encounterUav =u.getCurrentPositionWithTime(time);
+        	Position encounterUav = uavsPositions[i];
         	if(encounterUav!=null){
         		//Lib.p(u.getPosition(0).toString());
         		//Lib.p("SIMPANEL checkUAvNodeDistance Problem "+u.positionsLength()+"  "+time);
@@ -493,9 +519,9 @@ public class SimPanel extends JPanel implements MouseListener{
 					Node n=nodes.get(j);
 		        	RoutingNode rnode=routingNodes.get(j);
 		        	
-		        	Position encounterNode =n.getCurrentPositionWithTime(time);
+		        	Position encounterNode = nodesPositions[j];
 		        	
-		        	if(encounterNode!=null){
+		        	if(n.isVisible() && encounterNode!=null){
 			        	double xnode=encounterNode.getScreenX();
 			        	double ynode=encounterNode.getScreenY();
 			        	//Lib.p(Lib.relativeDistance(xuav, yuav, xnode, ynode)+"  BETWEEN  "+COMMDIST);
@@ -541,10 +567,11 @@ public class SimPanel extends JPanel implements MouseListener{
 				}//end of inner for
 			
         	}//end of if
+        	
 		}//end of outer for
 	}
 	
-	private void addContactsEncounters(RoutingNode n1,RoutingNode n2,Position p1,Position p2,int timegiven){
+	private void addContactsEncounters(RoutingNode n1,RoutingNode n2,Position p1,Position p2,long timegiven){
 		n2.addContact(n1.getId(),p2, timegiven); 
 		n1.addContact(n2.getId(),p1, timegiven);								
 		n2.addEncounter(n1.getId(),p2, timegiven); 
@@ -560,7 +587,6 @@ public class SimPanel extends JPanel implements MouseListener{
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         doDrawing(g);
-        
     }
     
     
@@ -572,7 +598,6 @@ public class SimPanel extends JPanel implements MouseListener{
        Lib.p(e.getX()+" coordinates   "+e.getY());
        //timer.stop();
        simulationEnded();
-
     }
     
     public void mouseEntered(MouseEvent e) {
@@ -585,6 +610,13 @@ public class SimPanel extends JPanel implements MouseListener{
     	
     }
 
+	public void processTime() {
+		while(!reachedMaxTime()) {
+			updatePositions();
+    		increaseTime();
+		}
+		simulationEnded();
+	}
     
     public class TimerListener implements ActionListener{
     	private SimPanel parent;
@@ -595,41 +627,21 @@ public class SimPanel extends JPanel implements MouseListener{
     	}
     	
         public void actionPerformed(ActionEvent e) {
-        	int time=parent.time;
         	if(parent.reachedMaxTime()){
         		((Timer)e.getSource()).stop();
                 Lib.p("Simulation stopped as it reached max time");
                 parent.simulationEnded();
+        	}else {
+        		updatePositions();
+        		increaseTime();
+        		parent.repaint();
         	}
         	/*else {
         		updater();  
         	}	*/
-        	parent.repaint();
-    		increaseTime();
+        	
+        	
         }     
-        
-        private void updater() {
-        	//Lib.p("Time is "+parent.time);
-			//these are vital. the iterator of the nodes and uavs get changed. we are simulating drawfigures here:)
-			for(int i=0;i<nodes.size();i++){
-				Position pos=nodes.get(i).getCurrentPositionWithTime(time);
-				if(pos!=null){
-					double x=pos.getScreenX();
-					double y=pos.getScreenY();		
-				}
-				
-				
-			}
-        
-			for(int i=0;i<uavs.size();i++){
-				Uav uav=uavs.get(i);
-				Position pos=uav.getCurrentPositionWithTime(time);
-				if(pos != null){
-					double xuav=pos.getScreenX();
-					double yuav=pos.getScreenY();
-				}
-			}
-        }
     }//end of inner class TimerListener
     
 }
