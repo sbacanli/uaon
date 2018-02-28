@@ -155,7 +155,7 @@ public class Simulator {
 				currentNode.readData(data.getMinTime());
 			}else{
 				ArrayList<PointP> path=data.fillRandomPositions(numberOfPositions);
-				currentNode.addPathsWithPoints(path,data,"screen");
+				currentNode.addPathsWithPoints(path,data,"screen",-1);
 				
 			}
 			

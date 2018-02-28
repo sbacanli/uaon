@@ -37,8 +37,8 @@ public class Uav extends Positionable{
 		initialY=ypos;
 		mydata=givendata;
 		
-		PointP genPoint=new PointP(xpos, ypos);
-		Position posGen=new Position(mydata.getMinTime(), genPoint, genPoint);
+		Position posGen=mydata.getPositionWithScreen(xpos, ypos);
+		posGen.setTime(mydata.getMinTime());
 		ArrayList<Position> p1=new ArrayList<Position>();
 		p1.add(posGen);
 		addPathsWithPositions(p1,mydata,"screen");
@@ -90,7 +90,7 @@ public class Uav extends Positionable{
 		if(arr==null || arr.isEmpty()){
 			Lib.p("POSITIONS GOT EMPTY AT UAV FILLPATH");
 		}else{
-			addPathsWithPoints(arr,mydata,"screen");	
+			addPathsWithPoints(arr,mydata,"screen",mydata.getMinTime());	
 		}
 		//time++;
 		
@@ -260,6 +260,11 @@ public class Uav extends Positionable{
 		int lengthBefore=positionsLength();
 		//Lib.p("Length Before: "+positionsLength());
 		Position returned=null;
+		if(positionsLength()==0) {
+			Lib.p("Problem here!");
+			int status =1;
+			System.exit(status);
+		}
 		if(positionsLength()==1) {
 			if(getPosition(0).time==giventime)
 			{	

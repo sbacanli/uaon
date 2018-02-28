@@ -124,7 +124,7 @@ public class Node extends Positionable{
 			returned=dequeuePosition();
 			Lib.p("Dequued");
 		}else {
-			writePositions();
+			//writePositions();
 		}
 		
 		return returned;

@@ -215,7 +215,7 @@ public class SimPanel extends JPanel implements MouseListener{
 		//Drawing the nodes
         for(int i=0;i<nodes.size();i++){
         	double x=0;
-        	double y=0;
+        	double y=0; 
         	
         	Position nodepos=nodes.get(i).getCurrentPositionWithTime(time);
         	nodesPositions[i]=nodepos;
