@@ -259,11 +259,12 @@ public class SimPanel extends JPanel implements MouseListener{
 	        	//}
 	        	//uav.writePositions();
         	}else {
-        		Lib.p("PROBLEM!!!! in simpanel.java");
+        		//*
+        		Lib.p("PROBLEM!!!! in simpanel.java UAV can not be null");
         		Lib.p("Length of the positions " +uav.getPositions().size());
             	Lib.p("time is "+time);
         		Lib.p(uav.getPosition(0));
-        		
+        		//*/
         	}
         }
         

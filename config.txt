@@ -17,7 +17,8 @@ InitialSpiralRadius:200
 EncounterTimeLimit:1200
 //with every rerouting encounters less than 1200 seconds old will be deleted
 //-1 will delete all encounters
-SpeedOfUAVs:1
+SpeedOfUAVs:15
+LocationType:RELATIVE
 MessageTimesForUAVs:300
 MessageTimesForNodes:300
 //plus or minus

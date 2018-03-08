@@ -49,6 +49,8 @@ public class Simulator {
 	//this is for the time limit for deleting the encounters after each route finish/
 	private int encounterTimeLimit;
 	private boolean isGPS;
+	private LocationType loctype;
+	
 	
 	
 	public Simulator(Options op,Datas datagiven)
@@ -70,7 +72,18 @@ public class Simulator {
 			numberOfNodes=datafiles.size();
 		}
 		
-		isGPS=op.getParamBoolean("isGPS");
+		String loctypestr=op.getParamString("LocationType");
+		if(loctypestr.equals("SCREEN")) {
+			loctype=LocationType.SCREEN;
+		}else if(loctypestr.equals("REAL")) {
+			loctype=LocationType.REAL;
+		}else if(loctypestr.equals("RELATIVE")){
+			loctype=LocationType.RELATIVE;
+		}else {
+			Lib.p("UNDEFINED LOCATION TYPE");
+		}
+		data.setLoc(loctype);
+		
 		realDistance=op.getParamInt("CommDistance");
 		numberOfUAVs=op.getParamInt("numberOfUAVs");
 		nodeRouting=new Probabilistic(air,op.getParamDouble("interNodesProbability"));
@@ -155,7 +168,7 @@ public class Simulator {
 				currentNode.readData(data.getMinTime());
 			}else{
 				ArrayList<PointP> path=data.fillRandomPositions(numberOfPositions);
-				currentNode.addPathsWithPoints(path,data,"screen",-1);
+				currentNode.addPathsWithPoints(path,data,LocationType.SCREEN);
 				
 			}
 			

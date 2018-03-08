@@ -37,11 +37,15 @@ public class Uav extends Positionable{
 		initialY=ypos;
 		mydata=givendata;
 		
+		//adding initial screen position
 		Position posGen=mydata.getPositionWithScreen(xpos, ypos);
 		posGen.setTime(mydata.getMinTime());
 		ArrayList<Position> p1=new ArrayList<Position>();
 		p1.add(posGen);
-		addPathsWithPositions(p1,mydata,"screen");
+		addPathsWithPositions(p1,mydata,LocationType.SCREEN);
+		
+		///
+		
 		
 		xnum=0;
 		ynum=0;
@@ -90,14 +94,19 @@ public class Uav extends Positionable{
 		if(arr==null || arr.isEmpty()){
 			Lib.p("POSITIONS GOT EMPTY AT UAV FILLPATH");
 		}else{
-			addPathsWithPoints(arr,mydata,"screen",mydata.getMinTime());	
+			//There will be at least one element in the points list
+			//so the last parameter is in fact useless
+			addPathsWithPoints(arr,mydata,LocationType.SCREEN);	
 		}
 		//time++;
 		
+		
+		/*
 		for(int i=0;i<getPositions().size();i++){
 			getPosition(i).setTime(time);
 			time++;
 		}
+		*/
 	}
 	
 	public void setGriderParams(int xi,int yi){
@@ -176,7 +185,7 @@ public class Uav extends Positionable{
 		newx=mydata.convertToScreenX(newx);
 		newy=mydata.convertToScreenY(newy);
 		//now they are screen coordinates
-		
+		Lib.p(newx+" "+newy+" for reroute");
 			
 		fillPath(newx,newy,currentTime);
 		
@@ -260,17 +269,17 @@ public class Uav extends Positionable{
 		int lengthBefore=positionsLength();
 		//Lib.p("Length Before: "+positionsLength());
 		Position returned=null;
+		Lib.p("Called once");
 		if(positionsLength()==0) {
 			Lib.p("Problem here!");
-			int status =1;
-			System.exit(status);
+			return null;
 		}
 		if(positionsLength()==1) {
 			if(getPosition(0).time==giventime)
 			{	
-				/*
+				//*
 				Lib.p("TIME IS "+giventime);
-				Lib.p("first size "+positionsLength());
+				Lib.p("before reroute "+positionsLength());
 				writePositions();
 	        	//*/
 				//returned=new Position(getPosition(0));
@@ -278,7 +287,10 @@ public class Uav extends Positionable{
 				//we will get the first one on the queue and we will add the remaining positions
 				// we dont remove the first one now because the added ones should continue from the first
 				//position
+				
 				reRoute(giventime);
+				Lib.p("filled path again"+positionsLength()+" in simulator");
+				writePositions();
 				//now we need to remove the first
 				
 				returned=dequeuePosition();

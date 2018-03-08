@@ -19,7 +19,7 @@ public class Node extends Positionable{
 		setScreenSpeed(15);
 		setRealSpeed(1);
 		dataLineStart=0;
-		numberOfDataLines=10;
+		numberOfDataLines=100;
 		isVisible=true;
 
 	}
@@ -53,7 +53,7 @@ public class Node extends Positionable{
 					System.exit(-1);
 				}
 				
-				addPathsWithPositions(positionsCreated,data,"real");
+				addPathsWithPositions(positionsCreated,data,data.getLoc());
 			
 				/*
 				Lib.p("CREATED for node "+getId()+" "+getDataFile());

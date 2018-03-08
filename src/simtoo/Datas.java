@@ -6,6 +6,9 @@ import routing.LibRouting;
 
 import java.io.*;
 
+enum LocationType{
+	REAL,RELATIVE,SCREEN;
+}
 public class Datas {
 
 	private Random r;
@@ -21,12 +24,14 @@ public class Datas {
 	private long mintime;
 	private boolean isGPS;
 	private int precision;
+	private LocationType op;
 	
 	public Datas(double h,double w){
 		linenumlimit=1000;
 		//width and height of the screen
 		widthOfScreen=w;
 		heightOfScreen=h;
+		//real,relative or screen
 		
 		r=new Random();
 		arr=new ArrayList<ArrayList<Double>>();
@@ -46,6 +51,14 @@ public class Datas {
 	
 	public void setGPS(boolean b){
 		isGPS=b;
+	}
+	
+	public void setLoc(LocationType l) {
+		op=l;
+	}
+	
+	public LocationType getLoc() {
+		return op;
 	}
 	
 	public ArrayList<PointP> fillRandomPositions(int numberOfPoints){
@@ -556,13 +569,28 @@ public class Datas {
 		heightOfScreen=h;
 	}
 	
+	
+	//similarity ratio of two rectangles is the square root of their areas
 	public double VirtualToRealDistance(int distScr){
-		return  (distScr * (getMaxX()-getMinX())) / (widthOfScreen);
+		double MapArea=0;double ScreenArea=0;
+		if(op==LocationType.RELATIVE) {
+			MapArea=Lib.relativeDistance(getMaxX(),getMaxY(),getMinX(),getMinY());
+		}else if(op==LocationType.REAL) {
+			MapArea=Lib.realdistance(getMaxX(),getMaxY(),getMinX(),getMinY());
+		}
+		ScreenArea=Math.sqrt(widthOfScreen*heightOfScreen);
+		return  (distScr * (MapArea)) / (ScreenArea);
 	}
 	
-	
 	public double RealToVirtualDistance(double speedreal){
-		return  (speedreal * (double)widthOfScreen) / (getMaxX()-getMinX());
+		double MapArea=0;double ScreenArea=0;
+		if(op==LocationType.RELATIVE) {
+			MapArea=Lib.relativeDistance(getMaxX(),getMaxY(),getMinX(),getMinY());
+		}else if(op==LocationType.REAL) {
+			MapArea=Lib.realdistance(getMaxX(),getMaxY(),getMinX(),getMinY());
+		}
+		ScreenArea=Math.sqrt(widthOfScreen*heightOfScreen);
+		return  (speedreal * (ScreenArea)) / (MapArea);
 	}
 	
 	public double getMinX(){

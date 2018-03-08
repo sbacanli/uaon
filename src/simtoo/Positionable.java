@@ -17,9 +17,6 @@ public class Positionable {
 		private int nodeId;
 		private double speed;//   in terms of  m/sec
 		private double screenspeed;//in terms of pixels
-		
-		private double lastposx;
-		private double lastposy;
 		private double distancetravelled;
 		
 		private Queue<Position> pointsp;
@@ -39,7 +36,7 @@ public class Positionable {
 			
 			speed=1;//used in random mobility, will be changed if not random mobility
 			screenspeed=10;//used in random mobility, will be changed if not random mobility
-			pointsp=new LinkedList<Position>();;
+			pointsp=new LinkedList<Position>();
 			setRouteFinished(false);
 			distancetravelled=0;
 			
@@ -88,15 +85,19 @@ public class Positionable {
 			pointsp=arr;
 		}
 		
-		public void addPathsWithPoints(ArrayList<PointP> path,Datas mydata,String op,long giventime){
+		
+		//UAV.fillPath uses that
+		public void addPathsWithPoints(ArrayList<PointP> path,Datas mydata,LocationType op){
 			for(int i=0;i<path.size();i++){
-				PointP p=path.get(i);
-				if(op.equals("real")) {
-					addPathWithRealCoordinates(p.getX(),p.getY(),mydata,giventime);
-				}else if(op.equals("screen")) {
-					addPathWithScreenCoordinates(p.getX(),p.getY(),mydata,giventime);
+				PointP pelement=path.get(i);
+				if(op==LocationType.REAL) {
+					Position p=mydata.getPositionWithReal(pelement.getX(),pelement.getY());		
+					addPathWithSpeed(p, mydata,op);	
+				}else if(op==LocationType.SCREEN) {
+					Position p=mydata.getPositionWithScreen(pelement.getX(),pelement.getY());
+					addPathWithSpeed(p, mydata,op);
 				}else {
-					Lib.p("No such option for addPathsWithPoints");
+					Lib.p("Option Different at Positionable!!!");
 				}
 				
 			}
@@ -105,65 +106,70 @@ public class Positionable {
 		//option will be screen or real
 		// positions are added based on the time data so the speed is constant
 		//according to the distance and time between the positions
-		public void addPathsWithPositions(ArrayList<Position> path,Datas mydata,String op){
+		//this is used by the nodes as in the dataset
+		//we assume the speed of the nodes are constant between 2 points.
+		//we just protect whaatever the speed is
+		// considering that the node is at pos (1,1) at time 5 and at (5,5) at time 11 then at time 6 (2,2) etcc
+		// the distance is taken with constant speed
+		public void addPathsWithPositions(ArrayList<Position> path,Datas mydata,LocationType op){
 			for(int i=0;i<path.size();i++){
 				Position p1=path.get(i);
-				if(op.equals("real")) {
-					addPathWithRealCoordinatesWithPos(p1,mydata);
-				}else if(op.equals("screen")) {
-					addPathWithScreenCoordinatesWithPos(p1,mydata);
-				}else {
-					Lib.p("No such option for addPathsWithPositions at positionable.java");
-				}
-				
+				addPositionWithCoordinates(p1,mydata,op);		
 			}
 		}		
 		
-		private void addPathWithScreenCoordinates(double xcalc,double ycalc,Datas mydata,long giventime){
-			Position p=mydata.getPositionWithScreen(xcalc,ycalc);
-			p.setTime(giventime);
-			addPathWithScreenCoordinatesWithPos(p, mydata);
-		}
-		
-		//since the area will be very small latitude and longitude may be used like cartesian coordinate system
-		private void addPathWithRealCoordinates(double xreal,double yreal,Datas mydata,long giventime){
-			Position p=mydata.getPositionWithReal(xreal,yreal);		
-			p.setTime(giventime);
-			addPathWithRealCoordinatesWithPos(p, mydata);	
-		}				
-		
+		//the speed of the given data is protected
 		//the position will contain the time information
 		//screen part of the position will be used to put the coordinates to pointsp
-		private void addPathWithScreenCoordinatesWithPos(Position p,Datas mydata){
+		private void addPositionWithCoordinates(Position p,Datas mydata,LocationType op){
+			double x = 0,y = 0;
+			//the time of the position p is not important as the speed of the device will be used
+			if(op==LocationType.REAL || op==LocationType.RELATIVE) {
+				x=p.getRealX();
+				y=p.getRealY();
+			}else if(op==LocationType.SCREEN) {
+				x=p.getScreenX();
+				y=p.getScreenY();
+			}else {
+				Lib.p("Option Different at Positionable!!!");
+			}
 			long timeDifference=0;
-			double xcalc=p.getScreenX();
-			double ycalc=p.getScreenY();
-			
 			double xa=0;
 			double ya=0;
 			double num;
 			if(positionsLength() !=0){
 				int lasttime=0;
+				double lastposx=0;
+				double lastposy=0;
+				
 				int lastpos=positionsLength()-1;
-				lastposx=getPosition(lastpos).getScreenX();
-				lastposy=getPosition(lastpos).getScreenY();
+				if(op==LocationType.SCREEN) {
+					lastposx=getPosition(lastpos).getScreenX();
+					lastposy=getPosition(lastpos).getScreenY();
+				}else if(op==LocationType.REAL || op==LocationType.RELATIVE){
+					lastposx=getPosition(lastpos).getRealX();
+					lastposy=getPosition(lastpos).getRealY();
+				}else {
+					Lib.p("Option Different at Positionable!!!");
+				}
+				
 				lasttime=(int)(getPosition(lastpos).getTime());	
 				timeDifference=p.getTime()-lasttime;
 				
 				
 				//double distance=Lib.screenDistance(lastposx, lastposy, xcalc, ycalc);
-				double xdistance=Math.abs(lastposx-xcalc);
-				double ydistance=Math.abs(lastposy-ycalc);
+				double xdistance=Math.abs(lastposx-x);
+				double ydistance=Math.abs(lastposy-y);
 				
 				for(int k=1;k<=timeDifference;k++){
 					num=((double)k)/timeDifference;
-					if(lastposx>=xcalc && lastposy>=ycalc){
+					if(lastposx>=x && lastposy>=y){
 						xa=lastposx-num*xdistance;
 						ya=lastposy-num*ydistance;		
-					}else if(lastposx>=xcalc && lastposy<=ycalc){
+					}else if(lastposx>=x && lastposy<=y){
 						xa=lastposx-num*xdistance;
 						ya=lastposy+num*ydistance;
-					}else if(lastposx<=xcalc && lastposy>=ycalc){
+					}else if(lastposx<=x && lastposy>=y){
 						xa=lastposx+num*xdistance;
 						ya=lastposy-num*ydistance;
 					}else{//lastposx<x %% lastposy<y
@@ -171,7 +177,14 @@ public class Positionable {
 						ya=lastposy+num*ydistance;
 					}
 					
-					Position pCreated=mydata.getPositionWithScreen(xa,ya);
+					Position pCreated = null;
+					if(op==LocationType.SCREEN) {
+						pCreated=mydata.getPositionWithScreen(xa,ya);
+					}else if(op==LocationType.REAL || op==LocationType.RELATIVE){
+						pCreated=mydata.getPositionWithReal(xa, ya);
+					}else {
+						Lib.p("Option Different at Positionable!!!");
+					}
 					lasttime++;
 					pCreated.setTime(lasttime);
 					pointsp.add(pCreated);
@@ -192,71 +205,95 @@ public class Positionable {
 				pointsp.add(p);
 			}
 			
-			if(xcalc >mydata.getWidth() || xcalc < 0 || ycalc <0 || ycalc > mydata.getHeight()){
-				Lib.p("This can not happen");
-				Lib.p(xa+" "+ya+" "+mydata.getWidth()+" "+mydata.getHeight()+" "+xcalc+" "+ycalc+" "+lastposx+" "+lastposy);
-
-			}
 		}
 		
-		//the position will contain the time information
-		//real part of the position will be used to put the coordinates to pointsp
-		private void addPathWithRealCoordinatesWithPos(Position p,Datas mydata){
-			double xreal=p.getRealX();
-			double yreal=p.getRealY();
+		private void addPathWithSpeed(Position p,Datas mydata,LocationType op){
+			double x = 0;
+			double y=0;
+			//the time of the position p is not important as the speed of the device will be used
+			if(op==LocationType.REAL || op==LocationType.RELATIVE) {
+				x=p.getRealX();
+				y=p.getRealY();
+			}else if(op==LocationType.SCREEN) {
+				x=p.getScreenX();
+				y=p.getScreenY();
+			}else {
+				Lib.p("Option Different at Positionable!!!");
+			}
+			double lastposx=0;
+			double lastposy=0;
 			double xa=0;
 			double ya=0;
 			double num;
 			if(positionsLength() !=0){
 				long lasttime=0;
 				int lastpos=positionsLength()-1;
-				lastposx=getPosition(lastpos).getRealX();
-				lastposy=getPosition(lastpos).getRealY();
+				if(op==LocationType.REAL || op==LocationType.RELATIVE) {
+					lastposx=getPosition(lastpos).getRealX();
+					lastposy=getPosition(lastpos).getRealY();
+				}else if(op==LocationType.SCREEN) {
+					lastposx=getPosition(lastpos).getScreenX();
+					lastposy=getPosition(lastpos).getScreenY();
+				}else {
+					Lib.p("Option Different at Positionable!!!");
+				}
 				lasttime=(getPosition(lastpos).getTime());	
-				long timeDifference=p.time-lasttime;
 				
+				
+				int totaltime=0;
+				double distance=0;
+				if(op==LocationType.REAL) {
+					distance=Lib.realdistance(lastposx, lastposy, x, y);
+					totaltime=(int)Math.ceil(distance/speed);
+				}else if(op==LocationType.SCREEN) {
+					distance=Lib.screenDistance(lastposx, lastposy, x, y);
+					totaltime=(int)Math.ceil(distance/screenspeed);
+				}else if( op==LocationType.RELATIVE){
+					distance=Lib.relativeDistance(lastposx, lastposy, x, y);
+					totaltime=(int)Math.ceil(distance/screenspeed);
+				}else {
+					Lib.p("Option Different at Positionable!!!");
+				}
 				
 				//double distance=Lib.relativeDistance(lastposx, lastposy, xreal, yreal);
-				double xdistance=Math.abs(lastposx-xreal);
-				double ydistance=Math.abs(lastposy-yreal);
+				double xspeed=Math.abs(lastposx-x)/totaltime;
+				double yspeed=Math.abs(lastposy-y)/totaltime;
 				
-				for(int k=1;k<=timeDifference;k++){
-					num=((double)k)/timeDifference;
-					if(lastposx>=xreal && lastposy>=yreal){
-						xa=lastposx-num*xdistance;
-						ya=lastposy-num*ydistance;		
-					}else if(lastposx>=xreal && lastposy<=yreal){
-						xa=lastposx-num*xdistance;
-						ya=lastposy+num*ydistance;
-					}else if(lastposx<=xreal && lastposy>=yreal){
-						xa=lastposx+num*xdistance;
-						ya=lastposy-num*ydistance;
+				for(int k=1;k<=totaltime;k++){
+					num=((double)k);
+					if(lastposx>=x && lastposy>=y){
+						xa=lastposx-num*xspeed;
+						ya=lastposy-num*yspeed;		
+					}else if(lastposx>=x && lastposy<=y){
+						xa=lastposx-num*xspeed;
+						ya=lastposy+num*yspeed;
+					}else if(lastposx<=x && lastposy>=y){
+						xa=lastposx+num*xspeed;
+						ya=lastposy-num*yspeed;
 					}else{//lastposx<x %% lastposy<y
-						xa=lastposx+num*xdistance;
-						ya=lastposy+num*ydistance;
+						xa=lastposx+num*xspeed;
+						ya=lastposy+num*yspeed;
 					}
 					
-					Position pCreated=mydata.getPositionWithReal(xa,ya);
+					Position pCreated=null;				
+					if(op==LocationType.REAL || op==LocationType.RELATIVE) {
+						pCreated=mydata.getPositionWithReal(xa,ya);
+					}else if(op==LocationType.SCREEN) {
+						pCreated=mydata.getPositionWithScreen(xa,ya);
+					}else {
+						Lib.p("Option Different at Positionable!!!");
+					}
 					lasttime++;
 					pCreated.setTime(lasttime);
 					pointsp.add(pCreated);
 				}//end of for
 				
 			}else{
-				/*
-				Position newpos=mydata.getPositionWithReal(p.getRealX(), p.getRealY());
-				if(giventime!=-1) {
-					newpos.setTime(giventime);
-					//For UAv we need that as the queue never gets empty except for the first time
-					//for nodes it gets empty but filled according to the read data.
-				}
-				*/
-				
 				pointsp.add(p);
 			}	
 			//end of if
 			
-			if(xreal >mydata.getMaxX() || xreal < mydata.getMinX() || yreal <mydata.getMinY() || yreal > mydata.getMaxY()){
+			if(x >mydata.getMaxX() || x < mydata.getMinX() || y <mydata.getMinY() || y > mydata.getMaxY()){
 				Lib.p("This can not happen:addPathWithRealCoordinates");
 			}		
 		}
