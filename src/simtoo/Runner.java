@@ -28,10 +28,10 @@ public class Runner {
 				Options op=new Options(confFile);
 				
 				Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-				double height= screenSize.height;
+				double height= screenSize.height-250;
 				double width = screenSize.width;
 
-				//Lib.p("SCREEN "+height+" "+width);
+				Lib.p("SCREEN "+height+" "+width);
 				LibRouting.init();
 				Datas data=new Datas(height,width);
 				Simulator simulator=new Simulator(op,data);

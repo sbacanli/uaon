@@ -43,6 +43,7 @@ public class Datas {
 		mintime=Long.MAX_VALUE;
 		isGPS=false;
 		precision=6;
+		op=null;
 	}
 	
 	public boolean isGPS(){
@@ -436,7 +437,33 @@ public class Datas {
 	}
 	
 	public double convertToScreenSpeed(double realSpeed){
-		return realSpeed*getWidth()/(getMaxX()-getMinX());
+		return realSpeed*getWidth()/(getXDiff());
+	}
+	
+	public double getXDiff() {
+		if(getLoc()==LocationType.RELATIVE) {
+			return Lib.relativeDistance(getMinX(), (getMinY()+getMaxY())/2, getMaxX(), (getMinY()+getMaxY())/2);
+		}else if(getLoc()==LocationType.REAL){
+			return Lib.realdistance(getMinX(), (getMinY()+getMaxY())/2, getMaxX(), (getMinY()+getMaxY())/2);
+		}else if(getLoc()==LocationType.SCREEN) {
+			return Lib.screenDistance(getMinX(), (getMinY()+getMaxY())/2, getMaxX(), (getMinY()+getMaxY())/2);
+		}else {
+			Lib.p("getXDiff datas.java");
+		}
+		return 0;
+	}
+	
+	public double getYDiff() {
+		if(getLoc()==LocationType.RELATIVE) {
+			return Lib.relativeDistance((getMaxX()-getMinX())/2, getMinY(), (getMaxX()-getMinX())/2, getMaxY());
+		}else if(getLoc()==LocationType.REAL){
+			return Lib.realdistance((getMaxX()-getMinX())/2, getMinY(), (getMaxX()-getMinX())/2, getMaxY());
+		}else if(getLoc()==LocationType.SCREEN) {
+			return Lib.screenDistance((getMaxX()-getMinX())/2, getMinY(), (getMaxX()-getMinX())/2, getMaxY());
+		}else {
+			Lib.p("getYDiff datas.java");
+		}
+		return 0;
 	}
 	
 	public double convertToScreenY(double geoY){
@@ -448,16 +475,6 @@ public class Datas {
 			if(geoY<getMinY()){
 				geoY=getMinY();
 			}
-			
-			/*
-			try{
-				Exception e=new Exception();
-				throw e;
-			}catch(Exception e){
-				e.printStackTrace();
-				System.exit(-1);
-			}
-			*/
 		}
 		
 		if(Double.isNaN(geoY) || Double.isNaN(maxx) || Double.isNaN(miny) || Double.isNaN(maxy) || Double.isNaN(minx)){
@@ -487,6 +504,13 @@ public class Datas {
 			double oldscreenX=screenX;
 			screenX=getWidth();
 			Lib.p("screen coordinate converted from "+oldscreenX+" to "+screenX+" limit is "+getWidth());
+			try{
+				Exception e=new Exception();
+				throw e;
+			}catch(Exception e){
+				e.printStackTrace();
+				System.exit(-1);
+			}
 		}
 		
 		if(Double.isNaN(screenX)){
@@ -573,24 +597,20 @@ public class Datas {
 	//similarity ratio of two rectangles is the square root of their areas
 	public double VirtualToRealDistance(int distScr){
 		double MapArea=0;double ScreenArea=0;
-		if(op==LocationType.RELATIVE) {
-			MapArea=Lib.relativeDistance(getMaxX(),getMaxY(),getMinX(),getMinY());
-		}else if(op==LocationType.REAL) {
-			MapArea=Lib.realdistance(getMaxX(),getMaxY(),getMinX(),getMinY());
-		}
-		ScreenArea=Math.sqrt(widthOfScreen*heightOfScreen);
-		return  (distScr * (MapArea)) / (ScreenArea);
+		MapArea=calculateMapArea();
+		ScreenArea=calculateScreenArea();
+		
+		double AreaRatio=Math.sqrt(MapArea/ScreenArea);
+		return  (distScr * AreaRatio);
 	}
 	
 	public double RealToVirtualDistance(double speedreal){
 		double MapArea=0;double ScreenArea=0;
-		if(op==LocationType.RELATIVE) {
-			MapArea=Lib.relativeDistance(getMaxX(),getMaxY(),getMinX(),getMinY());
-		}else if(op==LocationType.REAL) {
-			MapArea=Lib.realdistance(getMaxX(),getMaxY(),getMinX(),getMinY());
-		}
-		ScreenArea=Math.sqrt(widthOfScreen*heightOfScreen);
-		return  (speedreal * (ScreenArea)) / (MapArea);
+		MapArea=calculateMapArea();
+		ScreenArea=calculateScreenArea();
+		
+		double AreaRatio=Math.sqrt(MapArea/ScreenArea);
+		return  (speedreal / AreaRatio);
 	}
 	
 	public double getMinX(){
@@ -644,6 +664,20 @@ public class Datas {
 	
 	public long getMaxTime(){
 		return maxtime;
+	}	
+	
+	private double calculateMapArea() {
+		double MapArea=0;
+		if(getLoc()==LocationType.RELATIVE) {
+			MapArea=Lib.relativeDistance(getMaxX(),getMaxY(),getMinX(),getMaxY()) * Lib.relativeDistance(getMaxX(),getMaxY(),getMaxX(),getMinY());
+		}else if(getLoc()==LocationType.REAL) {
+			MapArea=Lib.realdistance(getMaxX(),getMaxY(),getMinX(),getMaxY()) * Lib.realdistance(getMaxX(),getMaxY(),getMaxX(),getMinY());
+		}
+		return MapArea;
+	}
+	
+	private double calculateScreenArea() {
+		return widthOfScreen*heightOfScreen;
 	}
 	
 }

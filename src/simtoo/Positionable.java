@@ -278,10 +278,14 @@ public class Positionable {
 					Position pCreated=null;				
 					if(op==LocationType.REAL || op==LocationType.RELATIVE) {
 						pCreated=mydata.getPositionWithReal(xa,ya);
+						if(xa >mydata.getMaxX() || xa < mydata.getMinX() || ya <mydata.getMinY() || ya > mydata.getMaxY()){
+							Lib.p("This can not happen:addPathWithRealCoordinates for real cords at positionable");
+						}
 					}else if(op==LocationType.SCREEN) {
 						pCreated=mydata.getPositionWithScreen(xa,ya);
-					}else {
-						Lib.p("Option Different at Positionable!!!");
+						if(xa >mydata.getWidth() || xa < 0 || ya <0 || ya > mydata.getHeight()){
+							Lib.p("This can not happen:addPathWithRealCoordinates for screen coords at positionable.java");
+						}
 					}
 					lasttime++;
 					pCreated.setTime(lasttime);
@@ -293,9 +297,22 @@ public class Positionable {
 			}	
 			//end of if
 			
-			if(x >mydata.getMaxX() || x < mydata.getMinX() || y <mydata.getMinY() || y > mydata.getMaxY()){
-				Lib.p("This can not happen:addPathWithRealCoordinates");
-			}		
+			if(op==LocationType.REAL || op==LocationType.RELATIVE) {
+				x=p.getRealX();
+				y=p.getRealY();
+				if(x >mydata.getMaxX() || x < mydata.getMinX() || y <mydata.getMinY() || y > mydata.getMaxY()){
+					Lib.p("This can not happen:addPathWithRealCoordinates");
+				}	
+			}else if(op==LocationType.SCREEN) {
+				x=p.getScreenX();
+				y=p.getScreenY();
+				if(x >mydata.getWidth() || x < 0 || y <0 || y > mydata.getHeight()){
+					Lib.p("This can not happen:addPathWithRealCoordinates for screen coords at positionable.java");
+				}	
+			}else {
+				Lib.p("Option Different at Positionable!!!");
+			}
+				
 		}
 		
 		

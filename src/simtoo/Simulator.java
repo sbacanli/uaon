@@ -7,6 +7,7 @@ import Shapes.RandomPoints;
 import Shapes.Rectangle;
 import Shapes.Shape;
 import Shapes.Spiral;
+import javafx.scene.chart.PieChart.Data;
 import routing.*;
 
 public class Simulator {
@@ -50,7 +51,7 @@ public class Simulator {
 	private int encounterTimeLimit;
 	private boolean isGPS;
 	private LocationType loctype;
-	
+	private double altitudeconverted;
 	
 	
 	public Simulator(Options op,Datas datagiven)
@@ -201,7 +202,7 @@ public class Simulator {
 			
 			Uav u=new Uav(-1*i,s,speeduavReal,altitude,initialX,initialY,data,rn,randomGrid,encounterTimeLimit);
 			u.setGriderParams(GridXDistance, GridYDistance);
-			u.fillPath(u.getInitialX(),u.getInitialY(),data.getMinTime());
+			//u.fillPath(u.getInitialX(),u.getInitialY(),data.getMinTime());
 			
 			//Lib.p("filled path "+u.positionsLength()+" in simulator");
 			//u.writePositions();
@@ -210,9 +211,14 @@ public class Simulator {
 		}
 		
 		COMMDISTANCE=data.RealToVirtualDistance(realDistance);
+		altitudeconverted=data.RealToVirtualDistance(altitude);
 		
 		Reporter.init(toString());
 	
+	}
+	
+	public double getConvertedAltitude() {
+		return altitudeconverted;
 	}
 	
 	public int getMessageLifeInSeconds(){

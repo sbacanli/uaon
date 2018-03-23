@@ -105,25 +105,35 @@ public class Node extends Positionable{
 	@Override
 	public Position getCurrentPositionWithTime(long giventime){
 		Position returned=null;
-		Lib.p("TIME for node "+giventime);
+		//Lib.p("TIME for node "+giventime);
 		if(!isVisible()) {
-			Lib.p("Not visible");
+			//Lib.p(getId()+ " not visible");
 			return null;
 		}
 		if(positionsLength()==0) {
 			//it means no positions in the list but we still have data to read.
 			readData(giventime);
-			Lib.p("data read");
+			//Lib.p("data read in node.java for node "+getId());
 		}
 		//here it means we have data in the list if the time has come
 		//else we can not see the node as it is not in the map at that time
 		
+		int lengthfirst=positionsLength();
+		//Lib.p(getId()+" id length "+lengthfirst);
 		if(positionsLength()!=0 && getPosition(0).getTime()==giventime)
 		{	
 			//returned=new Position(getPosition(0));
 			returned=dequeuePosition();
-			Lib.p("Dequued");
+			//Lib.p("Dequued");
+			int lengthlast=positionsLength();
+			if(lengthlast==lengthfirst) {
+				Lib.p("Position list dequeue not done in Node.java");
+			}
+			
 		}else {
+			//This means the node is not active now. Its data is for future and time hasnt come yet for it.
+			//so it will be null
+			//Lib.p(getId()+" giventime "+giventime+" positions Length "+positionsLength()+" "+getPosition(0).toString());
 			//writePositions();
 		}
 		

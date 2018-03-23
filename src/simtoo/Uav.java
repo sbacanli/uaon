@@ -93,20 +93,19 @@ public class Uav extends Positionable{
 		
 		if(arr==null || arr.isEmpty()){
 			Lib.p("POSITIONS GOT EMPTY AT UAV FILLPATH");
+			System.exit(-1);
 		}else{
-			//There will be at least one element in the points list
-			//so the last parameter is in fact useless
+			// there will be at least one element in the list that has a time data
+			// the arr coordinates are generated for screen. They will be converted to real
 			addPathsWithPoints(arr,mydata,LocationType.SCREEN);	
 		}
 		//time++;
-		
-		
 		/*
 		for(int i=0;i<getPositions().size();i++){
 			getPosition(i).setTime(time);
 			time++;
 		}
-		*/
+		//*/
 	}
 	
 	public void setGriderParams(int xi,int yi){
@@ -185,7 +184,7 @@ public class Uav extends Positionable{
 		newx=mydata.convertToScreenX(newx);
 		newy=mydata.convertToScreenY(newy);
 		//now they are screen coordinates
-		Lib.p(newx+" "+newy+" for reroute");
+		//Lib.p(newx+" "+newy+" for reroute");
 			
 		fillPath(newx,newy,currentTime);
 		
@@ -267,17 +266,18 @@ public class Uav extends Positionable{
 	@Override
 	public Position getCurrentPositionWithTime(long giventime){
 		int lengthBefore=positionsLength();
+		boolean dequeued=false;
 		//Lib.p("Length Before: "+positionsLength());
 		Position returned=null;
-		Lib.p("Called once");
+		//Lib.p("Called once");
 		if(positionsLength()==0) {
-			Lib.p("Problem here!");
+			Lib.p("Problem here! in UAV.java");
 			return null;
 		}
 		if(positionsLength()==1) {
 			if(getPosition(0).time==giventime)
 			{	
-				//*
+				/*
 				Lib.p("TIME IS "+giventime);
 				Lib.p("before reroute "+positionsLength());
 				writePositions();
@@ -287,43 +287,42 @@ public class Uav extends Positionable{
 				//we will get the first one on the queue and we will add the remaining positions
 				// we dont remove the first one now because the added ones should continue from the first
 				//position
+				//Lib.p("dequeed for time "+giventime);
 				
 				reRoute(giventime);
-				Lib.p("filled path again"+positionsLength()+" in simulator");
-				writePositions();
+				
 				//now we need to remove the first
-				
 				returned=dequeuePosition();
-				
-				//Lib.p("sizeXXXXXX");
+				dequeued=true;
 				
 				/*
-				Lib.p("second size "+positionsLength());
+				Lib.p("After "+positionsLength());
 				writePositions();
 	        	//*/
 				
 			}else {
-				//Lib.p("Not dequeued");
+				Lib.p("Not dequeued - length is 1 time "+giventime);
+				writePositions();
+				System.exit(-1);
 			}
 		}else {
 			if(getPosition(0).time==giventime)
 			{			
 				//returned=new Position(getPosition(0));
 				returned=dequeuePosition();
-				
-				//Lib.p("DEqued here");
+				dequeued=true;
+				//Lib.p("Dequed here 2");
 			}else {
-				//Lib.p("Not dequeued2");
+				Lib.p("Not dequeued - length is more");
+				writePositions();
+				System.exit(-1);
+				//PROBLEM HERE AQ
 			}
 		}
-		int lengthAfter=positionsLength();
-		if(lengthBefore==lengthAfter) {
-			//Lib.p("Returned : "+returned+" size of arraylist "+positionsLength());
-		}
+		
 		if(returned == null) {
 			Lib.p("NULL AT UAV.java NOT POSSIBLE!!!");
 			Lib.p("time is: "+giventime);
-			
 		}
 		return returned;
 	}

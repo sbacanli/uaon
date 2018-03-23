@@ -52,7 +52,12 @@ public class SimPanel extends JPanel implements MouseListener{
 	boolean clearpos;
 	boolean isGPS;
 	double btwdistance;//comm distance between node and uav 
-
+	
+	//this is related with java drawing.
+	//repaaint method is called fist. The thing is at that time we dont have data in the Position[] arrays
+	//so I am keeping track of if it is first time
+	boolean firsttime;
+	
 	
 	//The current positions of the nodes and uavs if they are on the map at that time
 	// we are asking positions 2 places
@@ -66,6 +71,7 @@ public class SimPanel extends JPanel implements MouseListener{
 	public SimPanel(Simulator simulator,Datas datagiven,boolean isvisible){
 		
 		super();
+		firsttime=true;
 		this.isvisible=isvisible;
 		r=new Random();
 		mydata=datagiven;
@@ -84,9 +90,10 @@ public class SimPanel extends JPanel implements MouseListener{
 		uavsPositions=new Position[uavs.size()];
 		
 		//Virtual distance
-		COMMDIST=simulator.getCommDist(); 
+		COMMDIST=simulator.getCommDist();
+		double altitude=simulator.getConvertedAltitude();
 		messageLifeInSeconds=simulator.getMessageLifeInSeconds();
-		btwdistance=Math.sqrt(COMMDIST*COMMDIST-uavs.get(0).getAltitude()*uavs.get(0).getAltitude());
+		btwdistance=Math.sqrt(COMMDIST*COMMDIST+altitude*altitude);
 		
 		
 		//Message Scheduling 
@@ -213,12 +220,11 @@ public class SimPanel extends JPanel implements MouseListener{
 	private void drawFigures(Graphics2D g2){
 		int nodesize=15;
 		//Drawing the nodes
-        for(int i=0;i<nodes.size();i++){
+        for(int i=0;i<nodesPositions.length;i++){
         	double x=0;
         	double y=0; 
         	
-        	Position nodepos=nodes.get(i).getCurrentPositionWithTime(time);
-        	nodesPositions[i]=nodepos;
+        	Position nodepos= nodesPositions[i];
         	
 	        if(nodepos!=null){
 	        	x=nodepos.getScreenX();
@@ -231,22 +237,22 @@ public class SimPanel extends JPanel implements MouseListener{
 	        	g2.setPaint(new Color(0, 0, 255)); // a dull blue-green
 	            g2.fill(node);
 	            g2.draw (node);
+	            //Lib.p("node is on the scene "+nodepos.toString());
 	            //Lib.p("for node text "+nodes.get(i).getDataFile()+" is on pos "+nodepos.toString()+" simpanel");
 	           // nodes.get(i).writePositions();
         	}else {
-        		Lib.p("Empty for node "+nodes.get(i).getDataFile());
+        		//Lib.p("Empty for node "+nodes.get(i).getDataFile());
         	}
         }
         
-        for(int i=0;i<uavs.size();i++){
+        for(int i=0;i<uavsPositions.length;i++){
         	Uav uav=uavs.get(i);
         	/*
         	for(int b=0;b<uav.getPositions().size();b++){
         		System.out.println(uav.getPosition(b).toString());
         	}
         	*/
-        	Position uavpos=uav.getCurrentPositionWithTime(time);
-        	uavsPositions[i]=uavpos;
+        	Position uavpos=uavsPositions[i];
         	
 	        if(uavpos!=null){
 	        	
@@ -323,6 +329,19 @@ public class SimPanel extends JPanel implements MouseListener{
 		//routing checks for UAVs	
 		for(int i=0;i<uavs.size();i++){
 			Uav uav=uavs.get(i);
+			int pos=uav.getId()*(-1) - 1;
+			uavsPositions[pos]=uav.getCurrentPositionWithTime(time);
+			Position uavpos=uavsPositions[pos];
+        	
+	        if(uavpos==null){
+	    		//*
+        		Lib.p("time is "+time+" in update positions");
+        		Lib.p(uav.getPosition(0));
+        		Lib.p("This part can not be null");
+        		System.exit(-1);
+        		//*/
+        	}
+	        
 			if(uav.isRouteFinished() && uav.getPositions().size()!=0) {
 				Lib.p("PROBLEM in simpanel");
 				uav.writePositions();
@@ -337,11 +356,17 @@ public class SimPanel extends JPanel implements MouseListener{
 	    			Lib.p(uav.getPosition(n).time);
 	    		}
 	    		//*/
-	    		
-	    		
 	    		numberOfRoutesCompleted++;
 	    	}
+			
 		}
+		
+		for(int i=0;i<nodes.size();i++){
+			Node node=nodes.get(i);
+			int pos=node.getId()-1;
+			nodesPositions[pos]=node.getCurrentPositionWithTime(time);
+		}
+		
 	}
 	
 	public void addMessage(RoutingNode n,long timegiven){
@@ -389,10 +414,7 @@ public class SimPanel extends JPanel implements MouseListener{
 		        		double x2=encountern2.getScreenX();
 			        	double y2=encountern2.getScreenY();
 			        	double distancecalc=Lib.screenDistance(x1, y1, x2, y2);
-			        	if(isGPS){
-			        		distancecalc=Lib.realdistance(y1,x1,y2,x2);
-			        	}
-		
+			        			
 			        	
 			        	//Distance comparison should be done on virtual distances
 			        	//COMMDIST is virtual
@@ -461,9 +483,6 @@ public class SimPanel extends JPanel implements MouseListener{
 			        	
 			        	//Lib.p(Lib.relativeDistance(x1, y1, x2, y2)+"  UAVS  "+COMMDIST);
 			        	double distancecalc=Lib.screenDistance(x1, y1, x2, y2);
-			        	if(isGPS){
-			        		distancecalc=Lib.realdistance(y1,x1,y2,x2);
-			        	}
 			        	
 			        	if(distancecalc <= COMMDIST){
 							
@@ -527,11 +546,7 @@ public class SimPanel extends JPanel implements MouseListener{
 			        	double ynode=encounterNode.getScreenY();
 			        	//Lib.p(Lib.relativeDistance(xuav, yuav, xnode, ynode)+"  BETWEEN  "+COMMDIST);
 			        	double distancecalc=0;
-			        	if(isGPS){
-			        		distancecalc=Lib.realdistance(yuav,xuav,ynode,xnode);
-			        	}else{
-			        		distancecalc=Lib.screenDistance(xuav, yuav, xnode, ynode);
-			        	}
+			        	distancecalc=Lib.screenDistance(xuav, yuav, xnode, ynode);
 			        	
 			        	if(distancecalc <= btwdistance){
 		
@@ -580,14 +595,32 @@ public class SimPanel extends JPanel implements MouseListener{
 	}
 	
 	private void doDrawing(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
-        drawFigures(g2);
+		if(firsttime) {
+			updatePositions();
+			Graphics2D g2 = (Graphics2D) g;
+			drawFigures(g2);
+			increaseTime();
+			firsttime=false;
+		}else {
+			Graphics2D g2 = (Graphics2D) g;
+			drawFigures(g2);
+		}
+        
     }
 
     @Override
     public void paintComponent(Graphics g) {
-        super.paintComponent(g);
+    	super.paintComponent(g);
         doDrawing(g);
+    }
+    
+    private boolean allEmpty(Position[] arr) {
+    	for(int i=0;i<arr.length;i++) {
+    		if(arr[i]!=null) {
+    			return false;
+    		}
+    	}
+    	return true;
     }
     
     
@@ -634,8 +667,9 @@ public class SimPanel extends JPanel implements MouseListener{
                 parent.simulationEnded();
         	}else {
         		updatePositions();
-        		increaseTime();
+        		
         		parent.repaint();
+        		increaseTime();
         	}
         	/*else {
         		updater();  

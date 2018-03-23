@@ -29,13 +29,7 @@ public class Lib {
 		
 	}
     
-    public static double distance(PointP p1,PointP p2){
-		return Math.sqrt(
-				(  p1.getX()-p2.getX() )  *  (  p1.getX()-p2.getX()   )
-				+ ( p1.getY()-p2.getY() ) *  (  p1.getY()-p2.getY()   )
-				);
-	}
-	
+    
     public static double realdistance(double lat1,double lon1,double lat2,double lon2) {
     	//*
     	double R = 6371; // Radius of the earth in km

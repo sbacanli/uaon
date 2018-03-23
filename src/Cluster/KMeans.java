@@ -138,7 +138,7 @@ public class KMeans {
         	//Calculates total distance between new and old Centroids
         	double distance = 0;
         	for(int i = 0; i < lastCentroids.size(); i++) {
-        		distance += Lib.distance(lastCentroids.get(i),currentCentroids.get(i));
+        		distance += distance(lastCentroids.get(i),currentCentroids.get(i));
         		System.out.println("distances "+distance);
         	}
         	System.out.println("#################");
@@ -151,6 +151,13 @@ public class KMeans {
         	}
         }
     }
+    
+    public static double distance(PointP p1,PointP p2){
+		return Math.sqrt(
+				(  p1.getX()-p2.getX() )  *  (  p1.getX()-p2.getX()   )
+				+ ( p1.getY()-p2.getY() ) *  (  p1.getY()-p2.getY()   )
+				);
+	}
     
     private void clearClusters() {
     	for(Cluster cluster : clusters) {
@@ -180,7 +187,7 @@ public class KMeans {
         	min = max;
             for(int i = 0; i < clusters.size(); i++) {
             	Cluster c = clusters.get(i);
-                distance = Lib.distance(point, c.getCentroid());
+                distance = distance(point, c.getCentroid());
                 if(distance > min){
                     min = distance;
                     cluster = i;
