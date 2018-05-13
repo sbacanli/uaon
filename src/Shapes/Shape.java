@@ -6,8 +6,8 @@ import simtoo.PointP;
 
 public abstract class Shape {
 
-	ArrayList<PointP> arr;
-	double xlim,ylim;
+	private ArrayList<PointP> arr;
+	private double xlim,ylim;
 	
 	protected Shape(double xlim,double ylim){
 		arr=new ArrayList<PointP>();
@@ -31,6 +31,9 @@ public abstract class Shape {
 		arr.add(new PointP(x,y));
 	}
 	
+	public void addPoint(PointP p) {
+		arr.add(p);
+	}
 	/*
 	public void writeFile(String s){
 		BufferedWriter bw=null;
@@ -57,4 +60,16 @@ public abstract class Shape {
 	public abstract void updateFail();
 	
 	public abstract void updateFail(double n);
+	
+	public PointP initialPoint() {
+		return null;
+	}
+	
+	public final void clearPositions() {
+		arr.clear();
+	}
+	
+	public final boolean isPositionsEmpty() {
+		return arr.isEmpty();
+	}
 }

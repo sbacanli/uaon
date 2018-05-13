@@ -1,8 +1,9 @@
 package simtoo;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
-public class Position implements Comparator<Position> {
+public class Position implements Comparator<Position>,Serializable {
 	
 	long time;
 	PointP screenp;

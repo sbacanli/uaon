@@ -1,14 +1,8 @@
 package simtoo;
 
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.io.*;
+import java.util.*;
 
 
 public class Positionable {
@@ -22,12 +16,14 @@ public class Positionable {
 		private Queue<Position> pointsp;
 		private boolean routeFinished;
 		private Comparator<Position> positionComparator;
-		private boolean isGPS;
+		private Datas mydata;
+		private Position prevPosition;
+		private Position currentPosition;
 		
-		public Positionable(int nodeId,boolean isGPS){
+		public Positionable(int nodeId,Datas gdata){
 
 			//fillPositions();
-			this.isGPS=isGPS;
+			mydata=gdata;
 			this.nodeId=nodeId;
 			if(nodeId==0){
 				Lib.p("NodeId is 0");
@@ -53,6 +49,10 @@ public class Positionable {
 			return nodeId;
 		}
 		
+		public Datas getData() {
+			return mydata;
+		}
+		
 		public boolean isRouteFinished(){
 			return routeFinished;
 		}
@@ -60,6 +60,7 @@ public class Positionable {
 		public void setRouteFinished(boolean a){
 			routeFinished=a;
 		}
+		
 		
 		public Queue<Position> getPositions(){
 			return pointsp;
@@ -85,6 +86,21 @@ public class Positionable {
 			pointsp=arr;
 		}
 		
+		public void setPreviousPosition(Position p1) {
+			prevPosition=p1;
+		}
+		
+		public void setCurrentPosition(Position p1) {
+			currentPosition=p1;
+		}
+		
+		public Position getCurrentPosition() {
+			return currentPosition;
+		}
+		
+		public Position getPreviousPosition() {
+			return prevPosition;
+		}
 		
 		//UAV.fillPath uses that
 		public void addPathsWithPoints(ArrayList<PointP> path,Datas mydata,LocationType op){
@@ -156,6 +172,11 @@ public class Positionable {
 				lasttime=(int)(getPosition(lastpos).getTime());	
 				timeDifference=p.getTime()-lasttime;
 				
+				//if the time difference is larger than 5 minutes dont project the coordinates or
+				// if the data repeats itself ignore it
+				if(timeDifference > mydata.getTimeDifference() || timeDifference==0) {
+					return;
+				}
 				
 				//double distance=Lib.screenDistance(lastposx, lastposy, xcalc, ycalc);
 				double xdistance=Math.abs(lastposx-x);
@@ -328,28 +349,31 @@ public class Positionable {
 			}else if(getPosition(0).time==giventime)
 			{
 				returned=new Position(getPosition(0));
-				setRouteFinished(false);
-				calculateDistance();
+				setRouteFinished(false);				
 				dequeuePosition();
 			}	
 			return returned;
 		}
 		
 		public void calculateDistance() {
-			if(!isGPS){
-				double lat1=getPosition(0).getRealX();
-				double lon1=getPosition(0).getRealY();
-				
-				double lat2=getPosition(1).getRealX();
-				double lon2=getPosition(1).getRealY();
-				addDistanceTravelled(Lib.relativeDistance(lat1, lon1, lat2, lon2));
-			}else{
-				double lat1=getPosition(0).getRealX();
-				double lon1=getPosition(0).getRealY();
-				
-				double lat2=getPosition(1).getRealX();
-				double lon2=getPosition(1).getRealY();
-				addDistanceTravelled(Lib.realdistance(lat1, lon1, lat2, lon2));
+			if(getPreviousPosition()!=null && getCurrentPosition() !=null) {
+				if(getData().getLoc()==LocationType.RELATIVE){
+					double lat1=getPreviousPosition().getRealX();
+					double lon1=getPreviousPosition().getRealY();
+					
+					double lat2=getCurrentPosition().getRealX();
+					double lon2=getCurrentPosition().getRealY();
+					addDistanceTravelled(Lib.relativeDistance(lat1, lon1, lat2, lon2));
+				}else if(getData().getLoc()==LocationType.REAL){
+					double lat1=getPreviousPosition().getRealX();
+					double lon1=getPreviousPosition().getRealY();
+					
+					double lat2=getCurrentPosition().getRealX();
+					double lon2=getCurrentPosition().getRealY();
+					addDistanceTravelled(Lib.realdistance(lat1, lon1, lat2, lon2));
+				}else {
+					Lib.p("Unknown data location type is Positionable.java");
+				}
 			}
 		}
 		
@@ -379,7 +403,7 @@ public class Positionable {
 		}
 		
 		public void addDistanceTravelled(double d){
-			distancetravelled+=d;
+			distancetravelled=d+distancetravelled;
 		}
 		
 		public Position getLastPosition(){

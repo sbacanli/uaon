@@ -35,7 +35,7 @@ public class Computer {
 		}
 		
 		Lib.p(Reporter.PacketInfo());
-		//Lib.p(Reporter.getDistanceTravelled(uav));
+		Lib.p(Reporter.getDistanceTravelled(uav));
 		Reporter.writeDistanceTravelled(uav);
 	}
 	

@@ -51,13 +51,13 @@ public class Reporter {
 	private static int numberOfSentByNodeToUAVs=0;
 	
 	//Output folder name set to Outputs
-	private static String foldername="Outputs";
+	private static String foldername="";
 	private static Date runstart;
 	
 	//the written filename will be in fact the parameters of the simulation
 	//that will be someVariable_Value_someVariable_Value etc...
 	public static void init(String params){
-		foldername=foldername+"_"+params;
+		foldername=params;
 		File fold=new File(foldername);
 		if(!fold.exists()  || !fold.isDirectory()){
 			fold.mkdir();
@@ -262,7 +262,8 @@ public class Reporter {
 			bwriter.write(s);
 			bwriter.close();
 		}catch(Exception e){
-			Lib.p(e.toString());
+			Lib.p("Reporter can not write to file "+foldername+"/"+fileName);
+			e.printStackTrace();
 		}
 	}	
 	
@@ -334,10 +335,14 @@ public class Reporter {
 	
 	public static String getDistanceTravelled(ArrayList<Uav> uavs){
 		String all="";
+		double distances=0;
 		for(int i=0;i<uavs.size();i++){
-			all=all+"UAV with id "+uavs.get(i).getId()+" travelled "+uavs.get(i).getDistanceTravelled()+" meters \r\n";
+			//all=all+"UAV with id "+uavs.get(i).getId()+" travelled "+uavs.get(i).getDistanceTravelled()+" meters \r\n";
+			distances=distances+uavs.get(i).getDistanceTravelled();
 		}
+		all="UAV distances is "+distances;
 		return all;
+		
 		
 	}
 	

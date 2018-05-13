@@ -1,6 +1,8 @@
 package simtoo;
 
-public class PointP {
+import java.io.Serializable;
+
+public class PointP implements Serializable {
 
 	private double x;
 	private double y;

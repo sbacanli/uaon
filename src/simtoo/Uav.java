@@ -9,42 +9,47 @@ import random.*;
 
 public class Uav extends Positionable{
 
-	double initialX,initialY;
-	Datas mydata;
-	int Radius;
-	int xnum,ynum;
+	private double initialX,initialY;
+	private int Radius;
+	private int xnum,ynum;
 	private RoutingNode rn;
-	double distance;
-	double altitude;
-	ArrayList<Encounter> prevEnc;
-	ArrayList<Integer> uniqueReceiversPrev;
-	boolean randomGrid;
-	double initialParamSpiral;
-	Shape s;
-	Grider g;
-	int encounterTimeLimit;
-	ArrayList<PointP> oldpoints;
-	Position prevPosition;
+	private double distance;
+	private double altitude;
+	private ArrayList<Encounter> prevEnc;
+	private ArrayList<Integer> uniqueReceiversPrev;
+	private boolean randomGrid;
+	private double initialParamSpiral;
+	private Shape s;
+	private Grider g;
+	private int encounterTimeLimit;
+	private ArrayList<PointP> oldpoints;
+	private int numberOfRoutesCompleted;
+	
 	
 	Uav(int uid,Shape sg,double speedreal,int altitudegiven,
-			double xpos,double ypos,Datas givendata,RoutingNode rn,boolean rg,int encounterTimeLimit){
-		super(uid,givendata.isGPS());
+			Datas givendata,RoutingNode rn,boolean rg,int encounterTimeLimit){
+		super(uid,givendata);
 		setRealSpeed(speedreal);
 		setScreenSpeed(givendata.RealToVirtualDistance(speedreal));
 		this.rn=rn;
 		s=sg;
-		initialX=xpos;
-		initialY=ypos;
-		mydata=givendata;
+		PointP initialPoint=s.initialPoint();
+		initialX=initialPoint.getX();
+		initialY=initialPoint.getY();
 		
 		//adding initial screen position
-		Position posGen=mydata.getPositionWithScreen(xpos, ypos);
-		posGen.setTime(mydata.getMinTime());
+		Position posGen=getData().getPositionWithScreen(initialX, initialY);
+		setCurrentPosition(posGen);
+		posGen.setTime(getData().getMinTime());
 		ArrayList<Position> p1=new ArrayList<Position>();
 		p1.add(posGen);
-		addPathsWithPositions(p1,mydata,LocationType.SCREEN);
+		addPathsWithPositions(p1,getData(),LocationType.SCREEN);
 		
-		///
+		
+		setPreviousPosition(null);
+		
+		//after the first position the positions will be consumed and reroute will be run
+		
 		
 		
 		xnum=0;
@@ -58,7 +63,7 @@ public class Uav extends Positionable{
 		}
 		this.encounterTimeLimit=encounterTimeLimit;
 		oldpoints=new ArrayList<PointP>();
-		prevPosition=null;
+		numberOfRoutesCompleted=0;
 	}
 	
 	public void setShape(Shape sg){
@@ -86,9 +91,16 @@ public class Uav extends Positionable{
 	
 	public void fillPath(double xpos,double ypos,long time){
 		//initial X and Y coordinate on the screen
+		//writePositions();
 		ArrayList<PointP> arr=null;
 		s.fill(xpos,ypos);
 		arr=s.getPoints();
+		
+		/*
+		for(int i=0;i<arr.size();i++){
+			System.out.println( (i+1)+"   "+arr.get(i).getX()+" "+ arr.get(i).getY());
+		}
+		//*/
 		
 		
 		if(arr==null || arr.isEmpty()){
@@ -97,7 +109,7 @@ public class Uav extends Positionable{
 		}else{
 			// there will be at least one element in the list that has a time data
 			// the arr coordinates are generated for screen. They will be converted to real
-			addPathsWithPoints(arr,mydata,LocationType.SCREEN);	
+			addPathsWithPoints(arr,getData(),LocationType.SCREEN);	
 		}
 		//time++;
 		/*
@@ -106,11 +118,15 @@ public class Uav extends Positionable{
 			time++;
 		}
 		//*/
+		//this is important! spent one day to add this line!
+		//positions in the shape should be cleared so that the new positions will not be added
+		// to the old positions
+		s.clearPositions();
 	}
 	
 	public void setGriderParams(int xi,int yi){
 		xnum=xi;ynum=yi;
-		g=new Grider(xnum,ynum,mydata.getMinX(),mydata.getMaxX(),mydata.getMinY(),mydata.getMaxY());
+		g=new Grider(xnum,ynum,getData().getMinX(),getData().getMaxX(),getData().getMinY(),getData().getMaxY());
 	}
 	
 	public PointP getRandomLocationInGrid(){
@@ -160,6 +176,7 @@ public class Uav extends Positionable{
 				//setting initial position will be useful for spiral only.
 				//It is not used for rectangular or random. No problem at all
 				//setting Radius for Spiral
+				
 				s.updateFail(initialParamSpiral);
 				
 				//Lib.p("UAV is random ");
@@ -177,91 +194,29 @@ public class Uav extends Positionable{
 			
 			
 		}//end of random grid check
-	
+		
 		rn.clearEncounters(encounterTimeLimit,currentTime);
 		
 		//newX and newY are real coordinates
-		newx=mydata.convertToScreenX(newx);
-		newy=mydata.convertToScreenY(newy);
+		newx=getData().convertToScreenX(newx);
+		newy=getData().convertToScreenY(newy);
 		//now they are screen coordinates
 		//Lib.p(newx+" "+newy+" for reroute");
 			
+		initialX=newx;
+		initialY=newy;
 		fillPath(newx,newy,currentTime);
 		
-		
+		numberOfRoutesCompleted++;
+		s.clearPositions();
         //setRouteFinished(false);
 	}
 	
-	public void updateIfnotRandom(double newx,double newy){
-		//we are not using random directly
-		
-		//if in the previous route, no encounter took place
-		if(rn.getEncounterCountWithNodes()==0){
-			//encountered with no one
-			//random real coordinates
-			
-			PointP randompoint=getRandomLocationInGrid();
-			newx=randompoint.getX();
-			newy=randompoint.getY();
-			
-			//setting initial position will be useful for spiral only.
-			//It is not used for rectangular or random. No problem at all
-			//setting Radius for Spiral
-			s.updateFail();
-			
-			//Lib.p("UAV is random ");
-			
-		}else{
-			//if in the previous route, some encounter happened
-			
-			if(!prevEnc.isEmpty()){
-				//UAV encountered with some nodes
-				// prev Encounter is also not empty
-				
-				ArrayList<Integer> commons=SimLib.commonNumbers(rn.uniqueReceiverIdsEncounterNodes(), uniqueReceiversPrev);
-				//commons are the common nodes (Id) between previous and current encounters
-				//commons can be empty but 
-				//rn.uniqueReceiverIdsEncounterNodes() can not be empty we checked at the top
-				//uniquereceiversPrev is also not empty as prevEnc is not empty
-				
-				if(commons.size()==rn.uniqueReceiverIdsEncounterNodes().size()){
-					//same nodes are encountered
-					PointP randompoint=getRandomLocationInGrid();
-					newx=randompoint.getX();
-					newy=randompoint.getY();
-					s.updateFail();
-					
-				}else{
-					//some different nodes exist
-					
-					g.process(rn.getEncounterHistoryWithNodes());
-					PointP p=g.max();
-					//g.pri();
-					//real coordinates
-					newx=p.getX();
-					newy=p.getY();					
-					s.updateSuccess();							
-				}
-				
-			
-			}else{
-				//random point
-				//previous encounter is empty. Current one is not empty
-				g.process(rn.getEncounterHistoryWithNodes());
-				PointP p=g.max();
-				newx=p.getX();
-				newy=p.getY();					
-				s.updateSuccess();						
-			}
-			
-			
-			prevEnc.clear();
-			prevEnc=new ArrayList<Encounter>(rn.getEncounterHistoryWithNodes());
-			uniqueReceiversPrev.clear();
-			uniqueReceiversPrev=new ArrayList<Integer>(rn.uniqueReceiverIdsEncounterNodes());
-			
-		}//end of else if encounterhistorywithnodes
+
+	public int getNumberOfRoutesCompleted(){
+		return numberOfRoutesCompleted;
 	}
+
 	
 	@Override
 	public Position getCurrentPositionWithTime(long giventime){
@@ -294,6 +249,9 @@ public class Uav extends Positionable{
 				//now we need to remove the first
 				returned=dequeuePosition();
 				dequeued=true;
+				setPreviousPosition(getCurrentPosition());
+				setCurrentPosition(returned);
+				calculateDistance();
 				
 				/*
 				Lib.p("After "+positionsLength());
@@ -311,6 +269,8 @@ public class Uav extends Positionable{
 				//returned=new Position(getPosition(0));
 				returned=dequeuePosition();
 				dequeued=true;
+				setPreviousPosition(getCurrentPosition());
+				setCurrentPosition(returned);
 				//Lib.p("Dequed here 2");
 			}else {
 				Lib.p("Not dequeued - length is more");
@@ -324,6 +284,7 @@ public class Uav extends Positionable{
 			Lib.p("NULL AT UAV.java NOT POSSIBLE!!!");
 			Lib.p("time is: "+giventime);
 		}
+		
 		return returned;
 	}
 	

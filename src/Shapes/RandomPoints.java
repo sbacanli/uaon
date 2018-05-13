@@ -1,5 +1,6 @@
 package Shapes;
 import random.Random;
+import simtoo.PointP;
 
 public class RandomPoints extends Shape{
 	
@@ -26,15 +27,24 @@ public class RandomPoints extends Shape{
 
 	
 	public void fill() {
-		double xpos=Random.nextDouble()*xlim;
-		double ypos=Random.nextDouble()*ylim;
+		clearPositions();
+		double xpos=Random.nextDouble()*getXlim();
+		double ypos=Random.nextDouble()*getYlim();
 		addPoint(xpos, ypos);
 	}
 
 	@Override
 	public void fill(double xpos, double ypos) {
+		clearPositions();
 		fill();
 		
+	}
+	
+	@Override
+	public PointP initialPoint() {
+		double xpos=Random.nextDouble()*getXlim();
+		double ypos=Random.nextDouble()*getYlim();
+		return new PointP(xpos,ypos);
 	}
 	
 	

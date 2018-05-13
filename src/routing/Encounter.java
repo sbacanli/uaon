@@ -6,12 +6,13 @@ import simtoo.Position;
  * This class is for holding information for encounters
  * who has encountered with who when and how many times!
  */
-public class Encounter implements Comparable<Encounter> {
+public class Encounter implements Comparable<Encounter>,java.io.Serializable {
 
 	//these integers are for the id of the nodes
 	private int sender,receiver;
 	private long startingTime,finishingTime;
 	private Position p;
+	private static final long serialVersionUID = 1L;
 	
 	public Encounter(){
 		sender=-1;

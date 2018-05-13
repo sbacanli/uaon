@@ -24,6 +24,7 @@ public class RoutingNode{
 	private double probToSend;
 	private ArrayList<Encounter> encounterHistoryWithNodes;
 	private HashMap<Integer,Encounter> hm;
+	private ArrayList<Encounter> ExtendedEncounters;
 	//encounter history with nodes can be harvested by checking encounterHistory ArrayList
 	// but in that case it will slow down the simulator so we will be keeping another ArrayList for
 	//encounters just with nodes.
@@ -36,6 +37,7 @@ public class RoutingNode{
 		contacts=new ArrayList<Encounter>();
 		encounterHistory=new ArrayList<Encounter>();
 		encounterHistoryWithNodes=new ArrayList<Encounter>();
+		ExtendedEncounters=new ArrayList<Encounter>();
 		messageBuffer=new ArrayList<Message>();
 		isIdle=false;
 		sents=new ArrayList<Integer>();//not used
@@ -373,6 +375,49 @@ public class RoutingNode{
 	
 		
 		return true;
+	}
+	
+	public boolean sendEncounterHistory(Air air,int receiverId,String time) {
+		int mesid=-2;
+		//this is protocol message for encounter History
+		String mes=Lib.toString(encounterHistoryWithNodes);
+		Message message=new Message(getId(), receiverId, mes, mesid, time);
+		return sendMessage(air,message,time);
+	}
+	
+	public void receiveEncounterHistory(Air a,String time) {
+		Message m=receiveMessage(a, time);
+		if(m==null) {
+			//message dropped or no message
+		}else{
+			if(m.getId()==-2) {
+				ArrayList<Encounter> encountersReceived=(ArrayList<Encounter>) (Lib.fromString(m.getMessageText()));
+				for(int i=0;i<encountersReceived.size();i++) {
+					int rec=encountersReceived.get(i).getReceiverId();
+					if(rec<0) {
+						//if it is UAV
+						rec=encountersReceived.get(i).getSenderId();
+						if(rec>0) {
+							Encounter e=new Encounter(getId(),rec,encountersReceived.get(i).getPosition(),Long.parseLong(time));
+							encounterHistory.add(e);
+							encounterHistoryWithNodes.add(e);
+							hm.put(rec, e);
+						}
+					}else {
+						Encounter e=new Encounter(getId(),rec,encountersReceived.get(i).getPosition(),Long.parseLong(time));
+						encounterHistory.add(e);
+						encounterHistoryWithNodes.add(e);
+						hm.put(rec, e);
+					}
+					
+				}//end of  for
+			}else {
+				Lib.p("Message is not encounters");
+				Lib.p("Message is "+m.toString());
+			}
+		}
+		
+		
 	}
 	
 	public boolean addtoBuffer(Message m,String time){

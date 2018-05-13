@@ -27,6 +27,9 @@ public class Air {
 	//receive the message that is sent to id
 	public Message receiveMessage(int id,String time){
 		Message ret=null;
+		if(messages.isEmpty()) {
+			return ret;
+		}
 		Message checker=messages.get(messages.size()-1);//last message sent
 		if(!messages.isEmpty() && checker.getTime().equals(time) &&
 			checker.getReceiver()==id ){//messages sent newly
@@ -50,5 +53,9 @@ public class Air {
 		//if we want eavesdropping property we shouldnt remove the packet
 
 		return ret;
+	}
+	
+	public ArrayList<Message> getAllMessages(){
+		return messages;
 	}
 }

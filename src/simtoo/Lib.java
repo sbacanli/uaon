@@ -1,26 +1,92 @@
 package simtoo;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import static jcuda.driver.JCudaDriver.*;
+
+import jcuda.*;
+import jcuda.driver.*;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.nio.ByteBuffer;
 
 
 public class Lib {
 
+	static String file;
+	
+	public static void init(String gfile) {
+		file=gfile;
+	}
 	
 	public static double relativeDistance(double x,double y,double x1,double y1){
-		return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
+		
+		return cudaFunc("relative", x, y, x1, y1);
+		//return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
+	}
+	
+	private static byte[] convertToByteArray(double value) {
+	      byte[] bytes = new byte[8];
+	      ByteBuffer buffer = ByteBuffer.allocate(bytes.length);
+	      buffer.putDouble(value);
+	      return buffer.array();
+
+	}
+	 
+	private static double toDouble(byte[] bytes) {
+		    return ByteBuffer.wrap(bytes).getDouble();
 	}
 	
 	public static double screenDistance(double x,double y,double x1,double y1){
-		return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
+		return cudaFunc("relative", x, y, x1, y1);
+		//return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
+	}
+	
+	private static double cudaFunc(String func,double x,double y,double x1,double y1) {
+		int memorySize=Double.SIZE/8;
+		cuInit(0);
+		CUdevice device = new CUdevice();
+		cuDeviceGet(device, 0);
+		CUcontext context = new CUcontext();
+		cuCtxCreate(context, 0, device);
+
+		// Load the PTX that contains the kernel.
+		CUmodule module = new CUmodule();
+		cuModuleLoad(module, "distance.ptx");
+
+		// Obtain a handle to the kernel function.
+		CUfunction function = new CUfunction();
+		cuModuleGetFunction(function, module, func);
+
+		// Allocate the device input data, and copy the
+		// host input data to the device
+		CUdeviceptr deviceData = new CUdeviceptr();
+		cuMemAlloc(deviceData, memorySize);
+		
+		
+		// Set up the kernel parameters: A pointer to an array
+		// of pointers which point to the actual values.
+		Pointer kernelParameters = Pointer.to(
+		    Pointer.to(convertToByteArray(x)), 
+		    Pointer.to(convertToByteArray(y)), 
+		    Pointer.to(convertToByteArray(x1)), 
+		    Pointer.to(convertToByteArray(y1)),
+		    Pointer.to(deviceData)
+		);
+
+        double[] hostOutput = new double[1];
+		// Copy the data back from the device to the host and clean up
+		cuMemcpyDtoH(Pointer.to(hostOutput), deviceData, memorySize);
+		
+		double returned=hostOutput[0];//toDouble(hostOutput);
+		cuMemFree(deviceData);
+		return returned;
 	}
 	
     public static void p(Object x){
 		System.out.println(x.toString());
 		BufferedWriter bwriter=null;
 		try{
-			bwriter=new BufferedWriter(new FileWriter("Report.txt",true));
+			bwriter=new BufferedWriter(new FileWriter(file,true));
 			bwriter.write(x+"\r\n");
 			bwriter.close();
 		}catch(Exception e){
@@ -31,7 +97,7 @@ public class Lib {
     
     
     public static double realdistance(double lat1,double lon1,double lat2,double lon2) {
-    	//*
+    	/*
     	double R = 6371; // Radius of the earth in km
     	double dLat = deg2rad(lat2-lat1);  // deg2rad below
     	double dLon = deg2rad(lon2-lon1); 
@@ -43,6 +109,7 @@ public class Lib {
     	double d = R * c; // Distance in km
     	return d*1000;
     	//*/
+    	return cudaFunc("real", lat1, lon1, lat2, lon2);
     }
     
 
@@ -79,4 +146,33 @@ public class Lib {
         }
         return -1;
 	}
+	
+	/** Read the object from Base64 string. */
+	   public static Object fromString( String s ) {
+		   try {
+				byte [] data = Base64.getDecoder().decode( s );
+				ObjectInputStream ois = new ObjectInputStream( 
+				                                new ByteArrayInputStream(  data ) );
+				Object o  = ois.readObject();
+				ois.close();
+				return o;
+		   }catch(Exception e) {
+			   e.printStackTrace();
+		   }
+		   return null;
+	   }
+
+	    /** Write the object to a Base64 string. */
+	    public static String toString( Serializable o ){
+	    	try {
+	    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	        ObjectOutputStream oos = new ObjectOutputStream( baos );
+	        oos.writeObject( o );
+	        oos.close();
+	        return Base64.getEncoder().encodeToString(baos.toByteArray()); 
+	    	}catch(Exception e) {
+			   e.printStackTrace();
+		   }
+	    	return null;
+	    }
 }

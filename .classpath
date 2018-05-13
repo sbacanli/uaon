@@ -2,5 +2,19 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcublas-0.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcublas-natives-0.8.0-windows-x86_64.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcuda-0.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcuda-natives-0.8.0-windows-x86_64.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcufft-0.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcufft-natives-0.8.0-windows-x86_64.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcurand-0.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcurand-natives-0.8.0-windows-x86_64.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcusolver-0.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcusolver-natives-0.8.0-windows-x86_64.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcusparse-0.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jcusparse-natives-0.8.0-windows-x86_64.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jnvgraph-0.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Kara/eclipse-workspace/UAON/src/jnvgraph-natives-0.8.0-windows-x86_64.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

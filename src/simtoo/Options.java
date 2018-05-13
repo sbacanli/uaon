@@ -16,10 +16,11 @@ public class Options {
 		readConfigFile();
 	}
 	
-	public void readConfigFile(){
+	private void readConfigFile(){
 		try (BufferedReader br = new BufferedReader(new FileReader(conf))) {
 		    String line;
 		    while ((line = br.readLine()) != null) {
+		    	// // is commenting in the config file
 		    	if(!line.startsWith("//")){
 		    		StringTokenizer st=new StringTokenizer(line,":");
 		    		String s1=st.nextToken();
@@ -28,8 +29,10 @@ public class Options {
 		    	}
 		    	// lines starting with // are comment lines and they are ignored
 		    }
+		    br.close();
 		}catch(Exception e){
-			Lib.p(e.toString());
+			Lib.p("Problem in reading config file "+conf);
+			e.printStackTrace();
 		}
 	}
 
@@ -64,7 +67,21 @@ public class Options {
     	if(hm.get(s) !=null){
     		return Integer.parseInt(hm.get(s));
     	}
+    	//made this number specifically like that  so that it will be easy to debug. just search the number.
     	Lib.p("ERROR: config file empty for call getParamInt in class Options for option "+s);
+    	return -999;
+    }
+    
+    public long getParamLong(String s){
+    	if(hm.isEmpty()){
+    		Lib.p("ERROR: config file empty ");
+    		return -999;
+    	}
+    	
+    	if(hm.get(s) !=null){
+    		return Long.parseLong(hm.get(s));
+    	}
+    	Lib.p("ERROR: config file empty for call getParamLong in class Options for option "+s);
     	return -999;
     }
     
@@ -95,4 +112,6 @@ public class Options {
 		Lib.p("ERROR: Entry not found for call getParamString in class Options");
     	return null;
     }
+    
+    
 }

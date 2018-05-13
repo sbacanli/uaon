@@ -13,18 +13,23 @@ public class Datas {
 
 	private Random r;
 	private int linenumlimit=0;
-	static double widthOfScreen;
-	static double heightOfScreen;
+	private  double widthOfScreen;
+	private double heightOfScreen;
 	private ArrayList<ArrayList<Double>> arr;
 	private double minx;
 	private double miny;
 	private double maxy;
 	private double maxx;
 	private long maxtime;
+	private long maxftime;
 	private long mintime;
-	private boolean isGPS;
 	private int precision;
 	private LocationType op;
+	private double AreaRatio;
+	private double LinearXDiff,LinearYDiff;
+	private int timeDifference;
+	private int numberOfDataLines;
+	private boolean eof;
 	
 	public Datas(double h,double w){
 		linenumlimit=1000;
@@ -40,18 +45,21 @@ public class Datas {
 		maxx=Double.MIN_VALUE;
 		maxy=Double.MIN_VALUE;
 		maxtime=Long.MIN_VALUE;
+		maxftime=Long.MIN_VALUE;
 		mintime=Long.MAX_VALUE;
-		isGPS=false;
 		precision=6;
 		op=null;
+		AreaRatio=0;
+		eof=false;
 	}
 	
-	public boolean isGPS(){
-		return isGPS;		
+	public boolean isEOF() {
+		return eof;
 	}
 	
-	public void setGPS(boolean b){
-		isGPS=b;
+	
+	public void setEOF(boolean c) {
+		eof=c;
 	}
 	
 	public void setLoc(LocationType l) {
@@ -62,18 +70,38 @@ public class Datas {
 		return op;
 	}
 	
+	public void setNumberOfDataLines(int ns) {
+		numberOfDataLines=ns;
+	}
+	
+	public void setTimeDifference(int t) {
+		timeDifference=t;
+	}
+	
+	public int getTimeDifference() {
+		return timeDifference;
+	}
+	
+	public int getNumberOfDataLines() {
+		return numberOfDataLines;
+	}
+	
+	public long getMaxFTime() {
+		return maxftime;
+	}
+	
 	public ArrayList<PointP> fillRandomPositions(int numberOfPoints){
 		ArrayList<PointP> pts=new ArrayList<PointP>();
 		
 		double xgen=0;
 		double ygen=0;
 		int count=1;
-		double xgenfirst=(r.nextDouble()*(maxx-minx))+minx;
-		double ygenfirst=(r.nextDouble()*(maxy-miny))+miny;
+		double xgenfirst=(r.nextDouble()*(getLinearXDiff()))+minx;
+		double ygenfirst=(r.nextDouble()*(getLinearYDiff()))+miny;
 		pts.add(new PointP(xgenfirst,ygenfirst));
 		while(count<numberOfPoints){
-			xgen=(r.nextDouble()*(maxx-minx))+minx;
-			ygen=(r.nextDouble()*(maxy-miny))+miny;
+			xgen=(r.nextDouble()*(getLinearXDiff()))+minx;
+			ygen=(r.nextDouble()*(getLinearYDiff()))+miny;
 			pts.add(new PointP(xgen,ygen));
 			count++;
 		}
@@ -106,26 +134,18 @@ public class Datas {
 	//the read file should be ordered according to time. Ascending order
 	//it finds the maximum and minimum coordinates of the file
 	private void readData(String fname){
-		BufferedReader br=null;
-		String line=null;
 		//boolean firstread=false;
 		double xcord,ycord=0;
 		long time=0l;
-		StringTokenizer st=null;
 		try{
-			br=new BufferedReader(new FileReader(new File(fname)));
-			while( (line=br.readLine()) !=null ){
-
-				st=new StringTokenizer(line);
-				time=Long.parseLong(st.nextToken());
-				xcord=Double.parseDouble(st.nextToken());
-				ycord=Double.parseDouble(st.nextToken());
-				/*
-				if(!firstread){
-					firstread=true;
-					mintime=time;
-				}*/
+			BufferedReader br=new BufferedReader(new FileReader(new File(fname)));
+			 for(String line;(line = br.readLine()) != null; ){
+				String[] arr=line.split("\t");
 				
+				time=Long.parseLong(arr[0]);
+				xcord=Double.parseDouble(arr[1]);
+				ycord=Double.parseDouble(arr[2]);
+								
 				if(xcord>maxx){
 					maxx=xcord;
 				}
@@ -139,18 +159,19 @@ public class Datas {
 					miny=ycord;
 				}
 				if(time>maxtime){
-					maxtime= time;
+					maxftime= time;
+					maxtime=time;
 				}
 				if(time<mintime){
 					mintime=time;
 				}
-				st=null;
 			}
-			st=null;
 			br.close();
+			br=null;
 		}catch(Exception e){
 			e.printStackTrace();
-		}	
+		}
+		
 	}	
 	//*/
 	
@@ -166,6 +187,7 @@ public class Datas {
 		return "Not Found";
 	}
 	
+	//for debugging purposes
 	private String findDataInDataSet(String fname,String searched){
 		BufferedReader br=null;
 		String line=null;
@@ -200,6 +222,7 @@ public class Datas {
 		}catch( IOException e) {
 			e.printStackTrace();
 		}
+		br=null;
 		return null;
 		
 	}
@@ -215,6 +238,7 @@ public class Datas {
 	public void calculateMaxes(String fname){
 		calculateMaxesByProcessing(fname);
 		fixHeightWidth();
+		
 		/*
 		maxx=LibRouting.prec(maxx, precision);
 		minx=LibRouting.prec(minx, precision);
@@ -226,6 +250,16 @@ public class Datas {
 	public void makeAllEqual(){
 		widthOfScreen=getMaxX()-getMinX();
 		heightOfScreen=getMaxY()-getMinY();
+	}
+	
+	public void calculateAreaRatio() {
+		double MapArea=0;double ScreenArea=0;
+		MapArea=calculateMapArea();
+		ScreenArea=calculateScreenArea();
+		AreaRatio=Math.sqrt(MapArea/ScreenArea);
+		System.out.println("map"+MapArea+" screen "+ScreenArea+" Ratio"+AreaRatio);
+		LinearXDiff=getMaxX()-getMinX();
+		LinearYDiff=getMaxY()-getMinY();	
 	}
 	
 	private void fixHeightWidth(){
@@ -240,47 +274,51 @@ public class Datas {
 		}
 	}
 	
-	public ArrayList<Position> readPortion(String fileName, long dataLineStart,int numberOfLinesToBeRead){
-		BufferedReader br;
-		StringTokenizer st;
-		String line=null;
+	public ArrayList<Position> readPortion(String fileName, long dataLineStart,int numberOfLinesToBeRead, long timebias){
+		//BufferedReader br;
+		//StringTokenizer st;
 		int count=0;
 		long linecount=0;
+		double xcord=0;
+		double ycord=0;
+		double calcx=0;
+		double calcy=0;
+		long time=0;
+
 
 		ArrayList<Position> arrposition=new ArrayList<Position>();
+		
 		try{
-			br=new BufferedReader(new FileReader(fileName));
-			while(linecount<dataLineStart){
-				line=br.readLine();
-				linecount++;
-			}
-			
-			while(count<numberOfLinesToBeRead && (line=br.readLine())!= null){
-				st=new StringTokenizer(line);
-				long time=Long.parseLong(st.nextToken());
-				double xcord=Double.parseDouble(st.nextToken());
-				double ycord=Double.parseDouble(st.nextToken());
-				double calcx=convertToScreenX(xcord);
-				double calcy=convertToScreenY(ycord);
+			BufferedReader brdata= new BufferedReader(new FileReader(fileName)); 
+		    for(String line;linecount<dataLineStart && (line = brdata.readLine()) != null; ) {
+		        linecount++;
+		    }
+		    
+		    for(String line;count<numberOfLinesToBeRead && (line = brdata.readLine()) != null; ) {
+			    /*st=new StringTokenizer(line);
+				time=Long.parseLong(st.nextToken());
+				xcord=Double.parseDouble(st.nextToken());
+				ycord=Double.parseDouble(st.nextToken());
+				*/
+				String[] arr=line.split("\t");
+				
+				time=Long.parseLong(arr[0])+timebias;
+				xcord=Double.parseDouble(arr[1]);
+				ycord=Double.parseDouble(arr[2]);
+				calcx=convertToScreenX(xcord);
+				calcy=convertToScreenY(ycord);
 				arrposition.add(new Position(time,calcx,calcy,xcord,ycord));
 				count++;
-				
-			}
-			br.close();
+			
+		    }
+		    if( brdata.readLine() == null) {//end of file
+		    	eof=true;
+		    }
+		    brdata.close();
+		    // line is not visible here.
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		st=null;
-		/*
-		BufferedWriter bw;
-		try{
-			bw=new BufferedWriter(new FileWriter(fileName,false));
-			bw.write(all);
-			bw.close();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		*/
 		return arrposition;
 	}     
 	
@@ -288,13 +326,13 @@ public class Datas {
 		//the maxes file does not change while running
 				//if it is calculated before no need to calculate again	
 				BufferedReader br=null;
-				String line=null;
-				int i=0;
 				
+				int i=0;
+				StringTokenizer st=null;
 				try{
 					br=new BufferedReader(new FileReader(new File(fname)));
-					while( (line=br.readLine()) !=null ){
-						StringTokenizer st=new StringTokenizer(line," ");
+					 for(String line;(line = br.readLine()) != null; ) {
+						st=new StringTokenizer(line," ");
 						st.nextToken();
 						st.nextToken();
 						if(i==0){
@@ -312,15 +350,18 @@ public class Datas {
 						}
 						
 						i++;
-					}//enf of while check
+						st=null;
+					}//enf of for 
 					br.close();
 				}catch(Exception e){
 					Lib.p(e.toString());
+					e.printStackTrace();
 				}
 				maxx=LibRouting.prec(maxx, precision);
 				minx=LibRouting.prec(minx, precision);
 				miny=LibRouting.prec(miny, precision);
 				minx=LibRouting.prec(minx, precision);
+				br=null;
 	}
 	
 	
@@ -329,33 +370,53 @@ public class Datas {
 	//timeAsNumberofSeconds Xcord YCord
 	public ArrayList<Position> readRealDataForNode(File fname){
 		BufferedReader br=null;
-		String line=null;
 		int i=0;
+		//StringTokenizer st=null;
 		ArrayList<Position> arrposition=new ArrayList<Position>();
+		long time=0;
+		double xcord=0;
+		double ycord=0;
+		double prevxcord=0;
+		double prevycord=0;
+		long prevtime=0;
+		double realx=0;
+		double realy=0;
+		double calcx=0;
+		double calcy=0;
+		int differenceTime=0;
+		double differencex=0;
+		double differencey=0;
+		
 		try{
 			br=new BufferedReader(new FileReader(fname));
-			while( (line=br.readLine()) !=null ){
-				StringTokenizer st=new StringTokenizer(line);
-				long time=Long.parseLong(st.nextToken());
-				double xcord=Double.parseDouble(st.nextToken());
-				double ycord=Double.parseDouble(st.nextToken());
+			 for(String line;(line = br.readLine()) != null; ){
+				String[] arrtemp=line.split("\t");
+				time=Long.parseLong(arrtemp[0]);
+				xcord=Double.parseDouble(arrtemp[1]);
+				ycord=Double.parseDouble(arrtemp[2]);
+				/*
+				st=new StringTokenizer(line);
+				time=Long.parseLong(st.nextToken());
+				xcord=Double.parseDouble(st.nextToken());
+				ycord=Double.parseDouble(st.nextToken());
+				*/
 				xcord=LibRouting.prec(xcord, precision);
 				ycord=LibRouting.prec(ycord, precision);
 				
 				if(i>0){
 					
-					long prevtime=arrposition.get(arrposition.size()-1).getTime();
-					double prevxcord=arrposition.get(arrposition.size()-1).getRealX();
-					double prevycord=arrposition.get(arrposition.size()-1).getRealY();
+					prevtime=arrposition.get(arrposition.size()-1).getTime();
+					prevxcord=arrposition.get(arrposition.size()-1).getRealX();
+					prevycord=arrposition.get(arrposition.size()-1).getRealY();
 					prevxcord=LibRouting.prec(prevxcord, precision);
 					prevycord=LibRouting.prec(prevycord, precision);
 					
-					int differenceTime=(int)(time-prevtime);
-					double differencex=(xcord-prevxcord)/differenceTime;
-					double differencey=(ycord-prevycord)/differenceTime;
+					differenceTime=(int)(time-prevtime);
+					differencex=(xcord-prevxcord)/differenceTime;
+					differencey=(ycord-prevycord)/differenceTime;
 					
-					double realy=0;
-					double realx=0;
+					realy=0;
+					realx=0;
 					
 					for(int h=1;h<differenceTime;h++){
 						if(prevxcord<xcord){
@@ -372,8 +433,8 @@ public class Datas {
 						
 						realx=LibRouting.prec(realx, precision);
 						realy=LibRouting.prec(realy, precision);
-						double calcx=convertToScreenX(realx);
-						double calcy=convertToScreenY(realy);
+						calcx=convertToScreenX(realx);
+						calcy=convertToScreenY(realy);
 						calcx=LibRouting.prec(calcx, precision);
 						calcy=LibRouting.prec(calcy, precision);
 						
@@ -388,17 +449,19 @@ public class Datas {
 				
 				}//end of if
 				
-				double calcx=convertToScreenX(xcord);
-				double calcy=convertToScreenY(ycord);
+				calcx=convertToScreenX(xcord);
+				calcy=convertToScreenY(ycord);
 				arrposition.add(new Position((int)time,calcx,calcy,xcord,ycord));
 				i++;
+				//st=null;
 			}//end of while
-			br.close();
+			br.close();			
 		}catch(Exception e){
 			Lib.p("problem in reading file "+fname);
 			Lib.p(e.toString());
 			e.printStackTrace();
 		}
+		
 		return arrposition;
 	}	
 	
@@ -411,23 +474,13 @@ public class Datas {
 			if(geoX<getMinX()){
 				geoX=getMinX();
 			}
-			
-			/*
-			try{
-				Exception e=new Exception();
-				throw e;
-			}catch(Exception e){
-				e.printStackTrace();
-				System.exit(-1);
-			}
-			*/
 		}
 		
 		if(Double.isNaN(geoX)){
 			Lib.p("ERROR:Datas' convertToScreenX is NaN");
 			System.exit(-1);
 		}
-		double createdPos=((geoX-minx) * (double)(widthOfScreen) )/(maxx-minx);
+		double createdPos=((geoX-minx) * (double)(widthOfScreen) )/(getLinearXDiff());
 		if(createdPos>getWidth()){
 			//Lib.p("This can not HAPPEN for datas.java at convertToscreenX");
 			createdPos=Math.floor(createdPos);
@@ -437,7 +490,7 @@ public class Datas {
 	}
 	
 	public double convertToScreenSpeed(double realSpeed){
-		return realSpeed*getWidth()/(getXDiff());
+		return RealToVirtualDistance(realSpeed);
 	}
 	
 	public double getXDiff() {
@@ -481,7 +534,7 @@ public class Datas {
 			Lib.p("ERROR:Datas' convertToScreenY is NaN");
 			System.exit(-1);
 		}
-		double createdPos= ((geoY-miny) * (double)(heightOfScreen) )/(maxy-miny);
+		double createdPos= ((geoY-miny) * (double)(heightOfScreen) )/(getLinearYDiff());
 		createdPos=LibRouting.prec(createdPos, precision);
 		if(createdPos>getHeight()){
 			Lib.p("This can not HAPPEN for datas.java at convertToscreen");
@@ -518,7 +571,7 @@ public class Datas {
 			System.exit(-1);
 		}
 		
-		return (screenX * (maxx-minx) )/(double)(widthOfScreen) + minx;
+		return (screenX * (getLinearXDiff()) )/(double)(widthOfScreen) + minx;
 	}
 	
 	public double convertToRealY(double screenY){
@@ -540,7 +593,7 @@ public class Datas {
 			System.exit(-1);
 		}
 		
-		return (screenY * (maxy-miny) )/(double)(heightOfScreen) + miny;
+		return (screenY * (getLinearYDiff()) )/(double)(heightOfScreen) + miny;
 	}
 	
 	//given screen coordinates it will return a position whose time is -1
@@ -596,20 +649,12 @@ public class Datas {
 	
 	//similarity ratio of two rectangles is the square root of their areas
 	public double VirtualToRealDistance(int distScr){
-		double MapArea=0;double ScreenArea=0;
-		MapArea=calculateMapArea();
-		ScreenArea=calculateScreenArea();
 		
-		double AreaRatio=Math.sqrt(MapArea/ScreenArea);
 		return  (distScr * AreaRatio);
 	}
 	
 	public double RealToVirtualDistance(double speedreal){
-		double MapArea=0;double ScreenArea=0;
-		MapArea=calculateMapArea();
-		ScreenArea=calculateScreenArea();
 		
-		double AreaRatio=Math.sqrt(MapArea/ScreenArea);
 		return  (speedreal / AreaRatio);
 	}
 	
@@ -655,7 +700,7 @@ public class Datas {
 	public String toString(){
 		return "Data maxX "+getMaxX()+" MaxY "+getMaxY()+" MinX "+getMinX()+" MinY "+getMinY()
 		+"\r\n width "+getWidth()+" height "+getHeight()
-		+"\r\n mintime "+mintime+" maxtime "+maxtime+"\r\n"+"Simulation duration: "+(maxtime-mintime);
+		+"\r\n mintime "+mintime+" maxtime "+maxtime+" filemax "+getMaxFTime()+"\r\n"+"Simulation duration: "+(maxtime-mintime);
 	}
 	
 	public long getMinTime(){
@@ -665,6 +710,28 @@ public class Datas {
 	public long getMaxTime(){
 		return maxtime;
 	}	
+	
+	public void setMaxTime(long maxt) {
+		if(maxt>0) {
+			maxtime=maxt;
+		}
+	}
+	
+	public double getLinearXDiff() {
+		if(LinearXDiff==0) {
+			Lib.p("X diff not set in Datas.java");
+			System.exit(-1);
+		}
+		return LinearXDiff;
+	}
+	
+	public double getLinearYDiff() {
+		if(LinearYDiff==0) {
+			Lib.p("Y diff not set in Datas.java");
+			System.exit(-1);
+		}
+		return LinearYDiff;
+	}
 	
 	private double calculateMapArea() {
 		double MapArea=0;

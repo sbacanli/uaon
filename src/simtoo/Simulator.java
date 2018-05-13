@@ -3,11 +3,7 @@ package simtoo;
 import java.io.File;
 import java.util.ArrayList;
 
-import Shapes.RandomPoints;
-import Shapes.Rectangle;
-import Shapes.Shape;
-import Shapes.Spiral;
-import javafx.scene.chart.PieChart.Data;
+import Shapes.*;
 import routing.*;
 
 public class Simulator {
@@ -18,7 +14,7 @@ public class Simulator {
 	boolean isRandomMobility;
 	double height;
 	double width;
-	Air air;
+	private Air air;
 	static Routing nodeRouting;
 	static Routing uavRouting;
 	static Routing interRouting;
@@ -49,10 +45,11 @@ public class Simulator {
 	private int altitude;
 	//this is for the time limit for deleting the encounters after each route finish/
 	private int encounterTimeLimit;
-	private boolean isGPS;
 	private LocationType loctype;
 	private double altitudeconverted;
-	
+	private int numberOfLinesToBeRead;
+	private double maxSpiralRadius;
+	private long maxTime;
 	
 	public Simulator(Options op,Datas datagiven)
 	{
@@ -64,7 +61,7 @@ public class Simulator {
 		
 		numberOfNodes=op.getParamInt("numberOfNodes");
 		dataFolder=op.getParamString("dataFolder");
-		String seperator="\\";
+		char seperator=File.separatorChar;
 		foldername=System.getProperty("user.dir")+seperator+"datasets"+seperator+dataFolder+seperator+"processedData";
 		
 		//getting the datafiles arraylist to be used for filling the node's movement data
@@ -84,11 +81,14 @@ public class Simulator {
 			Lib.p("UNDEFINED LOCATION TYPE");
 		}
 		data.setLoc(loctype);
+		data.setTimeDifference(op.getParamInt("ProjectionTimeLimit"));
+		
 		
 		realDistance=op.getParamInt("CommDistance");
 		numberOfUAVs=op.getParamInt("numberOfUAVs");
 		nodeRouting=new Probabilistic(air,op.getParamDouble("interNodesProbability"));
-		uavRouting=new Probabilistic(air,op.getParamDouble("interUavsProbability"));
+		uavRouting=new UAONRouting(air,op.getParamDouble("interUavsProbability"),op.getParamBoolean("encounterHistoryExchange"));
+		//uavRouting=new Probabilistic(air,op.getParamDouble("interUavsProbability"));
 		interRouting=new Probabilistic(air,op.getParamDouble("interProbability"));
 		simulationName=op.getParamString("SimulationName");
 		isRandomMobility=op.getParamBoolean("randomMobility");
@@ -101,6 +101,9 @@ public class Simulator {
 		messageErrorTimesForNodes=op.getParamInt("MessageErrorTimesForNodes");
 		randomGrid=op.getParamBoolean("RandomGrid");
 		encounterTimeLimit=op.getParamInt("EncounterTimeLimit");
+		maxTime=op.getParamLong("MaxSimulationTime");
+		numberOfLinesToBeRead=op.getParamInt("NumberOfDataLines");
+		data.setNumberOfDataLines(numberOfLinesToBeRead);
 		
 		
 		GridXDistance=op.getParamInt("GridXDistance");
@@ -115,10 +118,14 @@ public class Simulator {
 				System.exit(-1);
 			}
 			
-		}else if(shapeUAV.equals("spiral") || shapeUAV.equals("Spiral")){
+		}else if(shapeUAV.toLowerCase().equals("spiral")){
 			spiralRadiusInitial=op.getParamInt("InitialSpiralRadius");
-		}else if(shapeUAV.equals("random") || shapeUAV.equals("Random")){
+			maxSpiralRadius=op.getParamDouble("MaxSpiralRadius");
+			
+		}else if(shapeUAV.toLowerCase().equals("random")){
 			randomGrid=true;
+		}else if(shapeUAV.toLowerCase().equals("special")) {
+			
 		}else{
 			Lib.p("Unknown shape type in the config file entry: Shape\r\nIt should be spiral/rectangle/random");
 			System.exit(-1);
@@ -138,6 +145,8 @@ public class Simulator {
 		}else{	
 			data.calculateMaxesForScreen();
 		}
+		data.calculateAreaRatio();
+		data.setMaxTime(maxTime);
 		
 		/*
 		Lib.p("maxtime " +data.FindData(foldername, data.getMaxTime()+""));
@@ -150,7 +159,7 @@ public class Simulator {
 		
 		height=data.getHeight();
 		width=data.getWidth();
-		data.setGPS(isGPS);
+		
 		
 		
 		//the parameters are for real coordinates, conversion should be done to virtual
@@ -158,16 +167,20 @@ public class Simulator {
 		double aRectconverted=data.RealToVirtualDistance(aRect);
 		double bRectconverted=data.RealToVirtualDistance(bRect);
 		double spiralRadiusInitialconverted=data.RealToVirtualDistance(spiralRadiusInitial);
-		
+		maxSpiralRadius=data.RealToVirtualDistance(maxSpiralRadius);
+		System.out.println(maxSpiralRadius+"conv");
+		System.out.println(data);
 		for(int i=1;i<=numberOfNodes;i++){
 			RoutingNode rn=new RoutingNode(i);
 			routingNodes.add(rn);
-			Node currentNode=new Node(i,isGPS,data);
+			Node currentNode=new Node(i,data);
 			nodes.add(currentNode);
 			if(!isRandomMobility){
 				currentNode.setDataFile(datafiles.get(i-1).getAbsolutePath());
 				currentNode.readData(data.getMinTime());
 			}else{
+				currentNode.setScreenSpeed(15);
+				currentNode.setRealSpeed(1);
 				ArrayList<PointP> path=data.fillRandomPositions(numberOfPositions);
 				currentNode.addPathsWithPoints(path,data,LocationType.SCREEN);
 				
@@ -182,12 +195,13 @@ public class Simulator {
 			RoutingNode rn=new RoutingNode(i*-1);
 			routingNodeUavs.add(rn);
 			
-			double initialX=LibRouting.getUniform((int)width)-1;
-			double initialY=LibRouting.getUniform((int)height)-1;
+			//double initialX=LibRouting.getUniform((int)width)-1;
+			//double initialY=LibRouting.getUniform((int)height)-1;
 			
-			if(shapeUAV.equals("spiral") || shapeUAV.equals("Spiral")){
-				s=new Spiral(spiralRadiusInitialconverted,data.getWidth(),data.getHeight());
-			}else if(shapeUAV.equals("Rectangle") || shapeUAV.equals("rectangle")){
+			if(shapeUAV.toLowerCase().equals("spiral")){
+				
+				s=new Spiral(spiralRadiusInitialconverted,maxSpiralRadius,data.getWidth(),data.getHeight());
+			}else if(shapeUAV.toLowerCase().equals("rectangle")){
 				//one of the UAV will start from beginning, the other will start from end
 				if(i%2==0){
 					s=new Rectangle(true,aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
@@ -195,12 +209,14 @@ public class Simulator {
 					s=new Rectangle(false,aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
 				}
 				
-			}else if(shapeUAV.equals("random") || shapeUAV.equals("Random")){
+			}else if(shapeUAV.toLowerCase().equals("random")){
 				s=new RandomPoints(data.getWidth(),data.getHeight());
+			}else if(shapeUAV.toLowerCase().equals("special")) {
+				s=new Special(aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
 			}
 			
 			
-			Uav u=new Uav(-1*i,s,speeduavReal,altitude,initialX,initialY,data,rn,randomGrid,encounterTimeLimit);
+			Uav u=new Uav(-1*i,s,speeduavReal,altitude,data,rn,randomGrid,encounterTimeLimit);
 			u.setGriderParams(GridXDistance, GridYDistance);
 			//u.fillPath(u.getInitialX(),u.getInitialY(),data.getMinTime());
 			
@@ -282,9 +298,6 @@ public class Simulator {
 		return realDistance;
 	}
 	
-	public boolean isGPS(){
-		return isGPS;
-	}
 	
 	public ArrayList<Node> getNodes(){
 		return nodes;
@@ -308,9 +321,9 @@ public class Simulator {
 		nodeRouting.send(time);
 	}
 	
-	public static void uavRoute(RoutingNode uav,RoutingNode r2, String time){
-		uavRouting.setSender(uav);
-		uavRouting.setReceiver(r2);
+	public static void uavRoute(RoutingNode uav1,RoutingNode uav2, String time){
+		uavRouting.setSender(uav1);
+		uavRouting.setReceiver(uav2);
 		uavRouting.send(time);
 	}
 	
@@ -327,6 +340,7 @@ public class Simulator {
 	public String toString(){
 		//text+="_gx_"+GridXDistance+"_gy_"+GridYDistance;
 		String text=getSimulationName()+"_"+dataFolder;
+		/*
 		if(shapeUAV.equals("Spiral")|| shapeUAV.equals("spiral")){
 			text+="_spiralR_"+spiralRadiusInitial;
 		}else if(shapeUAV.equals("Rectangle")|| shapeUAV.equals("rectangle")){
@@ -337,6 +351,7 @@ public class Simulator {
 		if(randomGrid){
 			text+="_Random";
 		}
+		*/
 		return text;
 		
 		

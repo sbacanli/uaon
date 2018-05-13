@@ -4,27 +4,33 @@ import java.util.ArrayList;
 
 public class Node extends Positionable{
 
-	Datas data;
 	private String datafile;
-	long dataLineStart;
-	int numberOfDataLines;
+	private long dataLineStart;
+	//how many times the data file is read
+	private int rounds;
+	
 	private boolean isVisible;
+	int numberOfDataLines;
 	
-	
-	public Node(int nid,boolean isGPS,Datas data){
-		super(nid,isGPS);
-		this.data=data;
-		//Speeds will be set according to the dataset
-		//this is for random mobility
-		setScreenSpeed(15);
-		setRealSpeed(1);
+	public Node(int nid,Datas data){
+		super(nid,data);
 		dataLineStart=0;
-		numberOfDataLines=100;
+		numberOfDataLines=getData().getNumberOfDataLines();
 		isVisible=true;
-
+		setCurrentPosition(null);
+		setPreviousPosition(null);
+		rounds=0;
 	}
 		
 
+	private void addRounds() {
+		rounds++;
+	}
+	
+	private int getRounds() {
+		return rounds;
+	}
+	
 	public void setDataFile(String s){
 		datafile=s;
 	}
@@ -37,23 +43,31 @@ public class Node extends Positionable{
 		return dataLineStart;
 	}
 	
-	public int getNumberOfDataLines(){
-		return numberOfDataLines;
-	}
-	
 	public void readData(long gtime){
 		if(dataLineStart==-1) {
 			isVisible=false;
 		}else {
 			if(positionsLength()==0){
-				ArrayList<Position> positionsCreated=data.readPortion(datafile,dataLineStart,numberOfDataLines);
-				if(positionsCreated==null || positionsCreated.isEmpty()) {
-					Lib.p("POSITIONS EMPTY at node.java");
-					Lib.p("length "+positionsLength()+"  "+dataLineStart+"  "+numberOfDataLines+" "+datafile);
-					System.exit(-1);
+				long timebias=0;
+				if(rounds!=0) {
+					timebias=rounds*getData().getMaxFTime();
 				}
 				
-				addPathsWithPositions(positionsCreated,data,data.getLoc());
+				
+				ArrayList<Position> positionsCreated=getData().readPortion(datafile,dataLineStart,numberOfDataLines,timebias);
+				
+				if(positionsCreated==null || positionsCreated.isEmpty()) {
+					//Lib.p("POSITIONS EMPTY at node.java");
+					//Lib.p("length "+positionsLength()+"  "+dataLineStart+"  "+numberOfDataLines+" "+datafile);
+					dataLineStart=0;//data to be read is finished!
+					addRounds();
+					timebias=rounds*getData().getMaxFTime();
+					positionsCreated=getData().readPortion(datafile,dataLineStart,numberOfDataLines,timebias);
+					//System.exit(-1);
+					//it means that node data is finished
+				}
+				
+				
 			
 				/*
 				Lib.p("CREATED for node "+getId()+" "+getDataFile());
@@ -63,12 +77,13 @@ public class Node extends Positionable{
 				
 				//Lib.p(getId()+" Node.java "+getDataFile());
 				if(positionsCreated.size()<numberOfDataLines) {
-					dataLineStart=-1;//data to be read is finished!
-					isVisible=false;
+					dataLineStart=0;//reread the data from beginning
+					addRounds();
 				}else {
 					dataLineStart=dataLineStart+numberOfDataLines;
 				}//end of positions.size check
-								
+				
+				addPathsWithPositions(positionsCreated,getData(),getData().getLoc());				
 			
 			}//end of length==0
 			
@@ -82,25 +97,6 @@ public class Node extends Positionable{
 	public String toString(){
 		return "Node id: "+getId()+ " datafile: "+getDataFile();
 	}
-	
-	/*
-	public Position getcurrentPositionWithTime2(long giventime){
-		Position returned=null;
-		if(positionsLength()==0) {
-			readData();
-		}
-		int size=positionsLength();
-		if(getPosition(0).time==giventime)
-		{
-			returned=dequeuePosition();
-		}
-		int sizenow=positionsLength();
-		if(size-1!=sizenow) {
-			Lib.p("Not dequeueing! at node.java"+ size+"  "+sizenow);
-		}
-		return returned;
-	}
-	*/
 	
 	@Override
 	public Position getCurrentPositionWithTime(long giventime){
@@ -124,7 +120,10 @@ public class Node extends Positionable{
 		{	
 			//returned=new Position(getPosition(0));
 			returned=dequeuePosition();
+			setPreviousPosition(getCurrentPosition());
+			setCurrentPosition(returned);
 			//Lib.p("Dequued");
+			calculateDistance();
 			int lengthlast=positionsLength();
 			if(lengthlast==lengthfirst) {
 				Lib.p("Position list dequeue not done in Node.java");

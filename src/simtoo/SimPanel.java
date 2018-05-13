@@ -20,7 +20,7 @@ public class SimPanel extends JPanel implements MouseListener{
 	ArrayList<RoutingNode> uavRoutingNodes;
 	
 
-	private final int UPDATE_RATE = 1;
+	private final int UPDATE_RATE = 1000;
 	long time;
 	
 	Random r;
@@ -29,7 +29,6 @@ public class SimPanel extends JPanel implements MouseListener{
 	double height,width;
 	
 	double COMMDIST;
-	int numberOfRoutesCompleted;
 	int numberOfMessagesCreatedByNodes;
 	int numberOfMessagesCreatedByUavs;
 	int messageLifeInSeconds;
@@ -77,7 +76,6 @@ public class SimPanel extends JPanel implements MouseListener{
 		mydata=datagiven;
 		height= mydata.getHeight();
 		width = mydata.getWidth();
-		isGPS=simulator.isGPS();
 		
 		//Extracting Simulator Parameters
 		nodes=simulator.getNodes();
@@ -108,16 +106,15 @@ public class SimPanel extends JPanel implements MouseListener{
 			System.out.println("MessageTimes are all 0 \r\nPlease check config file ");
 			System.exit(-1);
 		}
-		if(messageTimesForNodes != 0){
+		if(messageTimesForNodes != 0 && !nodes.isEmpty()){
 			addScheduleForNodes();
 		}
-		if(messageTimesForUAVs != 0){
+		if(messageTimesForUAVs != 0 && !uavs.isEmpty()){
 			addScheduleForUAVs();
 		}
 		
 		setTime(mydata.getMinTime());
 		
-		numberOfRoutesCompleted=0;
 		numberOfNodes=nodes.size();
 		numberOfUavs=uavs.size();
 		
@@ -125,7 +122,7 @@ public class SimPanel extends JPanel implements MouseListener{
 		setBackground(Color.LIGHT_GRAY);
 				
 		addMouseListener(this);
-		
+		setBorder(BorderFactory.createLineBorder(Color.black));
 		
 		numberOfMessagesCreatedByNodes=0;
 		numberOfMessagesCreatedByUavs=0;
@@ -237,9 +234,6 @@ public class SimPanel extends JPanel implements MouseListener{
 	        	g2.setPaint(new Color(0, 0, 255)); // a dull blue-green
 	            g2.fill(node);
 	            g2.draw (node);
-	            //Lib.p("node is on the scene "+nodepos.toString());
-	            //Lib.p("for node text "+nodes.get(i).getDataFile()+" is on pos "+nodepos.toString()+" simpanel");
-	           // nodes.get(i).writePositions();
         	}else {
         		//Lib.p("Empty for node "+nodes.get(i).getDataFile());
         	}
@@ -260,10 +254,6 @@ public class SimPanel extends JPanel implements MouseListener{
 	        	double yuav=uavpos.getScreenY();
 	        	//if(uav.isRouteFinished()){
 	        	drawImage("drone.png", g2,xuav, yuav);
-	        	//}else{
-	        	//	drawImage("drone.png", g2,xuav, yuav);
-	        	//}
-	        	//uav.writePositions();
         	}else {
         		//*
         		Lib.p("PROBLEM!!!! in simpanel.java UAV can not be null");
@@ -273,17 +263,22 @@ public class SimPanel extends JPanel implements MouseListener{
         		//*/
         	}
         }
-        
 	}
 	
-	private int getNumberOfRoutesCompleted(){
-		return numberOfRoutesCompleted;
+
+	private int getNumberOfRoutesCompletedForUAVs(){
+		int sum=0;
+		for(int i=0;i<uavs.size();i++) {
+			sum=uavs.get(i).getNumberOfRoutesCompleted()+sum;
+		}
+		return sum;
 	}
 
+	
 	public void simulationEnded(){
 		try{
 			Lib.p("Simulation ended at time "+time);
-			Lib.p("Number or routes completed "+getNumberOfRoutesCompleted());
+			Lib.p("Number or routes completed "+getNumberOfRoutesCompletedForUAVs());
 			Lib.p("Number of created messages total "+numberOfMessagesCreated());
 			Lib.p("Number of created messages by UAVs "+numberOfMessagesCreatedByUavs);
 			Lib.p("Number of created messages by Nodes "+numberOfMessagesCreatedByNodes);
@@ -322,7 +317,7 @@ public class SimPanel extends JPanel implements MouseListener{
 		}
 		
 		checkAllDistances();
-		time++;
+		time++;		
 	}
 	
 	private void updatePositions() {
@@ -346,18 +341,6 @@ public class SimPanel extends JPanel implements MouseListener{
 				Lib.p("PROBLEM in simpanel");
 				uav.writePositions();
 			}
-			
-			if(uav.isRouteFinished()){
-	    		uav.reRoute(time);
-	    		Lib.p("REROUTED");
-	    		/*
-	    		Lib.p("REROUTE "+uav.getId()+" "+uav.positionsLength());
-	    		for(int n=0;n<uav.positionsLength();n++) {
-	    			Lib.p(uav.getPosition(n).time);
-	    		}
-	    		//*/
-	    		numberOfRoutesCompleted++;
-	    	}
 			
 		}
 		
@@ -390,7 +373,9 @@ public class SimPanel extends JPanel implements MouseListener{
 	
 	public void checkAllDistances(){
 		checkNodesDistances();
-		checkUavDistances();
+		if(uavs.size()>1) {
+			checkUavDistances();
+		}		
 		checkUavNodeDistances();
 	}
 	
@@ -445,7 +430,7 @@ public class SimPanel extends JPanel implements MouseListener{
 								if(e1==null && e2==null){
 									Lib.p("Encounters are null between Nodes in SimPanel CHECK THIS AT SimPanel.java");
 								}else{
-									Reporter.writeEncounters(e1,e2,"encounterNodes.txt");
+									//Reporter.writeEncounters(e1,e2,"encounterNodes.txt");
 								}
 								
 								
@@ -508,7 +493,7 @@ public class SimPanel extends JPanel implements MouseListener{
 								if(e1==null && e2==null){
 									Lib.p("Encounters are null between UAVs in SimPanel CHECK THIS AT SimPanel.java");
 								}else{
-									Reporter.writeEncounters(e1,e2,"encounterUavs.txt");
+									//Reporter.writeEncounters(e1,e2,"encounterUavs.txt");
 								}
 							}
 							//if they are far and not in contact, no need to do anything.
@@ -572,7 +557,7 @@ public class SimPanel extends JPanel implements MouseListener{
 								if(e1==null && e2==null){
 									Lib.p("Encounters are null between UAV and Nodes in SimPanel CHECK THIS AT SimPanel.java");
 								}else{
-									Reporter.writeEncounters(e1,e2,"encountersUavNodes.txt");
+									//Reporter.writeEncounters(e1,e2,"encountersUavNodes.txt");
 								}
 							}
 							//if they are far and not in contact, no need to do anything.
@@ -595,16 +580,17 @@ public class SimPanel extends JPanel implements MouseListener{
 	}
 	
 	private void doDrawing(Graphics g) {
+		Graphics2D g2 = (Graphics2D) g;
 		if(firsttime) {
 			updatePositions();
-			Graphics2D g2 = (Graphics2D) g;
 			drawFigures(g2);
 			increaseTime();
 			firsttime=false;
-		}else {
-			Graphics2D g2 = (Graphics2D) g;
+		}else {			
 			drawFigures(g2);
 		}
+		g2.drawLine(0,(int)mydata.getHeight(), (int)mydata.getWidth(), (int)mydata.getHeight() );
+        g2.drawLine((int)mydata.getWidth(), 0,  (int)mydata.getWidth(), (int)mydata.getHeight());
         
     }
 
@@ -612,6 +598,7 @@ public class SimPanel extends JPanel implements MouseListener{
     public void paintComponent(Graphics g) {
     	super.paintComponent(g);
         doDrawing(g);
+        
     }
     
     private boolean allEmpty(Position[] arr) {

@@ -1,37 +1,48 @@
-SimulationName:Epidemic
+SimulationName:Ext2Spiral
 //yes or no for Random Mobility
 randomMobility:no
 //some comments here
-//dataFolder:NewYork
-//LocationType:RELATIVE
-dataFolder:outputs
-LocationType:REAL
-isGPS:yes
+dataFolder:NewYork
+LocationType:RELATIVE
+//dataFolder:outputs
+//LocationType:REAL
 interUavsProbability:1.0
 interNodesProbability:1.0
 interProbability:1.0
 CommDistance:250
 Altitude:100
 numberOfNodes:-1
-numberOfUAVs:2
-//2 days as message life : 172800
-MessageLifeInSeconds:7200
+numberOfUAVs:1
+//3 hours as message life : 10800
+MessageLifeInSeconds:10800
 InitialSpiralRadius:200
-EncounterTimeLimit:1200
+EncounterTimeLimit:1800
 //with every rerouting encounters less than 1200 seconds old will be deleted
 //-1 will delete all encounters
-SpeedOfUAVs:15
-MessageTimesForUAVs:300
-MessageTimesForNodes:300
-//plus or minus
-MessageErrorTimesForUAVs:15
-MessageErrorTimesForNodes:15
+//maximum speed of uav in terms of m/s
+SpeedOfUAVs:20
+//messages will be created in every X seconds
+MessageTimesForUAVs:3600
+MessageTimesForNodes:3600
+//plus or minus in terms of seconds
+MessageErrorTimesForUAVs:60
+MessageErrorTimesForNodes:60
 //The base will be partitioned to grids which have width XDistance
 GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
 Visible:yes
-Shape:Random
-RectangleWidth:1000
-RectangleHeight:1000
-RandomGrid:no
+Shape:spiral
+RectangleWidth:5000
+RectangleHeight:5000
+RandomGrid:yes
+encounterHistoryExchange:no
+//if the time difference between 2 data enytry is more than 300 seconds, it wont project.
+//in terms of seconds
+ProjectionTimeLimit:300
+//number of data lines to be read in buffer
+//for large files this should be small as the simulator makes projection automatically.
+NumberOfDataLines:10
+MaxSpiralRadius:300
+//30 days
+MaxSimulationTime:-1
