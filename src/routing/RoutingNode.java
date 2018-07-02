@@ -642,6 +642,10 @@ public class RoutingNode{
 						if(e1.getReceiverId()==nodeId && e1.getFinishingTime() ==-1){
 							e1.setFinishingTime(time);
 						}
+						if(hm.containsKey(e1.getReceiverId()) && hm.get(e1.getReceiverId()).getFinishingTime()==-1) {
+							e1.setFinishingTime(time);
+							hm.put(e1.getReceiverId(), e1);
+						}
 					}
 				}
 				
@@ -661,38 +665,46 @@ public class RoutingNode{
 	}
 	
 	//It will only clear the ones that are already finished.
-	public void clearEncounters(int encounterTimeLimit,long currentTime){
-		if(encounterTimeLimit==-1){
-			encounterHistory.clear();
-			encounterHistoryWithNodes.clear();
-			hm.clear();
-		}else{
-			for(int i=encounterHistory.size()-1;i>0;i--){
-				Encounter e=encounterHistory.get(i);
-				
-				if(e.getFinishingTime()==-1 || currentTime-e.getFinishingTime()>encounterTimeLimit){
-					encounterHistory.remove(i);
-				}
-			}
+	/**
+	 * Encounters that are not finished will be removed.
+	 * if encounterTimeLimit is -1 all encounterHistory,encounterHistoryWithNodes and hm
+	 * are cleared. hm contains unique receiver ids with encountered nodes.
+	 * encounters that are finished more than <it>encounterTimeLimit</it> ago will be cleared.
+	 *
+	 * @param  int  an absolute URL giving the base location of the image
+	 * @param  long the location of the image, relative to the url argument
+	 */
+	public void clearEncountersWithLimit(int encounterTimeLimit,long currentTime){
+		for(int i=encounterHistory.size()-1;i>0;i--){
+			Encounter e=encounterHistory.get(i);
 			
-			for(int i=encounterHistoryWithNodes.size()-1;i>=0;i--){
-				Encounter e=encounterHistoryWithNodes.get(i);
-				if(e.getFinishingTime()==-1 || currentTime-e.getFinishingTime()>encounterTimeLimit){
-					encounterHistoryWithNodes.remove(i);
-				}
-			}
-			
-			Iterator<Entry<Integer, Encounter>> it = hm.entrySet().iterator();
-			while (it.hasNext())
-			{
-			      Entry<Integer, Encounter> e = it.next();
-			      Encounter currentEnc=e.getValue();
-			      if(currentEnc.getFinishingTime()==-1 || currentTime-currentEnc.getFinishingTime()>encounterTimeLimit){
-			    	  it.remove();
-			      }
+			if(e.getFinishingTime()==-1 || currentTime-e.getFinishingTime()>encounterTimeLimit){
+				encounterHistory.remove(i);
 			}
 		}
 		
+		for(int i=encounterHistoryWithNodes.size()-1;i>=0;i--){
+			Encounter e=encounterHistoryWithNodes.get(i);
+			if(e.getFinishingTime()==-1 || currentTime-e.getFinishingTime()>encounterTimeLimit){
+				encounterHistoryWithNodes.remove(i);
+			}
+		}
+		
+		Iterator<Entry<Integer, Encounter>> it = hm.entrySet().iterator();
+		while (it.hasNext())
+		{
+		      Entry<Integer, Encounter> e = it.next();
+		      Encounter currentEnc=e.getValue();
+		      if(currentEnc.getFinishingTime()==-1 || currentTime-currentEnc.getFinishingTime()>encounterTimeLimit){
+		    	  it.remove();
+		      }
+		}				
+	}
+	
+	public void clearAllEncounters(){
+		encounterHistory.clear();
+		encounterHistoryWithNodes.clear();
+		hm.clear();
 	}
 	
 	public ArrayList<Encounter> getEncounterHistory(){
@@ -724,6 +736,18 @@ public class RoutingNode{
 			recIds.add(m.getKey());
 		}  
 		return recIds;
+	}
+	
+	public ArrayList<Encounter> uniqueEncounters(){
+		ArrayList<Encounter> allencs=new ArrayList<Encounter>(); 
+		Iterator<Entry<Integer, Encounter>> it = hm.entrySet().iterator();
+		while (it.hasNext())
+		{
+		      Entry<Integer, Encounter> e = it.next();
+		      Encounter currentEnc=e.getValue();
+		      allencs.add(currentEnc);
+		}
+		return allencs;
 	}
 		
 	/**********Encounter Related Methods******************/

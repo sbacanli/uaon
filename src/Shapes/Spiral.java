@@ -1,6 +1,7 @@
 package Shapes;
 
 import random.Random;
+import simtoo.Lib;
 import simtoo.PointP;
 
 
@@ -34,7 +35,7 @@ public class Spiral extends Shape{
 		double y=a*t*Math.sin(t)+ystart;
 		//*
 		if(x>getXlim() || y>getYlim() || y<0 || x<0){
-			//Lib.p("Limits done for spiral");
+			//Lib.p("Limits done for spiral x "+x+" y "+y+"xlim "+getXlim()+" getYLim "+getYlim()+" xstart "+xstart+" ystart"+ystart);
 			return null;
 		}
 		//*/
@@ -48,20 +49,23 @@ public class Spiral extends Shape{
 		PointP p=new PointP(0,0);
 		for(double y=degree;p!=null;y=y+degree){
 			p=equation(y,xstart,ystart);
-			
 			if(p!=null) {
-				if(distance(p.getX(),p.getY(),xstart,ystart)>maxradius) {
-					break;
-				}else {
+				double distan=distance(p.getX(),p.getY(),xstart,ystart);
+				if (maxradius==-1 || distan<maxradius) {
 					addPoint(p.getX(),p.getY());
-				}					
+				}else {
+					//Lib.p("maxradius " +maxradius+" distance "+distan+" degree "+degree+" y "+y);
+					break;
+				}			
+			}else {
+				//Lib.p("It is null at spiral " +xstart+" "+ystart+" "+y);
 			}
 		}
 		
 	}
 	
 	private double distance(double x,double y,double x2,double y2) {
-		return Math.sqrt(  (x-x2) *(x-x2)-(y-y2)*(y-y2) );
+		return Math.sqrt(  (x-x2) *(x-x2)+(y-y2)*(y-y2) );
 	}
 	
 	public void setRadius(double c){

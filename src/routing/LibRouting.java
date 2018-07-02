@@ -67,6 +67,11 @@ public class LibRouting {
 	
 	//precedence corrector
 	//for a given double number d,i number of numbers after the point is returned;
+	/**
+	 * @param d doublevalue
+	 * @param i number of precision digits to preserve
+	 * @return
+	 */
 	public static double prec(double d,int i){
 		return limitPrecision(d,i);
 		//return Double.parseDouble(dec.format(d));

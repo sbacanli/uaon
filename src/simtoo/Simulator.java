@@ -125,7 +125,14 @@ public class Simulator {
 		}else if(shapeUAV.toLowerCase().equals("random")){
 			randomGrid=true;
 		}else if(shapeUAV.toLowerCase().equals("special")) {
-			
+			spiralRadiusInitial=op.getParamInt("InitialSpiralRadius");
+			maxSpiralRadius=op.getParamDouble("MaxSpiralRadius");
+			aRect=op.getParamInt("RectangleWidth");
+			bRect=op.getParamInt("RectangleHeight");
+			if(aRect<=0 || bRect <=0){
+				Lib.p("aRect or bRect should be greater than 0");
+				System.exit(-1);
+			}
 		}else{
 			Lib.p("Unknown shape type in the config file entry: Shape\r\nIt should be spiral/rectangle/random");
 			System.exit(-1);
@@ -161,15 +168,14 @@ public class Simulator {
 		width=data.getWidth();
 		
 		
-		
 		//the parameters are for real coordinates, conversion should be done to virtual
 		//so that the classes can calculate
 		double aRectconverted=data.RealToVirtualDistance(aRect);
 		double bRectconverted=data.RealToVirtualDistance(bRect);
+		
 		double spiralRadiusInitialconverted=data.RealToVirtualDistance(spiralRadiusInitial);
 		maxSpiralRadius=data.RealToVirtualDistance(maxSpiralRadius);
-		System.out.println(maxSpiralRadius+"conv");
-		System.out.println(data);
+
 		for(int i=1;i<=numberOfNodes;i++){
 			RoutingNode rn=new RoutingNode(i);
 			routingNodes.add(rn);
@@ -203,7 +209,7 @@ public class Simulator {
 				s=new Spiral(spiralRadiusInitialconverted,maxSpiralRadius,data.getWidth(),data.getHeight());
 			}else if(shapeUAV.toLowerCase().equals("rectangle")){
 				//one of the UAV will start from beginning, the other will start from end
-				if(i%2==0){
+				if(i%2==1){
 					s=new Rectangle(true,aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
 				}else{
 					s=new Rectangle(false,aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
@@ -212,9 +218,8 @@ public class Simulator {
 			}else if(shapeUAV.toLowerCase().equals("random")){
 				s=new RandomPoints(data.getWidth(),data.getHeight());
 			}else if(shapeUAV.toLowerCase().equals("special")) {
-				s=new Special(aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
+				s=new Special(spiralRadiusInitialconverted,maxSpiralRadius,aRectconverted,bRectconverted,data.getWidth(),data.getHeight());
 			}
-			
 			
 			Uav u=new Uav(-1*i,s,speeduavReal,altitude,data,rn,randomGrid,encounterTimeLimit);
 			u.setGriderParams(GridXDistance, GridYDistance);

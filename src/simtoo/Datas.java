@@ -257,7 +257,6 @@ public class Datas {
 		MapArea=calculateMapArea();
 		ScreenArea=calculateScreenArea();
 		AreaRatio=Math.sqrt(MapArea/ScreenArea);
-		System.out.println("map"+MapArea+" screen "+ScreenArea+" Ratio"+AreaRatio);
 		LinearXDiff=getMaxX()-getMinX();
 		LinearYDiff=getMaxY()-getMinY();	
 	}
@@ -553,10 +552,11 @@ public class Datas {
 	}
 	
 	public double convertToRealX(double screenX){
-		if(screenX>getWidth() || screenX<0){
+		if(screenX>getWidth()){
 			double oldscreenX=screenX;
 			screenX=getWidth();
-			Lib.p("screen coordinate converted from "+oldscreenX+" to "+screenX+" limit is "+getWidth());
+			//Lib.p("screen coordinate converted from "+oldscreenX+" to "+screenX+" limit is "+getWidth());
+			/*
 			try{
 				Exception e=new Exception();
 				throw e;
@@ -564,8 +564,11 @@ public class Datas {
 				e.printStackTrace();
 				System.exit(-1);
 			}
+			*/
 		}
-		
+		if( screenX<0) {
+			screenX=0;
+		}
 		if(Double.isNaN(screenX)){
 			Lib.p("ERROR:Datas' convertToRealX is NaN");
 			System.exit(-1);
@@ -654,7 +657,6 @@ public class Datas {
 	}
 	
 	public double RealToVirtualDistance(double speedreal){
-		
 		return  (speedreal / AreaRatio);
 	}
 	
@@ -745,6 +747,12 @@ public class Datas {
 	
 	private double calculateScreenArea() {
 		return widthOfScreen*heightOfScreen;
+	}
+	
+	public PointP getRandomScreenLocation() {
+		double x1=random.Random.nextDouble()*widthOfScreen;
+		double y1=random.Random.nextDouble()*heightOfScreen;
+		return new PointP(x1, y1);
 	}
 	
 }

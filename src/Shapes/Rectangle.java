@@ -9,15 +9,14 @@ public class Rectangle extends Shape{
 	private double a,b;
 	private boolean isStart;
 	private int counter;
-	private int numberOfTours;
+	
 	
 	public Rectangle(boolean isStart,double a,double b,double xlim,double ylim){
 		super(xlim,ylim);
-		this.isStart=isStart;
+		this.isStart=false;//isStart;
 		this.a=a;
 		this.b=b;
 		counter=1;
-		numberOfTours=0;
 		
 	}
 	
@@ -35,20 +34,12 @@ public class Rectangle extends Shape{
 		a=ag;
 	}
 	
-	public int getNumberOfTours() {
-		return numberOfTours;
-	}
-	
 	public void setB(double bg){
 		b=bg;
 	}
 	
 	public double getA(){
 		return a;
-	}
-	
-	public int getCounter(){
-		return counter;
 	}
 	
 	public double getB(){
@@ -76,11 +67,7 @@ public class Rectangle extends Shape{
 	public void increaseB(double num){
 		b=b+num;
 	}
-	
-	protected void incCounter(){
-		counter++;
-	}
-	
+
 	public void fill(){
 		if(!isPositionsEmpty()) {
 			Lib.p("PROBLEM IN RECTANGLE");
@@ -90,8 +77,8 @@ public class Rectangle extends Shape{
 		if(isStart){
 			ar2=getPointsFillStart(counter);
 			//it means the limit is reached
-			if(ar2[0]==null) {
-				numberOfTours++;
+			if(ar2[0]==null && ar2[1]==null) {
+				incNumberOfTours();
 				counter=1;
 				ar2=getPointsFillStart(counter);
 			}
@@ -100,9 +87,9 @@ public class Rectangle extends Shape{
 			
 			ar2=getPointsFillEnd(counter);
 			
-			if(ar2[0]==null) {
+			if(ar2[0]==null && ar2[1]==null) {
 				counter=1;
-				numberOfTours++;
+				incNumberOfTours();
 				ar2=getPointsFillEnd(counter);
 			}
 		}
@@ -146,7 +133,8 @@ public class Rectangle extends Shape{
 			System.out.println("x is zero");
 			return null;
 		}
-		double firstTerm=(2*x-1)*getA()/2;
+		double firstTerm=((2*x)-1)*getA()/2;
+		
 		if(firstTerm<getXlim()) {
 			double yterm=getYlim()-getB()/2;
 			double bterm=getB()/2;
@@ -181,7 +169,7 @@ public class Rectangle extends Shape{
 			double bterm=getB()/2;
 			PointP p1=null;
 			PointP p2=null;
-			if(x%2==0) {
+			if((int)x%2==1) {
 				p1=new PointP(firstTerm,yterm);
 				p2=new PointP(firstTerm,bterm);
 			}else {
@@ -238,4 +226,15 @@ public class Rectangle extends Shape{
 		fill();
 	}
 
+	protected int getCounter(){
+		return counter;
+	}
+	
+	protected void incCounter(){
+		counter++;
+	}
+	
+	protected void setCounter() {
+		counter=0;
+	}
 }

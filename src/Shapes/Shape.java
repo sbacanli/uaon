@@ -8,11 +8,21 @@ public abstract class Shape {
 
 	private ArrayList<PointP> arr;
 	private double xlim,ylim;
+	private int numberOfTours;
 	
 	protected Shape(double xlim,double ylim){
 		arr=new ArrayList<PointP>();
 		this.xlim=xlim;
 		this.ylim=ylim;
+		numberOfTours=0;
+	}
+	
+	public int getNumberOfTours() {
+		return numberOfTours;
+	}
+	
+	public void incNumberOfTours() {
+		numberOfTours++;
 	}
 	
 	public ArrayList<PointP> getPoints(){

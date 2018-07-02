@@ -1,8 +1,8 @@
-SimulationName:Ext2Spiral
+SimulationName:Special
 //yes or no for Random Mobility
 randomMobility:no
 //some comments here
-dataFolder:NewYork
+dataFolder:NCSU
 LocationType:RELATIVE
 //dataFolder:outputs
 //LocationType:REAL
@@ -20,7 +20,7 @@ EncounterTimeLimit:1800
 //with every rerouting encounters less than 1200 seconds old will be deleted
 //-1 will delete all encounters
 //maximum speed of uav in terms of m/s
-SpeedOfUAVs:20
+SpeedOfUAVs:50
 //messages will be created in every X seconds
 MessageTimesForUAVs:3600
 MessageTimesForNodes:3600
@@ -32,9 +32,9 @@ GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
 Visible:yes
-Shape:spiral
-RectangleWidth:5000
-RectangleHeight:5000
+Shape:special
+RectangleWidth:1000
+RectangleHeight:1000
 RandomGrid:yes
 encounterHistoryExchange:no
 //if the time difference between 2 data enytry is more than 300 seconds, it wont project.
@@ -43,6 +43,6 @@ ProjectionTimeLimit:300
 //number of data lines to be read in buffer
 //for large files this should be small as the simulator makes projection automatically.
 NumberOfDataLines:10
-MaxSpiralRadius:300
+MaxSpiralRadius:1000
 //30 days
 MaxSimulationTime:-1

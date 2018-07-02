@@ -4,6 +4,8 @@ package simtoo;
 import java.io.*;
 import java.util.*;
 
+import routing.LibRouting;
+
 
 public class Positionable {
 
@@ -300,12 +302,24 @@ public class Positionable {
 					if(op==LocationType.REAL || op==LocationType.RELATIVE) {
 						pCreated=mydata.getPositionWithReal(xa,ya);
 						if(xa >mydata.getMaxX() || xa < mydata.getMinX() || ya <mydata.getMinY() || ya > mydata.getMaxY()){
-							Lib.p("This can not happen:addPathWithRealCoordinates for real cords at positionable");
+							xa=LibRouting.prec(xa, 8);
+							ya=LibRouting.prec(ya, 8);
+							if(xa >mydata.getMaxX() || xa < mydata.getMinX() || ya <mydata.getMinY() || ya > mydata.getMaxY()){
+								Lib.p("This can not happen:addPathWithRealCoordinates for real cords at positionable");
+								Lib.p("xa "+xa+" width "+mydata.getWidth()+" ya "+ya+" height "+mydata.getHeight());
+								try{throw new Exception();}catch(Exception e) {e.printStackTrace();}
+							}							
 						}
 					}else if(op==LocationType.SCREEN) {
 						pCreated=mydata.getPositionWithScreen(xa,ya);
 						if(xa >mydata.getWidth() || xa < 0 || ya <0 || ya > mydata.getHeight()){
-							Lib.p("This can not happen:addPathWithRealCoordinates for screen coords at positionable.java");
+							xa=LibRouting.prec(xa, 8);
+							ya=LibRouting.prec(ya, 8);
+							if(xa >mydata.getWidth() || xa < 0 || ya <0 || ya > mydata.getHeight()){
+								Lib.p("This can not happen:addPathWithRealCoordinates for screen coords at positionable.java");
+								Lib.p("xa "+xa+" width "+mydata.getWidth()+" ya "+ya+" height "+mydata.getHeight());
+								try{throw new Exception();}catch(Exception e) {e.printStackTrace();}
+							}							
 						}
 					}
 					lasttime++;
@@ -339,8 +353,14 @@ public class Positionable {
 		
 		
 		/***************************************************/
-		//for every time getScreenPosition or getRealPosiiton is called pointsiterator increased.
-		//If we just want the current position we should call this method		
+		
+		/**
+		* for every time getScreenPosition or getRealPosiiton is called pointsiterator increased.
+		* If we just want the current position we should call this method
+		* 
+		* @param int the current time is given
+		* @return Position it returns the Position from the positions queue that has screen and real coordinates 
+		*/				
 		public Position getCurrentPositionWithTime(long giventime){
 			Position returned=null;
 			
@@ -377,18 +397,18 @@ public class Positionable {
 			}
 		}
 		
-		public Position getPosition(int t){
+		public Position getPosition(int time){
 			if(pointsp.isEmpty()) {
 				return null;
 			}
 			
-			if(t==0) {
+			if(time==0) {
 				return pointsp.peek();
 			}else {
 				Iterator<Position> iterator = pointsp.iterator();
-				while(iterator.hasNext() && t>0){
+				while(iterator.hasNext() && time>0){
 				  iterator.next();
-				  t--;
+				  time--;
 				}
 				return (Position)iterator.next();
 			}
@@ -398,6 +418,9 @@ public class Positionable {
 		/******************************************************/
 		
 		
+		/**
+		 * @return Distance traveled by UAV
+		 */
 		public double getDistanceTravelled(){
 			return distancetravelled;
 		}
@@ -429,28 +452,21 @@ public class Positionable {
 			}
 		}
 		
-		public void clearPositions(){
+		public final void clearPositions(){
 			pointsp.clear();
-			/*
-			if(!pointsp.isEmpty()){
-				pointsp.subList(0,pointsp.size()-1).clear();
-			}
-			//*/
 		}
 		
-		public Position dequeuePosition() {
-			//Position p=new Position(getPosition(0));
+		public final Position dequeuePosition() {
 			try {
 				return pointsp.remove();
 			}catch(Exception e) {
 				e.printStackTrace();
-				//System.exit();
 			}
 			return null;
 			
 		}
 		
-		public int positionsLength(){
+		public final int positionsLength(){
 			return pointsp.size();
 		}
 		

@@ -1,12 +1,17 @@
 package simtoo;
 
+/*
 import static jcuda.driver.JCudaDriver.*;
-
-import jcuda.*;
+import jcuda.Pointer;
 import jcuda.driver.*;
+*/
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Base64;
+
+
+
 import java.nio.ByteBuffer;
 
 
@@ -20,8 +25,8 @@ public class Lib {
 	
 	public static double relativeDistance(double x,double y,double x1,double y1){
 		
-		return cudaFunc("relative", x, y, x1, y1);
-		//return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
+		//return cudaFunc("relative", (float)x, (float)y, (float)x1, (float)y1);
+		return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
 	}
 	
 	private static byte[] convertToByteArray(double value) {
@@ -37,12 +42,13 @@ public class Lib {
 	}
 	
 	public static double screenDistance(double x,double y,double x1,double y1){
-		return cudaFunc("relative", x, y, x1, y1);
-		//return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
+		//return cudaFunc("relative", (float)x, (float)y, (float)x1, (float)y1);
+		return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
 	}
 	
-	private static double cudaFunc(String func,double x,double y,double x1,double y1) {
-		int memorySize=Double.SIZE/8;
+	/*
+	private static float cudaFunc(String func,float x,float y,float x1,float y1) {
+		int memorySize=Float.SIZE/8;
 		cuInit(0);
 		CUdevice device = new CUdevice();
 		cuDeviceGet(device, 0);
@@ -72,15 +78,20 @@ public class Lib {
 		    Pointer.to(convertToByteArray(y1)),
 		    Pointer.to(deviceData)
 		);
+		
+		cuLaunchKernel(function, 255, 0, 0, 255, 0, 0, 
+			    0, null, kernelParameters, null);
+			cuCtxSynchronize();
 
-        double[] hostOutput = new double[1];
+        float[] hostOutput = new float[1];
 		// Copy the data back from the device to the host and clean up
 		cuMemcpyDtoH(Pointer.to(hostOutput), deviceData, memorySize);
 		
-		double returned=hostOutput[0];//toDouble(hostOutput);
+		float returned=hostOutput[0];//toDouble(hostOutput);
 		cuMemFree(deviceData);
 		return returned;
 	}
+	*/
 	
     public static void p(Object x){
 		System.out.println(x.toString());
@@ -97,7 +108,7 @@ public class Lib {
     
     
     public static double realdistance(double lat1,double lon1,double lat2,double lon2) {
-    	/*
+    	//*
     	double R = 6371; // Radius of the earth in km
     	double dLat = deg2rad(lat2-lat1);  // deg2rad below
     	double dLon = deg2rad(lon2-lon1); 
@@ -109,7 +120,7 @@ public class Lib {
     	double d = R * c; // Distance in km
     	return d*1000;
     	//*/
-    	return cudaFunc("real", lat1, lon1, lat2, lon2);
+    	//return cudaFunc("real", (float)lat1, (float)lon1, (float)lat2, (float)lon2);
     }
     
 
@@ -148,7 +159,7 @@ public class Lib {
 	}
 	
 	/** Read the object from Base64 string. */
-	   public static Object fromString( String s ) {
+	public static Object fromString( String s ) {
 		   try {
 				byte [] data = Base64.getDecoder().decode( s );
 				ObjectInputStream ois = new ObjectInputStream( 
@@ -163,7 +174,7 @@ public class Lib {
 	   }
 
 	    /** Write the object to a Base64 string. */
-	    public static String toString( Serializable o ){
+	public static String toString( Serializable o ){
 	    	try {
 	    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	        ObjectOutputStream oos = new ObjectOutputStream( baos );
