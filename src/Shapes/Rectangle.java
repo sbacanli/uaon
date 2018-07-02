@@ -159,8 +159,9 @@ public class Rectangle extends Shape{
 	
 	/**
 	 * <p>This is for filling the points from end for route. Will be necessary for second UAV</p>
-	 * @param the counter will be used by the caller method should be greater than 1 
+	 * @param counter will be used by the caller method should be greater than 1 
 	 * @return the array of points to be added to points(projection should be done)
+	 * @see PointP
 	 */
 	private PointP[] getPointsFillEnd(int counter) {
 		PointP[] ar2=new PointP[2];
