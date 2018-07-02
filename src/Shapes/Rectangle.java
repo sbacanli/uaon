@@ -122,25 +122,25 @@ public class Rectangle extends Shape{
 	}
 	*/
 	
-	/*
-	 * 
-	 * x starts from 1
+	/**
+	 * <p>This is for filling the points from start for route</p>
+	 * @param the counter will be used by the caller method should be greater than 1 
+	 * @return the array of points to be added to points(projection should be done)
 	 */
-	protected PointP[] getPointsFillStart(int x) {
+	private PointP[] getPointsFillStart(int counter) {
 		PointP[] ar2=new PointP[2];
-		//System.out.println("Nomre "+x);
-		if(x<1) {
-			System.out.println("x is zero");
+		if(counter<1) {
+			System.out.println("counter is zero for getpointsfillstart at rectangle");
 			return null;
 		}
-		double firstTerm=((2*x)-1)*getA()/2;
+		double firstTerm=((2*counter)-1)*getA()/2;
 		
 		if(firstTerm<getXlim()) {
 			double yterm=getYlim()-getB()/2;
 			double bterm=getB()/2;
 			PointP p1=null;
 			PointP p2=null;
-			if((int)x%2==1) {
+			if((int)counter%2==1) {
 				p1=new PointP(firstTerm,yterm);
 				p2=new PointP(firstTerm,bterm);
 			}else {
@@ -149,7 +149,6 @@ public class Rectangle extends Shape{
 			}
 			ar2[0]=p1;
 			ar2[1]=p2;
-			//Lib.p(p1+"\n"+p2);
 		}
 		if(ar2==null) {
 			System.out.println("AR2  null");
@@ -157,19 +156,24 @@ public class Rectangle extends Shape{
 		return ar2;		
 	}
 	
-	protected PointP[] getPointsFillEnd(int x) {
+	/**
+	 * <p>This is for filling the points from end for route. Will be necessary for second UAV</p>
+	 * @param the counter will be used by the caller method should be greater than 1 
+	 * @return the array of points to be added to points(projection should be done)
+	 */
+	private PointP[] getPointsFillEnd(int counter) {
 		PointP[] ar2=new PointP[2];
-		if(x<1) {
-			System.out.println("x is zero");
+		if(counter<1) {
+			System.out.println("counter is zero for getpointsfillend at rectangle");
 			return null;
 		}
-		double firstTerm=getXlim()-(2*x-1)*getA()/2;
+		double firstTerm=getXlim()-(2*counter-1)*getA()/2;
 		if(firstTerm>=getA()/2) {
 			double yterm=getYlim()-getB()/2;
 			double bterm=getB()/2;
 			PointP p1=null;
 			PointP p2=null;
-			if((int)x%2==1) {
+			if((int)counter%2==1) {
 				p1=new PointP(firstTerm,yterm);
 				p2=new PointP(firstTerm,bterm);
 			}else {
@@ -178,34 +182,10 @@ public class Rectangle extends Shape{
 			}
 			ar2[0]=p1;
 			ar2[1]=p2;
-			//Lib.p(p1+"\n"+p2);
 		}		
 		
 		return ar2;		
 	}
-	
-	/*
-	protected void fillend(){
-		boolean chk=true;
-		PointP one,two=null;
-		for(double i=xlim-a/2;i>=a/2;i=i-a){
-			if(chk){
-				//add bottom
-				one=new PointP(i,ylim-b/2);
-				two=new PointP(i,b/2);
-				chk=false;
-			}else{
-				//add top
-				one=new PointP(i,b/2);
-				two=new PointP(i,ylim-b/2);
-				chk=true;
-			}
-
-			arr.add(one);
-			arr.add(two);
-		}
-	}
-	*/
 	
 	
 	public void updateSuccess(){
