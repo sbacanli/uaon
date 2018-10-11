@@ -9,12 +9,14 @@ public abstract class Shape {
 	private ArrayList<PointP> arr;
 	private double xlim,ylim;
 	private int numberOfTours;
+	private PointP maximumPoint;
 	
 	protected Shape(double xlim,double ylim){
 		arr=new ArrayList<PointP>();
 		this.xlim=xlim;
 		this.ylim=ylim;
 		numberOfTours=0;
+		maximumPoint=null;
 	}
 	
 	public int getNumberOfTours() {
@@ -35,6 +37,14 @@ public abstract class Shape {
 	
 	public double getYlim(){
 		return ylim;
+	}
+	
+	public PointP getMaximumPoint() {
+		return maximumPoint;
+	}
+	
+	public void setMaximumPoint(double xscreen,double yscreen) {
+		maximumPoint=new PointP(xscreen, yscreen);
 	}
 	
 	public void addPoint(double x,double y){

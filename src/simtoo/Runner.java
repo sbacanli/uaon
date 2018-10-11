@@ -1,11 +1,10 @@
 package simtoo;
 
 import java.awt.*;
-import java.awt.event.WindowAdapter;
+import java.awt.event.*;
 
 import javax.swing.*;
 
-import com.sun.glass.events.WindowEvent;
 
 import routing.LibRouting;
 

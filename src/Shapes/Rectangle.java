@@ -8,7 +8,7 @@ public class Rectangle extends Shape{
 	
 	private double a,b;
 	private boolean isStart;
-	private int counter;
+	protected int counter;
 	
 	
 	public Rectangle(boolean isStart,double a,double b,double xlim,double ylim){
@@ -66,6 +66,10 @@ public class Rectangle extends Shape{
 	
 	public void increaseB(double num){
 		b=b+num;
+	}
+	
+	public boolean getIsStart() {
+		return isStart;
 	}
 
 	public void fill(){
@@ -128,7 +132,7 @@ public class Rectangle extends Shape{
 	 * @return the array of points to be added to points(projection should be done)
 	 * @see PointP
 	 */
-	private PointP[] getPointsFillStart(int counter) {
+	protected PointP[] getPointsFillStart(int counter) {
 		PointP[] ar2=new PointP[2];
 		if(counter<1) {
 			System.out.println("counter is zero for getpointsfillstart at rectangle");
@@ -163,7 +167,7 @@ public class Rectangle extends Shape{
 	 * @return the array of points to be added to points(projection should be done)
 	 * @see PointP
 	 */
-	private PointP[] getPointsFillEnd(int counter) {
+	protected PointP[] getPointsFillEnd(int counter) {
 		PointP[] ar2=new PointP[2];
 		if(counter<1) {
 			System.out.println("counter is zero for getpointsfillend at rectangle");

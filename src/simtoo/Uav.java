@@ -268,10 +268,9 @@ public class Uav extends Positionable{
 						fillPath(newx,newy);
 						
 						result.get(maxpos).clear();
-					}
-					
-					
+					}					
 				}
+				
 				
 			}//end of uniqueencounters size check
 			
