@@ -1,26 +1,32 @@
 package Cluster;
 
-
+import java.io.PrintStream;
 import java.util.ArrayList;
 import simtoo.PointP;
 
-public class Cluster {
-	
+public class Cluster
+{
 	public ArrayList<PointP> points;
 	public PointP centroid;
 	public int id;
-	
-	//Creates a new Cluster
-	public Cluster(int id) {
+
+	public Cluster(int id)
+	{
 		this.id = id;
-		this.points = new ArrayList<PointP>();
-		this.centroid = null;
+		points = new ArrayList();
+		centroid = null;
+	}
+
+	public Cluster(int id, ArrayList<PointP> points, PointP centroid) {
+		this.id = id;
+		this.points = points;
+		this.centroid = centroid;
 	}
 
 	public ArrayList<PointP> getPointPs() {
 		return points;
 	}
-	
+
 	public void addPointP(PointP point) {
 		points.add(point);
 	}
@@ -40,16 +46,17 @@ public class Cluster {
 	public int getId() {
 		return id;
 	}
-	
+
 	public void clear() {
 		points.clear();
+		centroid = null;
 	}
-	
+
 	public void plotCluster() {
-		System.out.println("[Cluster: " + id+"]");
+		System.out.println("[Cluster: " + id + "]");
 		System.out.println("[Centroid: " + centroid + "]");
 		System.out.println("[PointPs: \n");
-		for(PointP p : points) {
+		for (PointP p : points) {
 			System.out.println(p);
 		}
 		System.out.println("]");
@@ -58,5 +65,4 @@ public class Cluster {
 	public int getNumberOfPoints() {
 		return points.size();
 	}
-	
 }
