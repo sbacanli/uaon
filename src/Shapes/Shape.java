@@ -4,92 +4,103 @@ import java.util.ArrayList;
 
 import simtoo.PointP;
 
-public abstract class Shape {
-
-	private ArrayList<PointP> arr;
-	private double xlim,ylim;
+public abstract class Shape
+{
+	private ArrayList<simtoo.PointP> arr;
+	private double xlim;
+	private double ylim;
 	private int numberOfTours;
-	private PointP maximumPoint;
-	
-	protected Shape(double xlim,double ylim){
-		arr=new ArrayList<PointP>();
-		this.xlim=xlim;
-		this.ylim=ylim;
-		numberOfTours=0;
-		maximumPoint=null;
+	private double maxRadius;
+
+	protected Shape(double xlim, double ylim)
+	{
+		arr = new ArrayList<PointP>();
+		this.xlim = xlim;
+		this.ylim = ylim;
+		numberOfTours = 0;
 	}
-	
-	public int getNumberOfTours() {
+
+	public void setMaxRadius(double givenradius) {
+		maxRadius = givenradius;
+	}
+
+	public double getMaxRadius() {
+		return maxRadius;
+	}
+
+
+	public int getNumberOfTours()
+	{
 		return numberOfTours;
 	}
-	
+
 	public void incNumberOfTours() {
-		numberOfTours++;
+		numberOfTours += 1;
 	}
-	
-	public ArrayList<PointP> getPoints(){
+
+	public ArrayList<simtoo.PointP> getPoints() {
 		return arr;
 	}
-	
-	public double getXlim(){
+
+	public double getXlim() {
 		return xlim;
 	}
-	
-	public double getYlim(){
+
+	public double getYlim() {
 		return ylim;
 	}
-	
-	public PointP getMaximumPoint() {
-		return maximumPoint;
+
+	public void addPoint(double x, double y) {
+		arr.add(new simtoo.PointP(x, y));
 	}
-	
-	public void setMaximumPoint(double xscreen,double yscreen) {
-		maximumPoint=new PointP(xscreen, yscreen);
-	}
-	
-	public void addPoint(double x,double y){
-		arr.add(new PointP(x,y));
-	}
-	
-	public void addPoint(PointP p) {
+
+	public void addPoint(simtoo.PointP p) {
 		arr.add(p);
 	}
-	/*
-	public void writeFile(String s){
-		BufferedWriter bw=null;
-		try{
-			bw=new BufferedWriter(new FileWriter(s));
-			for(int j=0;j<arr.size();j++){
-				bw.write(arr.get(j).getX()+"\t"+arr.get(j).getY()+"\r\n");
-			}
-			bw.close();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
-	*/
-	
-	//fill screen locations starting point xpos and ypos
-	public abstract void fill(double xpos,double ypos);
-	
-	//fill screen locations with some precomputed value or random
+
+
+
+
+	public abstract void fill(double paramDouble1, double paramDouble2);
+
+
+
+
 	public abstract void fill();
-	
+
+
+
+
 	public abstract void updateSuccess();
 
+
+
 	public abstract void updateFail();
-	
-	public abstract void updateFail(double n);
-	
-	public PointP initialPoint() {
+
+
+
+	public abstract void updateFail(double paramDouble);
+
+
+
+	public simtoo.PointP initialPoint()
+	{
 		return null;
 	}
-	
+
 	public final void clearPositions() {
 		arr.clear();
 	}
-	
-	public final boolean isPositionsEmpty() {
+
+
+	public void setRandomRadius() {}
+
+	public final boolean isPositionsEmpty()
+	{
 		return arr.isEmpty();
+	}
+
+	public String toString() {
+		return initialPoint() + " " + xlim + " " + ylim + " " + numberOfTours;
 	}
 }

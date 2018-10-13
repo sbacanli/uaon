@@ -15,11 +15,13 @@ public class Special extends Rectangle {
 	 */
 	double spiralA,maxRadius;
 	int limitcounter;
+	PointP maxPoint;
 	
 	public Special(double spiralA, double maxRadius, double a, double b, double xlim, double ylim) {
 		super(true, a, b, xlim, ylim);
 		this.spiralA=spiralA;
 		limitcounter=4;
+		maxPoint=new PointP(getXlim(),getYlim());
 	}
 	
 	public double getSpiralA() {
@@ -116,6 +118,8 @@ public class Special extends Rectangle {
 		addPoint(ar2[1]);
 	}
 	
+	
+	
 	protected PointP[] getPointsFillStart(int counter) {
 		PointP[] ar2=new PointP[2];
 		if(counter<1) {
@@ -124,7 +128,7 @@ public class Special extends Rectangle {
 		}
 		double firstTerm=((2*counter)-1)*getA()/2;
 
-		if(firstTerm<getXlim() && firstTerm < getMaximumPoint().getX() && (getNumberOfTours()+1)%limitcounter < 0) {
+		if(firstTerm<getXlim() && firstTerm < getMaximumPoint().getX()) {
 			double yterm=getYlim()-getB()/2;
 			double bterm=getB()/2;
 			PointP p1=null;
@@ -159,4 +163,24 @@ public class Special extends Rectangle {
 		//pnts.clear();
 		s=null;		
 	}
+	
+	public void setClusterBorder(double xlim2, double ylim2) {
+		if( (getNumberOfTours()+1)%limitcounter == 0) {
+			setMaximumPoint(getXlim(), getYlim());
+		}else if ( (getNumberOfTours()+1)%limitcounter == 1){
+			setMaximumPoint(xlim2, ylim2);
+		}
+	}
+	
+	public void setMaximumPoint(double x1,double y1) {
+		maxPoint=new PointP(x1,y1);
+	}
+	
+	public PointP getMaximumPoint() {
+		return maxPoint;
+	}
+	
+	public boolean isMeandering() {
+	    return getNumberOfTours() % 2 == 0;
+	  }
 }
