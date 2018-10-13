@@ -21,7 +21,7 @@ public class Options {
 		    String line;
 		    while ((line = br.readLine()) != null) {
 		    	// // is commenting in the config file
-		    	if(!line.startsWith("//")){
+		    	if(!line.startsWith("//") && line.trim().length()!=0){
 		    		StringTokenizer st=new StringTokenizer(line,":");
 		    		String s1=st.nextToken();
 		    		String s2=st.nextToken();
@@ -31,8 +31,9 @@ public class Options {
 		    }
 		    br.close();
 		}catch(Exception e){
-			Lib.p("Problem in reading config file "+conf);
+			Lib.p("Problem in reading config file "+conf+" "+e.getMessage());
 			e.printStackTrace();
+			
 		}
 	}
 
