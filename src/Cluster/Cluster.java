@@ -13,7 +13,7 @@ public class Cluster
 	public Cluster(int id)
 	{
 		this.id = id;
-		points = new ArrayList();
+		points = new ArrayList<PointP>();
 		centroid = null;
 	}
 

@@ -54,7 +54,7 @@ public class PointC
 	}
 
 	protected static ArrayList<PointC> createRandomPointCs(int min, int max, int number) {
-		ArrayList<PointC> points = new ArrayList(number);
+		ArrayList<PointC> points = new ArrayList<PointC>(number);
 		for (int i = 0; i < number; i++) {
 			points.add(createRandomPointC(min, max));
 		}

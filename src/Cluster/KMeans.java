@@ -21,8 +21,8 @@ public class KMeans
 
 	public KMeans(ArrayList<PointP> pointsg, int numberOfClusters, boolean isReal)
 	{
-		clusters = new ArrayList(numberOfClusters);
-		ArrayList<PointP> points2 = new ArrayList();
+		clusters = new ArrayList<Cluster>(numberOfClusters);
+		ArrayList<PointP> points2 = new ArrayList<PointP>();
 		for (int n = 0; n < pointsg.size(); n++) {
 			points2.add(new PointP((PointP)pointsg.get(n)));
 		}
@@ -179,7 +179,7 @@ public class KMeans
 	}
 
 	public ArrayList<PointP> getCentroids() {
-		ArrayList<PointP> centroids = new ArrayList();
+		ArrayList<PointP> centroids = new ArrayList<PointP>();
 		for (int i = 0; i < clusters.size(); i++) {
 			Cluster cluster = (Cluster)clusters.get(i);
 			PointP aux = cluster.getCentroid();
@@ -242,7 +242,7 @@ public class KMeans
 	}
 
 	protected static ArrayList<PointP> createRandomPointPs(int min, int max, int number) {
-		ArrayList<PointP> points = new ArrayList(number);
+		ArrayList<PointP> points = new ArrayList<PointP>(number);
 		for (int i = 0; i < number; i++) {
 			points.add(createRandomPointP(min, max));
 		}
