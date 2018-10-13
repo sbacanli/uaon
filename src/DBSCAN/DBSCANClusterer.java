@@ -43,6 +43,7 @@ public class DBSCANClusterer<V> {
 	/** index maintaining visited points */
 	private HashSet<V> visitedPoints = new HashSet<V>();
 
+	
 	/**
 	 * Creates a DBSCAN clusterer instance. 
 	 * Upon instantiation, call {@link #performClustering()} 
