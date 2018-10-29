@@ -1,6 +1,6 @@
 package Cluster;
 
-import java.io.PrintStream;
+
 import java.util.ArrayList;
 import simtoo.PointP;
 

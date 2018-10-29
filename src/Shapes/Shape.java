@@ -1,8 +1,14 @@
 package Shapes;
 
+
+
 import java.util.ArrayList;
 
 import simtoo.PointP;
+
+enum ShapeType{
+	SPECIAL,RECTANGLE,SPIRAL,RANDOM,LINE;
+}
 
 public abstract class Shape
 {
@@ -11,6 +17,7 @@ public abstract class Shape
 	private double ylim;
 	private int numberOfTours;
 	private double maxRadius;
+	private ShapeType stype;
 
 	protected Shape(double xlim, double ylim)
 	{
@@ -20,6 +27,14 @@ public abstract class Shape
 		numberOfTours = 0;
 	}
 
+	public void setShapeType(ShapeType gtype) {
+		stype=gtype;
+	}
+	
+	public ShapeType getShapeType() {
+		return stype;
+	}
+	
 	public void setMaxRadius(double givenradius) {
 		maxRadius = givenradius;
 	}
@@ -55,7 +70,7 @@ public abstract class Shape
 	}
 
 	public void addPoint(simtoo.PointP p) {
-		arr.add(p);
+		arr.add(p); 
 	}
 
 
@@ -102,5 +117,10 @@ public abstract class Shape
 
 	public String toString() {
 		return initialPoint() + " " + xlim + " " + ylim + " " + numberOfTours;
+	}
+
+	public void resetRadius() {
+		// TODO Auto-generated method stub
+		
 	}
 }

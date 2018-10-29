@@ -14,77 +14,46 @@ public class Special extends Rectangle {
 	 * @param ylim: maximum y coordinate
 	 */
 	double spiralA,maxRadius;
-	int limitcounter;
 	PointP maxPoint;
+	double initRadius;
+	int limitcounter;
 	
 	public Special(double spiralA, double maxRadius, double a, double b, double xlim, double ylim) {
+		//isStart is true as we have only one UAV for now
 		super(true, a, b, xlim, ylim);
 		this.spiralA=spiralA;
-		limitcounter=4;
+		this.maxRadius = maxRadius;
+		
 		maxPoint=new PointP(getXlim(),getYlim());
+		limitcounter=4;
+		initRadius=maxRadius;
 	}
 	
 	public double getSpiralA() {
 		return spiralA;
-	}
+	}	
 	
 	public double getMaxRadius() {
 		return maxRadius;
 	}
 	
+	public boolean isMeandering() {
+	    return getNumberOfTours() % 2 == 0;
+	  }
+
+	public void resetRadius() {
+		maxRadius=initRadius;
+	}
+	
 	@Override
 	public void fill(double xpos,double ypos){
-		if(getNumberOfTours()%2==0){
+		if(isMeandering()){
 			fillAsMeander(xpos, ypos);
 			//Lib.p("super called");
 		}else {
 			fillAsSpiral(spiralA,maxRadius,xpos,ypos);
-			//Lib.p("spiral called");
 		}
-		/*
-		PointP[] ar2=getPointsFillEnd(getCounter());
-		//it means the limit is reached
-		if(ar2==null) {
-			Lib.p(" It is null at special");
-			System.exit(-1);
-		}
-		if(ar2[0]==null) {
-			setCounter();
-			incNumberOfTours();
-			ar2=getPointsFillEnd(getCounter());
-		}
-		if(getNumberOfTours()>0) {
-			addPoint(xpos, ypos);
-		}else {
-			addPoint(ar2[0]);
-			addPoint(ar2[1]);
-			incCounter();
-		}*/
 	}
-	
-	//@Override
-	//public void fill(){
-		//this.fill(0.0,0.0);
-		/*
-		PointP[] ar2=getPointsFillEnd(getCounter());
-		//it means the limit is reached
-		
-		if(ar2==null) {
-			Lib.p(" It is null at special");
-			System.exit(-1);
-		}
-		if(ar2[0]==null) {
-			setCounter();
-			incNumberOfTours();
-			ar2=getPointsFillEnd(getCounter());
-		}
-		if(getNumberOfTours()==0) {
-			addPoint(ar2[0]);
-			addPoint(ar2[1]);
-			incCounter();
-		}
-		**/
-	//}
 	
 	private void fillAsMeander(double xpos,double ypos) {
 		boolean limitsDone=false;
@@ -98,6 +67,7 @@ public class Special extends Rectangle {
 			//it means the limit is reached
 			if(ar2[0]==null && ar2[1]==null) {
 				incNumberOfTours();
+				Lib.p("Tours increased");
 				counter=1;
 				ar2=getPointsFillStart(counter);
 			}
@@ -154,15 +124,12 @@ public class Special extends Rectangle {
 		Spiral s=new Spiral(spiralA,maxradius,getXlim(),getYlim());
 		s.fill(xpos,ypos);
 		ArrayList<PointP> pnts=s.getPoints();
-		if(pnts.isEmpty() || pnts==null) {
-			Lib.p("fillasspiral problem "+spiralA+" "+maxradius);
-		}
 		for(int i=0;i<pnts.size();i++) {
 			addPoint(pnts.get(i));
 		}
-		//pnts.clear();
 		s=null;		
 	}
+	
 	
 	public void setClusterBorder(double xlim2, double ylim2) {
 		if( (getNumberOfTours()+1)%limitcounter == 0) {
@@ -170,7 +137,7 @@ public class Special extends Rectangle {
 		}else if ( (getNumberOfTours()+1)%limitcounter == 1){
 			setMaximumPoint(xlim2, ylim2);
 		}
-	}
+	} 
 	
 	public void setMaximumPoint(double x1,double y1) {
 		maxPoint=new PointP(x1,y1);
@@ -180,7 +147,4 @@ public class Special extends Rectangle {
 		return maxPoint;
 	}
 	
-	public boolean isMeandering() {
-	    return getNumberOfTours() % 2 == 0;
-	  }
 }

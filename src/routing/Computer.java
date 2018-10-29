@@ -37,6 +37,12 @@ public class Computer {
 		Lib.p(Reporter.PacketInfo());
 		Lib.p(Reporter.getDistanceTravelled(uav));
 		Reporter.writeDistanceTravelled(uav);
+	    Reporter.writeMessagesAddedToBuffers();
+	    Reporter.writeMessagesReceived();
+	    
+	    for (int h = 0; h < uav.size(); h++) {
+	      Lib.p("Number of tours for UAV" + ((Uav)uav.get(h)).getShape().getNumberOfTours());
+	    }
 	}
 	
 	

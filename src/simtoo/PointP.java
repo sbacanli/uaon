@@ -18,6 +18,11 @@ public class PointP implements Serializable {
 		this.cluster_number=0;
 	}
 	
+	public PointP(PointP screenPoint) {
+		x=screenPoint.x;
+		y=screenPoint.y;
+	}
+
 	public double getX() {
 		if (Double.isNaN(x)) {
 			Lib.p("PointP's x is NaN");

@@ -14,7 +14,7 @@ public class Spiral extends Shape{
 		super(xlim,ylim);
 		this.a=a;
 		radiusChange=100;
-		this.maxradius=maxradius;
+		this.maxradius=maxradius; 
 	}
 	
 	@Override
@@ -61,6 +61,10 @@ public class Spiral extends Shape{
 				//Lib.p("It is null at spiral " +xstart+" "+ystart+" "+y);
 			}
 		}
+		if(getPoints().size()==0) {
+			Lib.p("points empty xstart "+xstart+" ystart "+ystart+" xlim "+getXlim()+" ylim "+getYlim());
+			addPoint(xstart,ystart);
+		}
 		
 	}
 	
@@ -71,6 +75,15 @@ public class Spiral extends Shape{
 	public void setRadius(double c){
 		a=c;
 	}
+	
+	public void setRandomRadius()
+	{
+		if (getXlim() > getYlim()) {
+			setMaxRadius(Random.nextDouble() * (getYlim() / 2.0D));
+		} else {
+			setMaxRadius(Random.nextDouble() * (getXlim() / 2.0D));
+		}
+	 }
 	
 	public double getRadius(){
 		return a;

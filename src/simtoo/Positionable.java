@@ -29,7 +29,7 @@ public class Positionable {
 			this.nodeId=nodeId;
 			if(nodeId==0){
 				Lib.p("NodeId is 0");
-				System.exit(-1);
+				System.exit(-1); 
 			}
 			
 			speed=1;//used in random mobility, will be changed if not random mobility

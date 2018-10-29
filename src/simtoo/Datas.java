@@ -8,6 +8,16 @@ import java.io.*;
 
 enum LocationType{
 	REAL,RELATIVE,SCREEN;
+	
+	@Override
+	  public String toString() {
+	    switch(this) {
+	      case REAL: return "REAL";
+	      case RELATIVE: return "RELATIVE";
+	      case SCREEN: return "SCREEN";
+	      default: throw new IllegalArgumentException();
+	    }
+	  }
 }
 public class Datas {
 

@@ -28,10 +28,13 @@ public class Runner {
 	
 	public static void run(String confFile){
 		//read the options from the file
-		Options op=new Options(confFile);
-		
 		String reportfile=confFile.replace("config", "Report");
 		Lib.init(reportfile);
+		
+		Options op=new Options(confFile);
+		
+		
+		
 		
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		double height= screenSize.height;
@@ -77,17 +80,17 @@ public class Runner {
 
 	public static void runinvisible(String confFile){
 		//read the options from the file
-				Options op=new Options(confFile);
-				
-				Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-				double height= screenSize.height;
-				double width = screenSize.width;
+		Options op=new Options(confFile);
+		
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		double height= screenSize.height;
+		double width = screenSize.width;
 
-				Lib.p("SCREEN "+height+" "+width);
-				
-				Datas data=new Datas(height,width);
-				Simulator simulator=new Simulator(op,data);
-				SimPanel simpanel=new SimPanel(simulator,data,simulator.isVisible());
-				simpanel.processTime();
+		Lib.p("SCREEN "+height+" "+width);
+		
+		Datas data=new Datas(height,width);
+		Simulator simulator=new Simulator(op,data);
+		SimPanel simpanel=new SimPanel(simulator,data,simulator.isVisible());
+		simpanel.processTime();
 	}
 }

@@ -102,10 +102,8 @@ public class Lib {
 			bwriter.close();
 		}catch(Exception e){
 			e.printStackTrace();
-		}
-		
-	}
-    
+		}		
+	}    
     
     public static double realdistance(double lat1,double lon1,double lat2,double lon2) {
     	//*

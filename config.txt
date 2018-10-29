@@ -1,14 +1,15 @@
-SimulationName:Special
+SimulationName:SCRDB507
 //yes or no for Random Mobility
+//parameter for maximum distance is 2000
 randomMobility:no
-//some comments here
 dataFolder:NCSU
 LocationType:RELATIVE
-//dataFolder:outputs
-//LocationType:REAL
+
 interUavsProbability:1.0
-interNodesProbability:1.0
-interProbability:1.0
+interNodesProbability:-1.0
+interProbability:0.7
+NodeRouting:SCR 0.25 0.99 0.99 2
+
 CommDistance:250
 Altitude:100
 numberOfNodes:-1
@@ -19,12 +20,11 @@ InitialSpiralRadius:200
 EncounterTimeLimit:1800
 //with every rerouting encounters less than 1200 seconds old will be deleted
 //-1 will delete all encounters
-//maximum speed of uav in terms of m/s
-SpeedOfUAVs:50
+SpeedOfUAVs:33
 //messages will be created in every X seconds
-MessageTimesForUAVs:3600
+MessageTimesForUAVs:0
 MessageTimesForNodes:3600
-//plus or minus in terms of seconds
+//plus or minus
 MessageErrorTimesForUAVs:60
 MessageErrorTimesForNodes:60
 //The base will be partitioned to grids which have width XDistance
@@ -32,17 +32,22 @@ GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
 Visible:yes
-Shape:special
+
+
+Shape:spiralcluster
+ClusterTechnique:dbscan
+RadiusCoefficient:2
+numberOfClusters:5
+MaxDistanceForDBSCAN:2000
+
 RectangleWidth:1000
 RectangleHeight:1000
 RandomGrid:yes
 encounterHistoryExchange:no
 //if the time difference between 2 data enytry is more than 300 seconds, it wont project.
-//in terms of seconds
 ProjectionTimeLimit:300
 //number of data lines to be read in buffer
 //for large files this should be small as the simulator makes projection automatically.
-NumberOfDataLines:10
+NumberOfDataLines:50
 MaxSpiralRadius:1000
-//30 days
 MaxSimulationTime:-1

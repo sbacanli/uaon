@@ -1,12 +1,14 @@
 package simtoo;
-import routing.*;
-import DBSCAN.*;
 
-import java.util.ArrayList;
-
+import Cluster.Cluster;
+import Cluster.KMeans;
+import DBSCAN.DBSCANClusterer;
+import DBSCAN.myDistanceMetric;
 import Shapes.*;
 import grider.Grider;
-import random.*;
+
+import java.util.ArrayList;
+import routing.*;
 
 public class Uav extends Positionable{
 
@@ -25,10 +27,14 @@ public class Uav extends Positionable{
 	private int encounterTimeLimit;
 	private ArrayList<PointP> oldpoints;
 	private int numberOfRoutesCompleted;
+	private ClusterTechnique clusterTechnique;
+	private int radiusCoefficient;
+	private int numberOfClusters;
+	private String shapename;
+	private double maxDistanceForDBSCAN;
 	
-	
-	Uav(int uid,Shape sg,double speedreal,int altitudegiven,
-			Datas givendata,RoutingNode rn,boolean rg,int encounterTimeLimit){
+	Uav(int uid, Shape sg, double speedreal, int altitudegiven, 
+			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam){
 		super(uid,givendata);
 		setRealSpeed(speedreal);
 		setScreenSpeed(givendata.RealToVirtualDistance(speedreal));
@@ -37,6 +43,7 @@ public class Uav extends Positionable{
 		PointP initialPoint=s.initialPoint();
 		initialX=initialPoint.getX();
 		initialY=initialPoint.getY();
+		shapename = shapeName;
 		
 		//adding initial screen position
 		Position posGen=getData().getPositionWithScreen(initialX, initialY);
@@ -58,13 +65,18 @@ public class Uav extends Positionable{
 		prevEnc=new ArrayList<Encounter>();
 		altitude=givendata.RealToVirtualDistance(altitudegiven);
 		uniqueReceiversPrev=new ArrayList<Integer>();
-		randomGrid=rg;
+	
 		if(s instanceof Spiral){
 			initialParamSpiral=((Spiral) s).getA();
 		}
 		this.encounterTimeLimit=encounterTimeLimit;
 		oldpoints=new ArrayList<PointP>();
 		numberOfRoutesCompleted=0;
+		
+		radiusCoefficient = cparam.getRadiusCoefficient();
+		clusterTechnique = cparam.getTechnique();
+		numberOfClusters = cparam.getNumberOfClusters();
+		maxDistanceForDBSCAN=cparam.getMaxDistance();
 	}
 	
 	public void setShape(Shape sg){
@@ -102,6 +114,7 @@ public class Uav extends Positionable{
 			Lib.p("positions are empty interestingly.fillpath");
 		}
 		ArrayList<PointP> arr=null;
+		s.setRandomRadius();
 		s.fill(xpos,ypos);
 		arr=s.getPoints();
 		
@@ -114,6 +127,9 @@ public class Uav extends Positionable{
 		
 		if(arr==null || arr.isEmpty()){
 			Lib.p("POSITIONS GOT EMPTY AT UAV FILLPATH");
+			Lib.p("coordinates " + xpos + ", " + ypos + " sccreenwitdth " + getData().getWidth() + 
+			        " screenheight " + getData().getHeight() + " type " + s.getClass().getName());
+			      Lib.p("Class name " + s.getClass() + " ");
 			System.exit(-1);
 		}else{
 			// there will be at least one element in the list that has a time data
@@ -179,8 +195,10 @@ public class Uav extends Positionable{
 		g=new Grider(xnum,ynum,getData().getMinX(),getData().getMaxX(),getData().getMinY(),getData().getMaxY());
 	}
 	
-	public PointP getRandomLocationInGrid(){
-		return g.randomLoc();
+	
+	public PointP getRandomLocationFromEncounters(ArrayList<Encounter> ars) {
+		int randomLoc = random.Random.get(ars.size());
+		return ((Encounter)ars.get(randomLoc)).getPosition().getScreenPoint();
 	}
 	
 	public PointP getRandomLocation() {
@@ -191,9 +209,9 @@ public class Uav extends Positionable{
 		PointP p1=null;
 		
 		int sizeold=oldpoints.size();
-		int pos=Random.get(sizeold+1);
+		int pos=random.Random.get(sizeold+1);
 		if(pos==sizeold){
-			p1=getRandomLocationInGrid();
+			p1=getRandomLocation();
 		}else{
 			p1=oldpoints.get(pos);
 		}		
@@ -201,90 +219,161 @@ public class Uav extends Positionable{
 	}
 	
 	public void reRoute(long currentTime){
-		if(s instanceof Special ) {
-			specialReroute(currentTime);
-		}else {
+		if (shapename.contains("spiralcluster")) {
+			clusterReroute(currentTime);
+		} else {
 			otherReroute(currentTime);
 		}
 	}
 	
-	public void specialReroute(long currentTime) {
+	
+	//DBSSCAN clustering,
+	private ArrayList<Cluster> DBSCAN(ArrayList<Encounter> rnct)
+	{
+		ArrayList<ArrayList<Encounter>> resultcluster = null;
+
+		ArrayList<Cluster> clusters = new ArrayList<Cluster>();
+		
+
+		boolean isReal = getData().getLoc() == LocationType.REAL;
+		try {
+			DBSCANClusterer<Encounter> cl1 = new DBSCANClusterer<Encounter>(rnct, numberOfClusters, maxDistanceForDBSCAN, new myDistanceMetric(isReal));
+			resultcluster = cl1.performClustering();
+
+
+			for (int i = 0; i < resultcluster.size(); i++) {
+				PointP centropoint = centerOf(resultcluster.get(i));
+
+
+				Cluster x = new Cluster(i);
+				x.setCentroid(centropoint);
+
+
+				for (int j = 0; j < resultcluster.get(i).size(); j++) {
+					PointP p1 = new PointP(resultcluster.get(i).get(j).getPosition().getScreenPoint()  );
+					x.addPointP(p1);
+				}
+				clusters.add(x);
+			}
+		}
+		catch (DBSCAN.DBSCANClusteringException e1) {
+			Lib.p(e1);
+			e1.printStackTrace();
+		}
+		return clusters;
+	}
+
+	private ArrayList<Cluster> kmeans(ArrayList<Encounter> rnct)
+	{
+	    ArrayList<Cluster> clusters = new ArrayList<Cluster>();
+	    ArrayList<PointP> pts = new ArrayList<PointP>();
+	     
+	    boolean isReal = getData().getLoc() == LocationType.REAL;
+	    KMeans kmeans = new KMeans(pts, numberOfClusters, isReal);
+	    
+	    kmeans.calculate();
+	    clusters = kmeans.getClusters();
+	    
+	    return clusters;
+	}
+	
+	public double getFurthestXPoint(ArrayList<Encounter> earr) {
+		double maxxpoint=earr.get(0).getPosition().getScreenX();
+		for(int i=1;i<earr.size();i++) {
+			double tpoint=earr.get(i).getPosition().getScreenX();
+			if(tpoint>maxxpoint) {
+				maxxpoint=tpoint;
+			}
+		}
+		return maxxpoint;
+	}
+	
+	public void clusterReroute(long currentTime) {
 		PointP p;
 		double newx=0;
 		double newy=0;
-		//Lib.p(s.getNumberOfTours());
-		if(s.getNumberOfTours()%2==0) {
+		//Lib.p(s.getNumberOfTours());Special)s).isMeandering()
+		if(((Special)s).isMeandering()) {
 			initialX=newx;
 			initialY=newy;
 			fillPath(newx,newy);
 		}else {
 			ArrayList<Encounter> rnc=rn.uniqueEncounters();
-			
 			if(rnc.size()<2) {
 				//Lib.p("Size less than 2");
 				PointP tempp=getRandomLocation();
 				newx=tempp.getX();
 				newy=tempp.getY();
+				((Special)s).resetRadius();
 				fillPath(newx,newy);
 			}else {
-				ArrayList<ArrayList<Encounter>> result = null;
-				int minCluster = 5;
-				double maxDistance = 1000;
-				
-				DBSCANClusterer<Encounter> clusterer = null;
-				try {
-					clusterer = new DBSCANClusterer<Encounter>(rnc, minCluster, maxDistance,new myDistanceMetric());
-					result = clusterer.performClustering();
-				} catch (DBSCANClusteringException e1) {
-					Lib.p(e1);
+				double xmax=getFurthestXPoint(rnc);
+				//y variable is useless here
+				((Special)s).setClusterBorder(xmax,0);
+				ArrayList<Cluster> clusterResult = null;
+				if (clusterTechnique == ClusterTechnique.KMEANS) {
+					clusterResult = kmeans(rnc);
+				} else if (clusterTechnique == ClusterTechnique.DBSCAN) {
+					clusterResult = DBSCAN(rnc);
 				}
-				/*
-				for(Encounter e:rnc) {
-					System.out.println(e);
-				}*/
-				if(result.isEmpty()) {
-					//Lib.p("Result is empty");
-					PointP tempp=getRandomLocation();
-					newx=tempp.getX();
-					newy=tempp.getY();
-					fillPath(newx,newy);
-				}else {
-					//Lib.p("Result not empty");
-					for(int j=0;j<result.size() && j<3;j++) {
-						int max=result.get(0).size();
-						int maxpos=0;
-						for(int i=1;i<result.size();i++) {
-							if(max<result.get(i).size()) {
-								max=result.get(i).size();
-								maxpos=i;
-							}
-						}
-						
-						PointP resultPoint=centerOf(result.get(maxpos));
-						newx=resultPoint.getX();
-						newy=resultPoint.getY();
-						
-						//Lib.p("paths filled "+newx+" "+newy);
-						fillPath(newx,newy);
-						
-						result.get(maxpos).clear();
-					}					
+
+				if (clusterResult.isEmpty()) {
+					PointP tempp = getRandomLocationFromEncounters(rnc);
+					newx = tempp.getX();
+					newy = tempp.getY();
+					fillPath(newx, newy);
+				} else {
+					int sizeResult=clusterResult.size();
+					if(sizeResult>numberOfClusters) {
+						sizeResult=numberOfClusters;
+					}
+					for (int j = 0; (j < sizeResult); j++) {
+						s.setMaxRadius(getRadiusOfCluster(clusterResult.get(j).getPointPs()) / radiusCoefficient);
+						fillPath((clusterResult.get(j)).getCentroid().getX(), ((Cluster)clusterResult.get(j)).getCentroid().getY());
+						Lib.p("fill number "+j+" "+sizeResult+" clustersize "+clusterResult.size()+" numberofCluster "+numberOfClusters);
+					}
 				}
-				
-				
-			}//end of uniqueencounters size check
-			
+			}
 			s.incNumberOfTours();
-			
 			rn.clearContacts();
 			rn.clearAllEncounters();
 		}
-		numberOfRoutesCompleted++;
-		//s.clearPositions();
-		
+		Lib.p(s.getNumberOfTours()+" Tours");
+		numberOfRoutesCompleted += 1;
 	}
 	
-	public PointP centerOf(ArrayList<Encounter> encs) {
+	private double getRadiusOfCluster(ArrayList<PointP> points)
+	{
+		double maxX = ((PointP)points.get(0)).getX();
+		double maxY = ((PointP)points.get(0)).getY();
+		double minX = ((PointP)points.get(0)).getX();
+		double minY = ((PointP)points.get(0)).getY();
+		double ptsx = 0.0D;
+		double ptsy = 0.0D;
+
+		for (int i = 1; i < points.size(); i++) {
+			ptsx = ((PointP)points.get(i)).getX();
+			ptsy = ((PointP)points.get(i)).getY();
+
+			if (ptsx > maxX) {
+				maxX = ptsx;
+			}
+			if (ptsx < minX) {
+				minX = ptsx;
+			}
+			if (ptsy > maxY) {
+				maxY = ptsy;
+			}
+			if (ptsy < minY) {
+				minY = ptsy;
+			}
+		}
+
+		return Lib.screenDistance(maxX, maxY, minX, minY);
+	}
+
+	
+	public PointP centerOfOld(ArrayList<Encounter> encs) {
 		double maxx=encs.get(0).getPosition().getScreenX();
 		double minx=encs.get(0).getPosition().getScreenX();
 		double maxy=encs.get(0).getPosition().getScreenY();
@@ -311,6 +400,24 @@ public class Uav extends Positionable{
 		
 	}
 	
+	public PointP centerOf(ArrayList<Encounter> encs)
+	{
+		if (encs.isEmpty()) {
+			Lib.p("The encounters to be found centers are empty at uav.java");
+			System.exit(-1);
+		}
+
+		double screenx = 0.0D;
+		double screeny = 0.0D;
+		for (int i = 0; i < encs.size(); i++) {
+			screenx += (encs.get(i)).getPosition().getScreenX();
+			screeny += (encs.get(i)).getPosition().getScreenY();
+		}
+		double midx = screenx / encs.size();
+		double midy = screeny / encs.size();
+		return new PointP(midx, midy);
+	}
+	
 	public double mydistance(Position p1,Position p2) {
 		return Lib.relativeDistance(p1.real.getX(),p1.real.getY(),p2.real.getX(),p2.real.getY());
 	}
@@ -319,69 +426,24 @@ public class Uav extends Positionable{
 	 * @param currentTime
 	 */
 	public void otherReroute(long currentTime) {
-		PointP p;
-		//clearPositions();
-		
 		double newx=0;
 		double newy=0;
 		
-		if(randomGrid){
-			//Random routing uses this technique only
-			//it means whatever happens follow random next position
-			//unlike the else condition this technique is not adapting itself
-			
-			p=getRandomLocationInGrid();
-			newx=p.getX();
-			newy=p.getY();
-			
-			//Lib.p(newx+" "+newy);
-			//Lib.p("KNOWN RANDOM");
-		}else{
-			if(rn.getEncounterCountWithNodes()==0){
-				//encountered with no one
-				//random real coordinates
-				
-				p=getOldRandomLocation();
-				newx=p.getX();
-				newy=p.getY();
-				
-				//setting initial position will be useful for spiral only.
-				//It is not used for rectangular or random. No problem at all
-				//setting Radius for Spiral
-				
-				s.updateFail(initialParamSpiral);
-				
-				//Lib.p("UAV is random ");
-				
-			}else{
-				g.process(rn.getEncounterHistoryWithNodes());
-				p=g.max();
-				//g.pri();
-				//real coordinates
-				newx=p.getX();
-				newy=p.getY();					
-				s.updateSuccess();	
-				oldpoints.add(p);
-			}	
-			
-			
-		}//end of random grid check
-		
-		rn.clearEncountersWithLimit(encounterTimeLimit,currentTime);
-		
-		//newX and newY are real coordinates
-		newx=getData().convertToScreenX(newx);
-		newy=getData().convertToScreenY(newy);
-		//now they are screen coordinates
-		//Lib.p(newx+" "+newy+" for reroute");
-			
-		initialX=newx;
-		initialY=newy;
-		fillPath(newx,newy);
-		
-		numberOfRoutesCompleted++;
-		s.clearPositions();
-        //setRouteFinished(false);
+		PointP p = getRandomLocation();
+	    newx = p.getX();
+	    newy = p.getY();
+	    
+	    rn.clearEncountersWithLimit(encounterTimeLimit, currentTime);
+	    
+	    newx = getData().convertToScreenX(newx);
+	    newy = getData().convertToScreenY(newy);
+	    
+	    initialX = newx;
+	    initialY = newy;
+	    fillPath(newx, newy);
+	    
+	    numberOfRoutesCompleted += 1;
+	    s.clearPositions();
 	}
 
 	public int getNumberOfRoutesCompleted(){

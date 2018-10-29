@@ -51,6 +51,10 @@ public class Encounter implements Comparable<Encounter>,java.io.Serializable {
 		return finishingTime;
 	}
 	
+	public boolean isFinished() {
+		return finishingTime !=-1;
+	}
+	
 	public void setFinishingTime(long timet){
 		finishingTime=timet;
 	}
