@@ -1,6 +1,7 @@
 package Shapes;
 
-import random.Random;
+//import random.Random;
+import java.util.Random;
 import simtoo.Lib;
 import simtoo.PointP;
 
@@ -9,19 +10,23 @@ public class Spiral extends Shape{
 	double a;
 	int radiusChange;
 	double maxradius;
+	Random r;
 	
 	public Spiral(double a,double maxradius,double xlim,double ylim){
 		super(xlim,ylim);
 		this.a=a;
 		radiusChange=100;
-		this.maxradius=maxradius; 
+		this.maxradius=maxradius;
+		r=new Random(System.currentTimeMillis());
 	}
 	
 	@Override
 	public PointP initialPoint() {
-		double xpos=Random.nextDouble()*getXlim();
-		double ypos=Random.nextDouble()*getYlim();
-		return new PointP(xpos,ypos);
+		
+		//double xpos=r.nextDouble()*getXlim();
+		//double ypos=r.nextDouble()*getYlim();
+		//return new PointP(xpos,ypos);
+		return new PointP(getXlim()/2,getYlim()/2);
 	}
 
 	public double getA(){
@@ -59,13 +64,15 @@ public class Spiral extends Shape{
 				}			
 			}else {
 				//Lib.p("It is null at spiral " +xstart+" "+ystart+" "+y);
-			}
-		}
-		if(getPoints().size()==0) {
-			Lib.p("points empty xstart "+xstart+" ystart "+ystart+" xlim "+getXlim()+" ylim "+getYlim());
-			addPoint(xstart,ystart);
-		}
+			}//end of if p null check
+		}//end of for
 		
+		if(getPoints().size()==0) {
+			Lib.p("Still empty "+getXlim()+" "+getYlim()+" "+xstart+" "+ystart+" in Spiral.java");
+			addPoint(xstart,ystart);
+		}else {
+		
+		}
 	}
 	
 	private double distance(double x,double y,double x2,double y2) {
@@ -79,9 +86,9 @@ public class Spiral extends Shape{
 	public void setRandomRadius()
 	{
 		if (getXlim() > getYlim()) {
-			setMaxRadius(Random.nextDouble() * (getYlim() / 2.0D));
+			setMaxRadius(r.nextDouble() * (getYlim() / 2.0D));
 		} else {
-			setMaxRadius(Random.nextDouble() * (getXlim() / 2.0D));
+			setMaxRadius(r.nextDouble() * (getXlim() / 2.0D));
 		}
 	 }
 	

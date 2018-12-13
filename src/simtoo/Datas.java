@@ -476,7 +476,7 @@ public class Datas {
 	
 	public double convertToScreenX(double geoX){
 		if(geoX>getMaxX() || geoX<getMinX()){
-			//Lib.p("Geo X is not in the limit geoX "+geoX+" maxX "+getMaxX()+"  minX "+getMinX());
+			Lib.p("Geo X is not in the limit geoX "+geoX+" maxX "+getMaxX()+"  minX "+getMinX());
 			if(geoX>getMaxX()){
 				geoX=getMaxX();
 			}
@@ -760,9 +760,10 @@ public class Datas {
 	}
 	
 	public PointP getRandomScreenLocation() {
-		double x1=random.Random.nextDouble()*widthOfScreen;
-		double y1=random.Random.nextDouble()*heightOfScreen;
+		//double x1=random.Random.nextDouble()*widthOfScreen*0.7+widthOfScreen*0.2;
+		//double y1=random.Random.nextDouble()*heightOfScreen*0.7+heightOfScreen*0.2;
+		double x1=r.nextDouble()*widthOfScreen*0.6+widthOfScreen*0.2;
+		double y1=r.nextDouble()*heightOfScreen*0.6+heightOfScreen*0.2;
 		return new PointP(x1, y1);
 	}
-	
 }

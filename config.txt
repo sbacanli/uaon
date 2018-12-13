@@ -1,26 +1,29 @@
-SimulationName:SCRDB507
+SimulationName:Random
 //yes or no for Random Mobility
 //parameter for maximum distance is 2000
 randomMobility:no
-dataFolder:NCSU
+
+dataFolder:NewYork
 LocationType:RELATIVE
 
 interUavsProbability:1.0
-interNodesProbability:-1.0
-interProbability:0.7
-NodeRouting:SCR 0.25 0.99 0.99 2
+interNodesProbability:1.0
+interProbability:1.0
+//NodeRouting:SCR 0.25 0.99 0.99 2
 
 CommDistance:250
 Altitude:100
 numberOfNodes:-1
 numberOfUAVs:1
+
 //3 hours as message life : 10800
 MessageLifeInSeconds:10800
-InitialSpiralRadius:200
+
 EncounterTimeLimit:1800
 //with every rerouting encounters less than 1200 seconds old will be deleted
 //-1 will delete all encounters
 SpeedOfUAVs:33
+//cruising speed of Bayraktar UAV
 //messages will be created in every X seconds
 MessageTimesForUAVs:0
 MessageTimesForNodes:3600
@@ -31,14 +34,12 @@ MessageErrorTimesForNodes:60
 GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
-Visible:yes
+Visible:no
 
+Shape:spiral
+InitialSpiralRadius:200
+MaxSpiralRadius:1000
 
-Shape:spiralcluster
-ClusterTechnique:dbscan
-RadiusCoefficient:2
-numberOfClusters:5
-MaxDistanceForDBSCAN:2000
 
 RectangleWidth:1000
 RectangleHeight:1000
@@ -48,6 +49,5 @@ encounterHistoryExchange:no
 ProjectionTimeLimit:300
 //number of data lines to be read in buffer
 //for large files this should be small as the simulator makes projection automatically.
-NumberOfDataLines:50
-MaxSpiralRadius:1000
+NumberOfDataLines:100
 MaxSimulationTime:-1

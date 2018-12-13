@@ -14,18 +14,19 @@ public class Special extends Rectangle {
 	 * @param ylim: maximum y coordinate
 	 */
 	double spiralA,maxRadius;
-	PointP maxPoint;
+	PointP maxPoint,minPoint;
 	double initRadius;
 	int limitcounter;
 	
-	public Special(double spiralA, double maxRadius, double a, double b, double xlim, double ylim) {
+	public Special(double spiralA, double maxRadius, double a, double b, double xlim, double ylim,int limitcounter) {
 		//isStart is true as we have only one UAV for now
 		super(true, a, b, xlim, ylim);
 		this.spiralA=spiralA;
 		this.maxRadius = maxRadius;
 		
 		maxPoint=new PointP(getXlim(),getYlim());
-		limitcounter=4;
+		minPoint=new PointP(getA()/2,getYlim());
+		this.limitcounter=limitcounter;
 		initRadius=maxRadius;
 	}
 	
@@ -96,7 +97,7 @@ public class Special extends Rectangle {
 			System.out.println("counter is zero for getpointsfillstart at rectangle");
 			return null;
 		}
-		double firstTerm=((2*counter)-1)*getA()/2;
+		double firstTerm=((2*counter)-1)*getMinimumPoint().getX();
 
 		if(firstTerm<getXlim() && firstTerm < getMaximumPoint().getX()) {
 			double yterm=getYlim()-getB()/2;
@@ -131,13 +132,21 @@ public class Special extends Rectangle {
 	}
 	
 	
-	public void setClusterBorder(double xlim2, double ylim2) {
+	public void setClusterBorderForMaxX(double xlim2, double ylim2) {
 		if( (getNumberOfTours()+1)%limitcounter == 0) {
 			setMaximumPoint(getXlim(), getYlim());
 		}else if ( (getNumberOfTours()+1)%limitcounter == 1){
 			setMaximumPoint(xlim2, ylim2);
 		}
 	} 
+	
+	public void setClusterBorderForMinX(double xlim2, double ylim2) {
+		if( (getNumberOfTours()+1)%limitcounter == 0) {
+			setMinimumPoint(getA()/2, getYlim());
+		}else if ( (getNumberOfTours()+1)%limitcounter == 1){
+			setMinimumPoint(xlim2, ylim2);
+		}
+	}
 	
 	public void setMaximumPoint(double x1,double y1) {
 		maxPoint=new PointP(x1,y1);
@@ -147,4 +156,11 @@ public class Special extends Rectangle {
 		return maxPoint;
 	}
 	
+	public void setMinimumPoint(double x1,double y1) {
+		minPoint=new PointP(x1,y1);
+	}
+	
+	public PointP getMinimumPoint() {
+		return minPoint;
+	}
 }

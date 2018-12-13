@@ -47,8 +47,9 @@ public class Uav extends Positionable{
 		
 		//adding initial screen position
 		Position posGen=getData().getPositionWithScreen(initialX, initialY);
-		setCurrentPosition(posGen);
 		posGen.setTime(getData().getMinTime());
+		setCurrentPosition(posGen);
+		
 		ArrayList<Position> p1=new ArrayList<Position>();
 		p1.add(posGen);
 		addPathsWithPositions(p1,getData(),LocationType.SCREEN);
@@ -68,6 +69,8 @@ public class Uav extends Positionable{
 	
 		if(s instanceof Spiral){
 			initialParamSpiral=((Spiral) s).getA();
+			fillPath(initialX, initialY);
+			
 		}
 		this.encounterTimeLimit=encounterTimeLimit;
 		oldpoints=new ArrayList<PointP>();
@@ -102,7 +105,7 @@ public class Uav extends Positionable{
 	
 
 	
-	/**given sceen positions, path will be generated according to the shape
+	/**given screen positions, path will be generated according to the shape
 	 * 
 	 * @param xpos xposition for screen
 	 * @param ypos ypositions for screen
@@ -115,6 +118,7 @@ public class Uav extends Positionable{
 		}
 		ArrayList<PointP> arr=null;
 		s.setRandomRadius();
+		//Lib.p("PARAMETERS ARE "+xpos+" "+ypos);
 		s.fill(xpos,ypos);
 		arr=s.getPoints();
 		
@@ -126,11 +130,21 @@ public class Uav extends Positionable{
 		
 		
 		if(arr==null || arr.isEmpty()){
-			Lib.p("POSITIONS GOT EMPTY AT UAV FILLPATH");
-			Lib.p("coordinates " + xpos + ", " + ypos + " sccreenwitdth " + getData().getWidth() + 
-			        " screenheight " + getData().getHeight() + " type " + s.getClass().getName());
-			      Lib.p("Class name " + s.getClass() + " ");
-			System.exit(-1);
+			s.fill(getData().getWidth()/2,getData().getHeight()/2);
+			arr=s.getPoints();
+			if(arr==null || arr.isEmpty()){
+				Lib.p("-----------Still empty at UAV----------------");
+				Lib.p(getData().getWidth()/2+" "+getData().getHeight()/2);
+				
+				
+				Lib.p("-----------POSITIONS GOT EMPTY AT UAV FILLPATH---------------");
+				Lib.p("coordinates " + xpos + ", " + ypos + " sccreenwitdth " + getData().getWidth() + 
+				        " screenheight " + getData().getHeight() + " type " + s.getClass().getName());
+				      Lib.p("Class name " + s.getClass() + " ");
+				System.exit(-1);
+			}
+			
+			
 		}else{
 			// there will be at least one element in the list that has a time data
 			// the arr coordinates are generated for screen. They will be converted to real
@@ -196,27 +210,29 @@ public class Uav extends Positionable{
 	}
 	
 	
-	public PointP getRandomLocationFromEncounters(ArrayList<Encounter> ars) {
+	public PointP getRandomScreenLocationFromEncounters(ArrayList<Encounter> ars) {
 		int randomLoc = random.Random.get(ars.size());
 		return ((Encounter)ars.get(randomLoc)).getPosition().getScreenPoint();
 	}
 	
-	public PointP getRandomLocation() {
+	public PointP getRandomScreenLocation() {
 		return getData().getRandomScreenLocation();
 	}
 	
-	public PointP getOldRandomLocation(){
+	/*
+	public PointP getOldScreenRandomLocation(){
 		PointP p1=null;
 		
 		int sizeold=oldpoints.size();
 		int pos=random.Random.get(sizeold+1);
 		if(pos==sizeold){
-			p1=getRandomLocation();
+			p1=getRandomScreenLocation();
 		}else{
 			p1=oldpoints.get(pos);
 		}		
 		return p1;
 	}
+	*/
 	
 	public void reRoute(long currentTime){
 		if (shapename.contains("spiralcluster")) {
@@ -288,6 +304,18 @@ public class Uav extends Positionable{
 		return maxxpoint;
 	}
 	
+	public double getClosestXPoint(ArrayList<Encounter> earr) {
+		double minxpoint=earr.get(0).getPosition().getScreenX();
+		for(int i=1;i<earr.size();i++) {
+			double tpoint=earr.get(i).getPosition().getScreenX();
+			if(tpoint<minxpoint) {
+				minxpoint=tpoint;
+			}
+		}
+		return minxpoint;
+	}
+	
+	
 	public void clusterReroute(long currentTime) {
 		PointP p;
 		double newx=0;
@@ -301,7 +329,7 @@ public class Uav extends Positionable{
 			ArrayList<Encounter> rnc=rn.uniqueEncounters();
 			if(rnc.size()<2) {
 				//Lib.p("Size less than 2");
-				PointP tempp=getRandomLocation();
+				PointP tempp=getRandomScreenLocation();
 				newx=tempp.getX();
 				newy=tempp.getY();
 				((Special)s).resetRadius();
@@ -309,7 +337,12 @@ public class Uav extends Positionable{
 			}else {
 				double xmax=getFurthestXPoint(rnc);
 				//y variable is useless here
-				((Special)s).setClusterBorder(xmax,0);
+				((Special)s).setClusterBorderForMaxX(xmax,0);
+				
+				double xmin=getClosestXPoint(rnc);
+				//y variable is useless here
+				((Special)s).setClusterBorderForMinX(xmin,0);
+				
 				ArrayList<Cluster> clusterResult = null;
 				if (clusterTechnique == ClusterTechnique.KMEANS) {
 					clusterResult = kmeans(rnc);
@@ -318,7 +351,7 @@ public class Uav extends Positionable{
 				}
 
 				if (clusterResult.isEmpty()) {
-					PointP tempp = getRandomLocationFromEncounters(rnc);
+					PointP tempp = getRandomScreenLocationFromEncounters(rnc);
 					newx = tempp.getX();
 					newy = tempp.getY();
 					fillPath(newx, newy);
@@ -330,7 +363,7 @@ public class Uav extends Positionable{
 					for (int j = 0; (j < sizeResult); j++) {
 						s.setMaxRadius(getRadiusOfCluster(clusterResult.get(j).getPointPs()) / radiusCoefficient);
 						fillPath((clusterResult.get(j)).getCentroid().getX(), ((Cluster)clusterResult.get(j)).getCentroid().getY());
-						Lib.p("fill number "+j+" "+sizeResult+" clustersize "+clusterResult.size()+" numberofCluster "+numberOfClusters);
+						//Lib.p("fill number "+j+" "+sizeResult+" clustersize "+clusterResult.size()+" numberofCluster "+numberOfClusters);
 					}
 				}
 			}
@@ -338,7 +371,7 @@ public class Uav extends Positionable{
 			rn.clearContacts();
 			rn.clearAllEncounters();
 		}
-		Lib.p(s.getNumberOfTours()+" Tours");
+		//Lib.p(s.getNumberOfTours()+" Tours");
 		numberOfRoutesCompleted += 1;
 	}
 	
@@ -429,23 +462,47 @@ public class Uav extends Positionable{
 		double newx=0;
 		double newy=0;
 		
-		PointP p = getRandomLocation();
-	    newx = p.getX();
+		PointP p = getRandomScreenLocation();
+		newx = p.getX();
 	    newy = p.getY();
 	    
 	    rn.clearEncountersWithLimit(encounterTimeLimit, currentTime);
 	    
-	    newx = getData().convertToScreenX(newx);
-	    newy = getData().convertToScreenY(newy);
-	    
 	    initialX = newx;
 	    initialY = newy;
+	    
 	    fillPath(newx, newy);
 	    
 	    numberOfRoutesCompleted += 1;
 	    s.clearPositions();
 	}
 
+	/*
+	public void spiralReroute(long currentTime) {
+		double newx=0;
+		double newy=0;
+		
+		PointP p = getRandomScreenLocation();
+
+	    newx = p.getX();
+	    newy = p.getY();
+	    
+	    rn.clearEncountersWithLimit(encounterTimeLimit, currentTime);
+	    
+	    //newx = getData().convertToScreenX(newx);
+	    //newy = getData().convertToScreenY(newy);
+	    //Lib.p(newx+" "+newy+" CREATED POSITIONS\n");
+	    
+	    initialX = newx;
+	    initialY = newy;
+	    
+	    fillPath(newx, newy);
+	    
+	    numberOfRoutesCompleted += 1;
+	    s.clearPositions();
+	}
+	*/
+	
 	public int getNumberOfRoutesCompleted(){
 		return numberOfRoutesCompleted;
 	}
@@ -459,7 +516,7 @@ public class Uav extends Positionable{
 		Position returned=null;
 		//Lib.p("Called once");
 		if(positionsLength()==0) {
-			Lib.p("Problem here! in UAV.java");
+			Lib.p("Problem getCurrentPositionWithTime! in UAV.java\nPositions are empty");
 			return null;
 		}
 		if(positionsLength()==1) {
@@ -476,7 +533,7 @@ public class Uav extends Positionable{
 				// we dont remove the first one now because the added ones should continue from the first
 				//position
 				//Lib.p("dequeed for time "+giventime);
-				
+				//Lib.p("Reroute needed "+giventime);
 				reRoute(giventime);
 				
 				//now we need to remove the first
@@ -496,7 +553,7 @@ public class Uav extends Positionable{
 				writePositions();
 				System.exit(-1);
 			}
-		}else {
+		}else {//position length is more than 1
 			if(getPosition(0).time==giventime)
 			{			
 				//returned=new Position(getPosition(0));

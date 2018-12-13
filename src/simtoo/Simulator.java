@@ -241,9 +241,7 @@ public class Simulator {
 				if (clusterTechique.toLowerCase().equals("dbscan")) {
 					ct = ClusterTechnique.DBSCAN;
 					maxDistanceForDBSCAN=op.getParamDouble("MaxDistanceForDBSCAN");
-					Lib.p(maxDistanceForDBSCAN+" first one");
 					maxDistanceForDBSCAN=data.RealToVirtualDistance(maxDistanceForDBSCAN);
-					Lib.p(maxDistanceForDBSCAN+" second one");
 				} else if (clusterTechique.toLowerCase().equals("kmeans")) {
 					ct = ClusterTechnique.KMEANS;
 				} else {
@@ -260,7 +258,7 @@ public class Simulator {
 				
 				
 				s = new Shapes.Special(spiralRadiusInitialconverted, maxSpiralRadius, 
-						aRectconverted, bRectconverted, data.getWidth(), data.getHeight());
+						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("LimitCountForCluster"));
 				cp = new ClusterParam(ct, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
 			} else if (shapeUAV.toLowerCase().equals("linecluster")) {
 				numberofClusters = op.getParamInt("numberOfClusters");
@@ -293,7 +291,7 @@ public class Simulator {
 				
 				cp = new ClusterParam(ct, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
 				s = new Shapes.ClusterLine(spiralRadiusInitialconverted, maxSpiralRadius, 
-						aRectconverted, bRectconverted, data.getWidth(), data.getHeight());
+						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("LimitCountForCluster"));
 
 			}
 			else if (shapeUAV.toLowerCase().equals("random")) {
