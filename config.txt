@@ -7,9 +7,9 @@ dataFolder:NewYork
 LocationType:RELATIVE
 
 interUavsProbability:1.0
-interNodesProbability:1.0
+interNodesProbability:-1
 interProbability:1.0
-//NodeRouting:SCR 0.25 0.99 0.99 2
+NodeRouting:SCR 0.25 0.99 0.99 2
 
 CommDistance:250
 Altitude:100
@@ -34,11 +34,11 @@ MessageErrorTimesForNodes:60
 GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
-Visible:no
+Visible:yes
 
 Shape:spiral
 InitialSpiralRadius:200
-MaxSpiralRadius:1000
+MaxSpiralRadius:-1
 
 
 RectangleWidth:1000

@@ -220,7 +220,10 @@ public class Simulator {
 				double spiralRadiusInitialconverted = data.RealToVirtualDistance(spiralRadiusInitial);
 				maxSpiralRadius = op.getParamDouble("MaxSpiralRadius");
 
-				maxSpiralRadius = data.RealToVirtualDistance(maxSpiralRadius);
+				if(maxSpiralRadius>0) {
+					maxSpiralRadius = data.RealToVirtualDistance(maxSpiralRadius);
+				}
+				
 				
 				s = new Shapes.Spiral(spiralRadiusInitialconverted, maxSpiralRadius, data.getWidth(), data.getHeight());
 			} else if (shapeUAV.toLowerCase().equals("spiralcluster")) {
