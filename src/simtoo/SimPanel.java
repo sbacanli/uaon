@@ -617,7 +617,18 @@ public class SimPanel extends JPanel implements MouseListener{
 
     public void mouseReleased(MouseEvent e) {
        Lib.p(e.getX()+" coordinates   "+e.getY());
-       //timer.stop();
+       
+       double mindist=100000000;
+       String nodepath="";
+       for(int i=0;i<nodesPositions.length;i++) {
+    	   double newdist2=Lib.screenDistance(nodesPositions[i].screenp.getX(),nodesPositions[i].screenp.getY(),e.getX(),e.getY());
+    	   if(mindist<newdist2) {
+    		   mindist=newdist2;
+    		   nodepath=nodes.get(i).getDataFile();
+    	   }
+    	   
+       }
+       Lib.p(nodepath);
        simulationEnded();
     }
     

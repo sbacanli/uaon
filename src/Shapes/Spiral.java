@@ -11,12 +11,22 @@ public class Spiral extends Shape{
 	int radiusChange;
 	double maxradius;
 	Random r;
+	boolean randomGenerate;
+	double minOf;
 	
 	public Spiral(double a,double maxradius,double xlim,double ylim){
 		super(xlim,ylim);
 		this.a=a;
 		radiusChange=100;
 		this.maxradius=maxradius;
+		randomGenerate=false;
+		if(maxradius <0) {
+			randomGenerate=true;
+		}
+		minOf=xlim;
+		if(minOf>ylim) {
+			minOf=ylim;
+		}
 		r=new Random(System.currentTimeMillis());
 	}
 	
@@ -52,6 +62,9 @@ public class Spiral extends Shape{
 		clearPositions();
 		double degree=Math.PI/180*10;
 		PointP p=new PointP(0,0);
+		if(randomGenerate) {
+			maxradius=r.nextInt((int)minOf)+1;
+		}
 		for(double y=degree;p!=null;y=y+degree){
 			p=equation(y,xstart,ystart);
 			if(p!=null) {
@@ -68,7 +81,7 @@ public class Spiral extends Shape{
 		}//end of for
 		
 		if(getPoints().size()==0) {
-			Lib.p("Still empty "+getXlim()+" "+getYlim()+" "+xstart+" "+ystart+" in Spiral.java");
+			//Lib.p("Still empty "+getXlim()+" "+getYlim()+" "+xstart+" "+ystart+" in Spiral.java");
 			addPoint(xstart,ystart);
 		}else {
 		
