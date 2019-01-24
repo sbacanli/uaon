@@ -20,7 +20,7 @@ public class Spiral extends Shape{
 		radiusChange=100;
 		this.maxradius=maxradius;
 		randomGenerate=false;
-		if(maxradius <0) {
+		if(maxradius == -1) {
 			randomGenerate=true;
 		}
 		minOf=xlim;
@@ -69,7 +69,7 @@ public class Spiral extends Shape{
 			p=equation(y,xstart,ystart);
 			if(p!=null) {
 				double distan=distance(p.getX(),p.getY(),xstart,ystart);
-				if (maxradius==-1 || distan<maxradius) {
+				if (maxradius==-2 || distan<maxradius) {
 					addPoint(p.getX(),p.getY());
 				}else {
 					//Lib.p("maxradius " +maxradius+" distance "+distan+" degree "+degree+" y "+y);
