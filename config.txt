@@ -16,6 +16,8 @@ Altitude:100
 numberOfNodes:-1
 numberOfUAVs:1
 
+isCharging:no
+
 //3 hours as message life : 10800
 MessageLifeInSeconds:10800
 

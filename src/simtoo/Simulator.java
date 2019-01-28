@@ -53,6 +53,7 @@ public class Simulator {
 	private int clusterRadiusCoefficient;
 	private int numberofClusters;
 	private double maxDistanceForDBSCAN;
+	//private boolean isCharging;
 
 	public Simulator(Options op,Datas datagiven)
 	{
@@ -91,6 +92,8 @@ public class Simulator {
 		isVisible = op.getParamBoolean("Visible");
 		numberOfLinesToBeRead = op.getParamInt("NumberOfDataLines");
 		data.setNumberOfDataLines(numberOfLinesToBeRead);
+		//isCharging=op.getParamBoolean("isCharging");
+		
 
 		ArrayList<File> datafiles = null;
 		if (!isRandomMobility) {
@@ -261,7 +264,7 @@ public class Simulator {
 				
 				
 				s = new Shapes.Special(spiralRadiusInitialconverted, maxSpiralRadius, 
-						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("LimitCountForCluster"));
+						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("TourLimit"));
 				cp = new ClusterParam(ct, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
 			} else if (shapeUAV.toLowerCase().equals("linecluster")) {
 				numberofClusters = op.getParamInt("numberOfClusters");
@@ -308,7 +311,11 @@ public class Simulator {
 			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, cp);
 			//u.setGriderParams(GridXDistance, GridYDistance);
 
-
+			/*
+			if(isCharging) {
+				
+			}
+			*/
 
 
 			uavs.add(u);

@@ -32,6 +32,7 @@ public class Uav extends Positionable{
 	private int numberOfClusters;
 	private String shapename;
 	private double maxDistanceForDBSCAN;
+	//private PointP[] chargingLocations;
 	
 	Uav(int uid, Shape sg, double speedreal, int altitudegiven, 
 			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam){
