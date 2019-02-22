@@ -51,6 +51,7 @@ public class SimPanel extends JPanel implements MouseListener{
 	boolean clearpos;
 	boolean isGPS;
 	double btwdistance;//comm distance between node and uav 
+	boolean chargeOn;
 	
 	//this is related with java drawing.
 	//repaaint method is called fist. The thing is at that time we dont have data in the Position[] arrays
@@ -87,6 +88,7 @@ public class SimPanel extends JPanel implements MouseListener{
 		nodesPositions=new Position[nodes.size()];
 		uavsPositions=new Position[uavs.size()];
 		
+		chargeOn=simulator.isChargeOn();
 		//Virtual distance
 		COMMDIST=simulator.getCommDist();
 		double altitude=simulator.getConvertedAltitude();
@@ -324,6 +326,8 @@ public class SimPanel extends JPanel implements MouseListener{
 		//routing checks for UAVs	
 		for(int i=0;i<uavs.size();i++){
 			Uav uav=uavs.get(i);
+			uav.batteryConsume();
+			
 			int pos=uav.getId()*(-1) - 1;
 			uavsPositions[pos]=uav.getCurrentPositionWithTime(time);
 			Position uavpos=uavsPositions[pos];
@@ -340,6 +344,15 @@ public class SimPanel extends JPanel implements MouseListener{
 			if(uav.isRouteFinished() && uav.getPositions().size()!=0) {
 				Lib.p("PROBLEM in simpanel");
 				uav.writePositions();
+			}
+			
+			if(chargeOn && uav.isBatteryEmpty()) {
+				if(uav.isOnChargingPos(time)) {
+					uav.chargeBattery();
+					//TODO: the UAV should remove all the positions and wait here some time
+				}else {
+					Lib.p("Fall down");
+				}
 			}
 			
 		}
@@ -375,8 +388,10 @@ public class SimPanel extends JPanel implements MouseListener{
 		checkNodesDistances();
 		if(uavs.size()>1) {
 			checkUavDistances();
-		}		
-		checkUavNodeDistances();
+		}
+		if(uavs.size()>0) {
+			checkUavNodeDistances();
+		}
 	}
 	
 	public void checkNodesDistances(){
@@ -617,7 +632,7 @@ public class SimPanel extends JPanel implements MouseListener{
 
     public void mouseReleased(MouseEvent e) {
        Lib.p(e.getX()+" coordinates   "+e.getY());
-       
+       /*
        double mindist=100000000;
        String nodepath="";
        for(int i=0;i<nodesPositions.length;i++) {
@@ -629,6 +644,7 @@ public class SimPanel extends JPanel implements MouseListener{
     	   
        }
        Lib.p(nodepath);
+       */
        simulationEnded();
     }
     

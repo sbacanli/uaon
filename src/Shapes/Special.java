@@ -13,10 +13,10 @@ public class Special extends Rectangle {
 	 * @param xlim: maximum x coordinate
 	 * @param ylim: maximum y coordinate
 	 */
-	double spiralA,maxRadius;
-	PointP maxPoint,minPoint;
-	double initRadius;
-	int limitcounter;
+	private double spiralA,maxRadius;
+	private PointP maxPoint,minPoint;
+	private double initRadius;
+	private int limitcounter;
 	
 	public Special(double spiralA, double maxRadius, double a, double b, double xlim, double ylim,int limitcounter) {
 		//isStart is true as we have only one UAV for now
@@ -44,6 +44,22 @@ public class Special extends Rectangle {
 
 	public void resetRadius() {
 		maxRadius=initRadius;
+	}
+	
+	public void setMaximumPoint(double x1,double y1) {
+		maxPoint=new PointP(x1,y1);
+	}
+	
+	public PointP getMaximumPoint() {
+		return maxPoint;
+	}
+	
+	public void setMinimumPoint(double x1,double y1) {
+		minPoint=new PointP(x1,y1);
+	}
+	
+	public PointP getMinimumPoint() {
+		return minPoint;
 	}
 	
 	@Override
@@ -146,21 +162,5 @@ public class Special extends Rectangle {
 		}else if ( (getNumberOfTours()+1)%limitcounter == 1){
 			setMinimumPoint(xlim2, ylim2);
 		}
-	}
-	
-	public void setMaximumPoint(double x1,double y1) {
-		maxPoint=new PointP(x1,y1);
-	}
-	
-	public PointP getMaximumPoint() {
-		return maxPoint;
-	}
-	
-	public void setMinimumPoint(double x1,double y1) {
-		minPoint=new PointP(x1,y1);
-	}
-	
-	public PointP getMinimumPoint() {
-		return minPoint;
 	}
 }

@@ -32,7 +32,8 @@ public class Uav extends Positionable{
 	private int numberOfClusters;
 	private String shapename;
 	private double maxDistanceForDBSCAN;
-	//private PointP[] chargingLocations;
+	private PointP[] chargingLocations;
+	private int battery;
 	
 	Uav(int uid, Shape sg, double speedreal, int altitudegiven, 
 			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam){
@@ -45,22 +46,17 @@ public class Uav extends Positionable{
 		initialX=initialPoint.getX();
 		initialY=initialPoint.getY();
 		shapename = shapeName;
-		
 		//adding initial screen position
 		Position posGen=getData().getPositionWithScreen(initialX, initialY);
 		posGen.setTime(getData().getMinTime());
 		setCurrentPosition(posGen);
-		
 		ArrayList<Position> p1=new ArrayList<Position>();
 		p1.add(posGen);
 		addPathsWithPositions(p1,getData(),LocationType.SCREEN);
 		
-		
 		setPreviousPosition(null);
 		
 		//after the first position the positions will be consumed and reroute will be run
-		
-		
 		
 		xnum=0;
 		ynum=0;
@@ -81,6 +77,7 @@ public class Uav extends Positionable{
 		clusterTechnique = cparam.getTechnique();
 		numberOfClusters = cparam.getNumberOfClusters();
 		maxDistanceForDBSCAN=cparam.getMaxDistance();
+
 	}
 	
 	public void setShape(Shape sg){
@@ -104,6 +101,28 @@ public class Uav extends Positionable{
 		return altitude;
 	}
 	
+	public void batteryConsume() {
+		battery--;
+	}
+	
+	public void chargeBattery() {
+		battery=45*60;
+	}
+	
+	public boolean isBatteryEmpty() {
+		return battery==0;
+	}
+	
+	public boolean isOnChargingPos(long ttime) {
+		Position p1=getCurrentPositionWithTime(ttime);
+		for(int i=0;i<chargingLocations.length;i++) {
+			if(p1.getScreenPoint().equals(chargingLocations[i])){
+				return true;
+			}
+		}
+		return false;
+		
+	}
 
 	
 	/**given screen positions, path will be generated according to the shape
@@ -218,6 +237,13 @@ public class Uav extends Positionable{
 	
 	public PointP getRandomScreenLocation() {
 		return getData().getRandomScreenLocation();
+	}
+	
+	public void setChargingLocations(int lenCharging) {
+		chargingLocations=new PointP[lenCharging];
+		for(int i=0;i<lenCharging;i++) {
+			chargingLocations[i]=getRandomScreenLocation();
+		}
 	}
 	
 	/*
@@ -451,11 +477,11 @@ public class Uav extends Positionable{
 		double midy = screeny / encs.size();
 		return new PointP(midx, midy);
 	}
-	
+	/*
 	public double mydistance(Position p1,Position p2) {
 		return Lib.relativeDistance(p1.real.getX(),p1.real.getY(),p2.real.getX(),p2.real.getY());
 	}
-	
+	*/
 	/**
 	 * @param currentTime
 	 */
@@ -542,8 +568,9 @@ public class Uav extends Positionable{
 				dequeued=true;
 				setPreviousPosition(getCurrentPosition());
 				setCurrentPosition(returned);
-				calculateDistance();
-				
+				if(returned!=null && getPreviousPosition() !=null) {
+					calculateDistance();
+				}
 				/*
 				Lib.p("After "+positionsLength());
 				writePositions();
@@ -562,6 +589,10 @@ public class Uav extends Positionable{
 				dequeued=true;
 				setPreviousPosition(getCurrentPosition());
 				setCurrentPosition(returned);
+				
+				if(returned!=null && getPreviousPosition() !=null) {
+					calculateDistance();
+				}
 				//Lib.p("Dequed here 2");
 			}else {
 				Lib.p("Not dequeued - length is more");

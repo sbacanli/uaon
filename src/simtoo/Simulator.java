@@ -53,7 +53,8 @@ public class Simulator {
 	private int clusterRadiusCoefficient;
 	private int numberofClusters;
 	private double maxDistanceForDBSCAN;
-	//private boolean isCharging;
+	private boolean chargeOn;
+	private double spiralAconverted;
 
 	public Simulator(Options op,Datas datagiven)
 	{
@@ -61,13 +62,9 @@ public class Simulator {
 
 		air = new Air();
 
-		numberOfPositions = 2;
-
 		numberOfNodes = op.getParamInt("numberOfNodes");
 
 		char seperator = File.separatorChar;
-
-
 
 		String loctypestr = op.getParamString("LocationType");
 		if (loctypestr.equals("SCREEN")) {
@@ -92,7 +89,6 @@ public class Simulator {
 		isVisible = op.getParamBoolean("Visible");
 		numberOfLinesToBeRead = op.getParamInt("NumberOfDataLines");
 		data.setNumberOfDataLines(numberOfLinesToBeRead);
-		//isCharging=op.getParamBoolean("isCharging");
 		
 
 		ArrayList<File> datafiles = null;
@@ -100,8 +96,6 @@ public class Simulator {
 			dataFolder = op.getParamString("dataFolder");
 			foldername = (System.getProperty("user.dir") + seperator + "datasets" + seperator + dataFolder + seperator + "processedData");
 			datafiles = data.getDataFiles(foldername);
-
-
 
 			if (numberOfNodes == -1) {
 				numberOfNodes = datafiles.size();
@@ -118,37 +112,47 @@ public class Simulator {
 
 		COMMDISTANCE = data.RealToVirtualDistance(realDistance);
 
-		altitude = op.getParamInt("Altitude");
-		if (numberOfUAVs > 0) {
-			altitudeconverted = data.RealToVirtualDistance(altitude);
-		}
-
+		messageLifeInSeconds = op.getParamInt("MessageLifeInSeconds");
+		
 		double internodesprob = op.getParamDouble("interNodesProbability");
 		if (internodesprob == -1) {
-			String nrparam = op.getParamString("NodeRouting");
-			String[] exploded = nrparam.split(" ");
-
-			if (exploded[0].equals("SCR")) {
-				nodeRouting = new SCRouting(air, Double.parseDouble(exploded[1]), 
-						Double.parseDouble(exploded[2]), Double.parseDouble(exploded[3]), Double.parseDouble(exploded[4]));
-			}
+			nodeRouting=processRoutingParameter(op.getParamString("NodeRouting"),messageLifeInSeconds);
 		} else {
 			nodeRouting = new Probabilistic(air, internodesprob);
 		}
-
-		uavRouting = new routing.UAONRouting(air, op.getParamDouble("interUavsProbability"), op.getParamBoolean("encounterHistoryExchange"));
-		interRouting = new Probabilistic(air, op.getParamDouble("interProbability"));
-
-
-		messageTimesForUAVs = op.getParamInt("MessageTimesForUAVs");
+		
+		if (numberOfUAVs > 0) {
+			messageTimesForUAVs = op.getParamInt("MessageTimesForUAVs");
+			messageErrorTimesForUAVs = op.getParamInt("MessageErrorTimesForUAVs");
+			altitude = op.getParamInt("Altitude");
+			chargeOn=op.getParamBoolean("chargeOn");
+			altitudeconverted = data.RealToVirtualDistance(altitude);
+			speeduavReal = op.getParamInt("SpeedOfUAVs");
+			double interUAVProb=op.getParamDouble("interUavsProbability");
+			if (interUAVProb == -1) {
+				uavRouting=processRoutingParameter(op.getParamString("UAVRouting"),messageLifeInSeconds);
+			} else {
+				uavRouting = new UAONRouting(air, interUAVProb);
+				
+				((UAONRouting)uavRouting).setEncounterHistoryExchange(op.getParamBoolean("encounterHistoryExchange"));
+			}
+			
+			double internodeUAVProb=op.getParamDouble("interProbability");
+			if (internodeUAVProb == -1) {
+				interRouting=processRoutingParameter(op.getParamString("UAVandNodeRouting"),messageLifeInSeconds);
+			} else {
+				//routing between UAV and nodes
+				interRouting = new Probabilistic(air, internodeUAVProb);
+			}
+			
+		}else {//no UAV exists
+			uavRouting=new Probabilistic(air,0);
+			interRouting=new Probabilistic(air,0);
+		}
+		
 		messageTimesForNodes = op.getParamInt("MessageTimesForNodes");
-		messageErrorTimesForUAVs = op.getParamInt("MessageErrorTimesForUAVs");
 		messageErrorTimesForNodes = op.getParamInt("MessageErrorTimesForNodes");
-		messageLifeInSeconds = op.getParamInt("MessageLifeInSeconds");
-
-		encounterTimeLimit = op.getParamInt("EncounterTimeLimit");
-
-
+		
 
 		//GridXDistance = op.getParamInt("GridXDistance");
 		//GridYDistance = op.getParamInt("GridYDistance");
@@ -172,8 +176,11 @@ public class Simulator {
 				currentNode.setDataFile(((File)datafiles.get(i - 1)).getAbsolutePath());
 				currentNode.readData(data.getMinTime());
 			} else {
+				//Random Mobility
+				//might need to be checked!
 				currentNode.setScreenSpeed(15);
 				currentNode.setRealSpeed(1);
+				numberOfPositions = 2;
 				ArrayList<PointP> path = data.fillRandomPositions(numberOfPositions);
 				currentNode.addPathsWithPoints(path, data, LocationType.SCREEN);
 			}
@@ -184,22 +191,12 @@ public class Simulator {
 		ClusterTechnique ct = null;
 
 		for (int i = 1; i <= numberOfUAVs; i++) {
-			speeduavReal = op.getParamInt("SpeedOfUAVs");
-
 			
-
-
-			
-
-
 			Shapes.Shape s = null;
 			cp = new ClusterParam();
 			RoutingNode rn = new RoutingNode(i * -1);
 			routingNodeUavs.add(rn);
-
-
-
-
+			
 			if (shapeUAV.toLowerCase().equals("rectangle")) {
 				
 				aRect = op.getParamInt("RectangleWidth");
@@ -210,8 +207,6 @@ public class Simulator {
 					Lib.p("aRect or bRect should be greater than 0");
 					System.exit(-1);
 				}
-
-
 				if (i % 2 == 1) {
 					s = new Rectangle(true, aRectconverted, bRectconverted, data.getWidth(), data.getHeight());
 				} else {
@@ -219,16 +214,10 @@ public class Simulator {
 				}
 			}
 			else if (shapeUAV.toLowerCase().equals("spiral")) {
-				spiralRadiusInitial = op.getParamInt("InitialSpiralRadius");
-				double spiralRadiusInitialconverted = data.RealToVirtualDistance(spiralRadiusInitial);
-				maxSpiralRadius = op.getParamDouble("MaxSpiralRadius");
+				setSpiralParameters(op.getParamInt("SpiralA"),op.getParamDouble("MaxSpiralRadius"));		
+				
+				s = new Shapes.Spiral(spiralAconverted, maxSpiralRadius, data.getWidth(), data.getHeight());
 
-				if(maxSpiralRadius>0) {
-					maxSpiralRadius = data.RealToVirtualDistance(maxSpiralRadius);
-				}
-				
-				
-				s = new Shapes.Spiral(spiralRadiusInitialconverted, maxSpiralRadius, data.getWidth(), data.getHeight());
 			} else if (shapeUAV.toLowerCase().equals("spiralcluster")) {
 				numberofClusters = op.getParamInt("numberOfClusters");
 				clusterRadiusCoefficient = op.getParamInt("RadiusCoefficient");
@@ -254,16 +243,10 @@ public class Simulator {
 					Lib.p("Undefined Cluster technique at config file");
 					System.exit(-1);
 				}
-				spiralRadiusInitial = op.getParamInt("InitialSpiralRadius");
-				double spiralRadiusInitialconverted = data.RealToVirtualDistance(spiralRadiusInitial);
+					
+				setSpiralParameters(op.getParamInt("SpiralA"),op.getParamDouble("MaxSpiralRadius"));
 				
-				
-				
-				maxSpiralRadius = op.getParamDouble("MaxSpiralRadius");
-				maxSpiralRadius = data.RealToVirtualDistance(maxSpiralRadius);
-				
-				
-				s = new Shapes.Special(spiralRadiusInitialconverted, maxSpiralRadius, 
+				s = new Shapes.Special(spiralAconverted, maxSpiralRadius, 
 						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("TourLimit"));
 				cp = new ClusterParam(ct, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
 			} else if (shapeUAV.toLowerCase().equals("linecluster")) {
@@ -292,33 +275,30 @@ public class Simulator {
 					Lib.p("Undefined Cluster technique at config file");
 					System.exit(-1);
 				}
-				spiralRadiusInitial = op.getParamInt("InitialSpiralRadius");
-				double spiralRadiusInitialconverted = data.RealToVirtualDistance(spiralRadiusInitial);
+				
+				
+				setSpiralParameters(Integer.MIN_VALUE,Double.MIN_VALUE);//maximum spiral radius set very small
 				
 				cp = new ClusterParam(ct, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
-				s = new Shapes.ClusterLine(spiralRadiusInitialconverted, maxSpiralRadius, 
+				//setting maximum spiral radius as 1 (as small as possible) to create line effect
+				s = new Shapes.ClusterLine(spiralAconverted, maxSpiralRadius, 
 						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("LimitCountForCluster"));
 
-			}
-			else if (shapeUAV.toLowerCase().equals("random")) {
-				s = new Shapes.RandomPoints(data.getWidth(), data.getHeight());
-			} else {
+			}else {
 				Lib.p("Unknown Shape at config file");
 				System.exit(-1);
 			}
-
+			encounterTimeLimit = op.getParamInt("EncounterTimeLimit");//in terms of seconds
 
 			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, cp);
 			//u.setGriderParams(GridXDistance, GridYDistance);
-
 			/*
 			if(isCharging) {
 				
 			}
 			*/
-
-
 			uavs.add(u);
+			
 		}
 
 
@@ -355,6 +335,9 @@ public class Simulator {
 		return simulationName;
 	}
 
+	public boolean isChargeOn() {
+		return chargeOn;
+	}
 
 	public int getMessageErrorTimesForNodes(){
 		return messageErrorTimesForNodes;
@@ -413,18 +396,56 @@ public class Simulator {
 		return routingNodeUavs;
 	}
 
+	public void setSpiralParameters(int spiralAA,double maxsp) {
+		spiralAconverted = data.RealToVirtualDistance(spiralAA);
+		
+		maxSpiralRadius = maxsp;
+		if(maxSpiralRadius>0) {
+			maxSpiralRadius = data.RealToVirtualDistance(maxSpiralRadius);
+		}
+	}	
+	
+	public Routing processRoutingParameter(String parameterName,double messageLife) {
+		//String UAVparam = op.getParamString(parameterName);
+		//String[] exploded = UAVparam.split(" ");
+		String[] exploded=parameterName.split(" ");
+		if (exploded[0].equals("SCR")) {
+			return new SCRouting(air, Double.parseDouble(exploded[1]), 
+					Double.parseDouble(exploded[2]), Double.parseDouble(exploded[3]), Double.parseDouble(exploded[4]));
+		}else if(exploded[0].equals("VOI")) {
+			return new VOIRouting(air, Double.parseDouble(exploded[1]),messageLife);
+		}else if(exploded[0].equals("VOI2")) {
+			return new VOIRouting(air, Double.parseDouble(exploded[1]),messageLife);
+		}
+		System.out.println("UNKNOWN ROUTING TYPE at PARAMETER "+parameterName);
+		return null;
+	}
+	
+	
+	/*
+	 * 
+	 * Routing between Nodes
+	 */
 	public static void nodeRoute(RoutingNode r1,RoutingNode r2, String time){
 		nodeRouting.setSender(r1);
 		nodeRouting.setReceiver(r2);
 		nodeRouting.send(time);
 	}
 
+	/*
+	 * 
+	 * Routing between UAVs
+	 */
 	public static void uavRoute(RoutingNode uav1,RoutingNode uav2, String time){
 		uavRouting.setSender(uav1);
 		uavRouting.setReceiver(uav2);
 		uavRouting.send(time);
 	}
 
+	/*
+	 * 
+	 * Routing between UAV and Nodes
+	 */
 	public static void uavNodeRoute(RoutingNode uav,RoutingNode r2, String time){
 		interRouting.setSender(uav);
 		interRouting.setReceiver(r2);
@@ -451,7 +472,5 @@ public class Simulator {
 		}
 		 */
 		return text;
-
-
 	}
 }

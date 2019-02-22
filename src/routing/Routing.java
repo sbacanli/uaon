@@ -13,31 +13,37 @@ public abstract class Routing {
 		}
 		
 		public void setSender(RoutingNode gs){
+			if(gs==null){
+				System.out.println("sender null in Routing.java setSender");
+			}
 			sender=gs;
 		}
 		
 		public void setReceiver(RoutingNode gr){
+			if(gr==null){
+				System.out.println("Receiver null in Routing.java setReceiver");
+			}
 			receiver=gr;
 		}
 		
 		
 		public RoutingNode getSender(){
 			if(sender==null){
-				System.out.println("sender null");
+				System.out.println("sender null in Routing.java");
 			}
 			return sender;
 		}
 		
 		public RoutingNode getReceiver(){
 			if(receiver==null){
-				System.out.println("receiver null");
+				System.out.println("receiver null in Routing.java");
 			}
 			return receiver;
 		}
 		
 		public Air getAir(){
 			if(air==null){
-				System.out.println("Air is null");
+				System.out.println("Air is null in Routing.java");
 			}
 			return air;
 		}

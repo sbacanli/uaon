@@ -219,16 +219,6 @@ public class RoutingNode
 		return -1;
 	}
 
-
-
-
-
-
-
-
-
-
-
 	public String getAllBuffer()
 	{
 		String sum = "";

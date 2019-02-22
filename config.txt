@@ -3,20 +3,17 @@ SimulationName:Random
 //parameter for maximum distance is 2000
 randomMobility:no
 
-dataFolder:NewYork
+dataFolder:NCSU
 LocationType:RELATIVE
 
 interUavsProbability:1.0
-interNodesProbability:-1
+interNodesProbability:1.0
 interProbability:1.0
-NodeRouting:SCR 0.25 0.99 0.99 2
 
 CommDistance:250
 Altitude:100
 numberOfNodes:-1
 numberOfUAVs:1
-
-isCharging:no
 
 //3 hours as message life : 10800
 MessageLifeInSeconds:10800
@@ -36,16 +33,13 @@ MessageErrorTimesForNodes:60
 GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
-Visible:yes
+Visible:no
+chargeOn:no
 
 Shape:spiral
-InitialSpiralRadius:200
+SpiralA:200
 MaxSpiralRadius:-1
 
-
-RectangleWidth:1000
-RectangleHeight:1000
-RandomGrid:yes
 encounterHistoryExchange:no
 //if the time difference between 2 data enytry is more than 300 seconds, it wont project.
 ProjectionTimeLimit:300

@@ -28,6 +28,9 @@ public class Spiral extends Shape{
 			minOf=ylim;
 		}
 		r=new Random(System.currentTimeMillis());
+		if(a<0) {
+			Lib.p("Spiral A parameter is less than zero at Spiral constructor class!");
+		}
 	}
 	
 	@Override
@@ -81,7 +84,7 @@ public class Spiral extends Shape{
 		}//end of for
 		
 		if(getPoints().size()==0) {
-			//Lib.p("Still empty "+getXlim()+" "+getYlim()+" "+xstart+" "+ystart+" in Spiral.java");
+			Lib.p("Still empty "+getXlim()+" "+getYlim()+" "+xstart+" "+ystart+" in Spiral.java");
 			addPoint(xstart,ystart);
 		}else {
 		
@@ -124,15 +127,15 @@ public class Spiral extends Shape{
 	}
 	
 	public void updateFail(){
-		increaseRadius(radiusChange);
+		//increaseRadius(radiusChange);
 	}
 	
 	public void updateFail(double n){
-		setRadius(n);
+		//setRadius(n);
 	}
 	
 	public void updateSuccess(){
-		decreaseRadius(radiusChange);
+		//decreaseRadius(radiusChange);
 	}
 
 	@Override

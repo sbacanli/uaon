@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 
+/**
+ * @author Kara
+ *
+ */
 public class Message {
 
 	private int receiverId;
@@ -70,14 +74,27 @@ public class Message {
 		return message;
 	}
 	
+	
+	/**
+	 * Message Creation Time
+	 * @return time as String
+	 */
 	public String getTime(){
 		return time;
 	}
 	
+	/**
+	 * Receiver node Id
+	 * @return receiverId as String
+	 */
 	public int getReceiver(){
 		return receiverId;	
 	}
 	
+	/**
+	 * Sender node Id
+	 * @return senderId as String
+	 */
 	public int getSender(){
 		return senderId;
 	}
@@ -90,6 +107,11 @@ public class Message {
 		return hopCount;
 	}
 	
+	
+	/**
+	 * The time when the message will be expired
+	 * @return expirationTime as String
+	 */
 	public String getExpiration(){
 		return expirationTime;
 	}

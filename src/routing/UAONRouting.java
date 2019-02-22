@@ -1,10 +1,14 @@
 package routing;
 
 public class UAONRouting extends Probabilistic{
-	boolean encounterHistoryExchange;
+	private boolean encounterHistoryExchange;
 	
-	public UAONRouting(Air ag, double prob,boolean enc) {
+	public UAONRouting(Air ag, double prob) {
 		super(ag, prob);
+		
+	}
+	
+	public void setEncounterHistoryExchange(boolean enc) {
 		encounterHistoryExchange=enc;
 	}
 	
@@ -24,8 +28,7 @@ public class UAONRouting extends Probabilistic{
 			}
 		}
 		
-		if(isOKToSend()){
-			//exchanging encounter history information			
+		if(isOKToSend()){		
 			communicate(getSender(),getReceiver(),timet);
 		}
 		if(isOKToSend()){

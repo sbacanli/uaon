@@ -1,7 +1,5 @@
 package Shapes;
 
-
-
 import java.util.ArrayList;
 
 import simtoo.PointP;
