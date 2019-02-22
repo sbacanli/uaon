@@ -568,9 +568,9 @@ public class Uav extends Positionable{
 				dequeued=true;
 				setPreviousPosition(getCurrentPosition());
 				setCurrentPosition(returned);
-				if(returned!=null && getPreviousPosition() !=null) {
-					calculateDistance();
-				}
+				//calculateDistance itself checks previous and current positions if they are not null
+				//no need to check here
+				calculateDistance();
 				/*
 				Lib.p("After "+positionsLength());
 				writePositions();
@@ -590,9 +590,9 @@ public class Uav extends Positionable{
 				setPreviousPosition(getCurrentPosition());
 				setCurrentPosition(returned);
 				
-				if(returned!=null && getPreviousPosition() !=null) {
-					calculateDistance();
-				}
+				//calculateDistance itself checks previous and current positions if they are not null
+				//no need to check here
+				calculateDistance();
 				//Lib.p("Dequed here 2");
 			}else {
 				Lib.p("Not dequeued - length is more");
