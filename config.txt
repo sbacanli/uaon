@@ -33,8 +33,8 @@ MessageErrorTimesForNodes:60
 GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
-Visible:no
-chargeOn:no
+Visible:yes
+chargeOn:yes
 
 Shape:spiral
 SpiralA:200

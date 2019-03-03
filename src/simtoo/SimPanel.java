@@ -68,9 +68,13 @@ public class SimPanel extends JPanel implements MouseListener{
 	Position[] nodesPositions;
 	Position[] uavsPositions;
 	
+	int secondsToWait;
+	PointP[] chargingLocations;
+	
 	public SimPanel(Simulator simulator,Datas datagiven,boolean isvisible){
 		
 		super();
+		secondsToWait=30;
 		firsttime=true;
 		this.isvisible=isvisible;
 		r=new Random();
@@ -135,6 +139,10 @@ public class SimPanel extends JPanel implements MouseListener{
         Lib.p(simulator.toString());
         Lib.p(mydata.toString());
         Lib.p("Number of nodes: "+nodes.size());
+        
+        if(!uavs.isEmpty()) {
+        	chargingLocations=uavs.get(0).getChargingLocations();
+        }
 	}
 		
 	public void startTimer() {
@@ -265,6 +273,11 @@ public class SimPanel extends JPanel implements MouseListener{
         		//*/
         	}
         }
+        if(!(uavs.isEmpty()) && chargeOn) {
+        	for(int i=0;i<chargingLocations.length;i++) {
+        		drawImage("energy.png",g2,chargingLocations[i].getX(),chargingLocations[i].getY());
+        	}
+		}
 	}
 	
 
@@ -347,8 +360,9 @@ public class SimPanel extends JPanel implements MouseListener{
 			}
 			
 			if(chargeOn && uav.isBatteryEmpty()) {
-				if(uav.isOnChargingPos(time)) {
+				if(uav.isOnAChargingPos(time)) {
 					uav.chargeBattery();
+					uav.wait(secondsToWait, time);
 					//TODO: the UAV should remove all the positions and wait here some time
 				}else {
 					Lib.p("Fall down");

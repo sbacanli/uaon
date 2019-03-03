@@ -355,7 +355,7 @@ public class Positionable {
 		/***************************************************/
 		
 		/**
-		* for every time getScreenPosition or getRealPosiiton is called pointsiterator increased.
+		* for every time getScreenPosition or getRealPosition is called pointsiterator increased.
 		* If we just want the current position we should call this method
 		* 
 		* @param int the current time is given

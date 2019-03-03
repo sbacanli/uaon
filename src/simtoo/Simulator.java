@@ -54,7 +54,10 @@ public class Simulator {
 	private int numberofClusters;
 	private double maxDistanceForDBSCAN;
 	private boolean chargeOn;
+	private PointP[] chargingLocations;
+	private int numberOfChargingLocations;
 	private double spiralAconverted;
+
 
 	public Simulator(Options op,Datas datagiven)
 	{
@@ -106,6 +109,9 @@ public class Simulator {
 			}
 		} else {
 			data.calculateMaxesForScreen();
+			if (!isVisible) {
+				data.makeAllEqual();
+			}
 		}
 		data.calculateAreaRatio();
 		data.setMaxTime(maxTime);
@@ -145,6 +151,14 @@ public class Simulator {
 				interRouting = new Probabilistic(air, internodeUAVProb);
 			}
 			
+			Lib.p("CHARGING LOCAS");
+			numberOfChargingLocations=10;
+			chargingLocations=new PointP[numberOfChargingLocations];
+			for(int i=0;i<numberOfChargingLocations;i++) {
+				chargingLocations[i]=data.getRandomScreenLocation();
+				Lib.p(chargingLocations[i]);
+			}
+		
 		}else {//no UAV exists
 			uavRouting=new Probabilistic(air,0);
 			interRouting=new Probabilistic(air,0);
@@ -187,13 +201,13 @@ public class Simulator {
 		}
 
 
-		ClusterParam cp = null;
-		ClusterTechnique ct = null;
+		ClusterParam clusterparam = null;
+		ClusterTechnique clustertech = null;
 
 		for (int i = 1; i <= numberOfUAVs; i++) {
 			
 			Shapes.Shape s = null;
-			cp = new ClusterParam();
+			clusterparam = new ClusterParam();
 			RoutingNode rn = new RoutingNode(i * -1);
 			routingNodeUavs.add(rn);
 			
@@ -234,11 +248,11 @@ public class Simulator {
 				}
 
 				if (clusterTechique.toLowerCase().equals("dbscan")) {
-					ct = ClusterTechnique.DBSCAN;
+					clustertech = ClusterTechnique.DBSCAN;
 					maxDistanceForDBSCAN=op.getParamDouble("MaxDistanceForDBSCAN");
 					maxDistanceForDBSCAN=data.RealToVirtualDistance(maxDistanceForDBSCAN);
 				} else if (clusterTechique.toLowerCase().equals("kmeans")) {
-					ct = ClusterTechnique.KMEANS;
+					clustertech = ClusterTechnique.KMEANS;
 				} else {
 					Lib.p("Undefined Cluster technique at config file");
 					System.exit(-1);
@@ -248,7 +262,7 @@ public class Simulator {
 				
 				s = new Shapes.Special(spiralAconverted, maxSpiralRadius, 
 						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("TourLimit"));
-				cp = new ClusterParam(ct, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
+				clusterparam = new ClusterParam(clustertech, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
 			} else if (shapeUAV.toLowerCase().equals("linecluster")) {
 				numberofClusters = op.getParamInt("numberOfClusters");
 				clusterRadiusCoefficient = op.getParamInt("RadiusCoefficient");
@@ -265,12 +279,12 @@ public class Simulator {
 				}
 
 				if (clusterTechique.toLowerCase().equals("dbscan")) {
-					ct = ClusterTechnique.DBSCAN;
+					clustertech = ClusterTechnique.DBSCAN;
 					maxDistanceForDBSCAN=op.getParamDouble("MaxDistanceForDBSCAN");
 					maxDistanceForDBSCAN=data.RealToVirtualDistance(maxDistanceForDBSCAN);
 					
 				} else if (clusterTechique.toLowerCase().equals("kmeans")) {
-					ct = ClusterTechnique.KMEANS;
+					clustertech = ClusterTechnique.KMEANS;
 				} else {
 					Lib.p("Undefined Cluster technique at config file");
 					System.exit(-1);
@@ -279,7 +293,7 @@ public class Simulator {
 				
 				setSpiralParameters(Integer.MIN_VALUE,Double.MIN_VALUE);//maximum spiral radius set very small
 				
-				cp = new ClusterParam(ct, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
+				clusterparam = new ClusterParam(clustertech, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
 				//setting maximum spiral radius as 1 (as small as possible) to create line effect
 				s = new Shapes.ClusterLine(spiralAconverted, maxSpiralRadius, 
 						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("LimitCountForCluster"));
@@ -290,7 +304,16 @@ public class Simulator {
 			}
 			encounterTimeLimit = op.getParamInt("EncounterTimeLimit");//in terms of seconds
 
-			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, cp);
+			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,chargeOn);
+			if(chargeOn) {
+				u.setChargingLocations(chargingLocations);
+			}
+			
+			/*
+			for(int b=0;b<chargingLocations.length;b++) {
+				Lib.p(chargingLocations[b]);
+			}
+			*/
 			//u.setGriderParams(GridXDistance, GridYDistance);
 			/*
 			if(isCharging) {
@@ -300,8 +323,7 @@ public class Simulator {
 			uavs.add(u);
 			
 		}
-
-
+		
 
 		routing.Reporter.init(toString());
 

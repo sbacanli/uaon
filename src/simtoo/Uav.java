@@ -36,7 +36,7 @@ public class Uav extends Positionable{
 	private int battery;
 	
 	Uav(int uid, Shape sg, double speedreal, int altitudegiven, 
-			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam){
+			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam,boolean charge){
 		super(uid,givendata);
 		setRealSpeed(speedreal);
 		setScreenSpeed(givendata.RealToVirtualDistance(speedreal));
@@ -77,7 +77,12 @@ public class Uav extends Positionable{
 		clusterTechnique = cparam.getTechnique();
 		numberOfClusters = cparam.getNumberOfClusters();
 		maxDistanceForDBSCAN=cparam.getMaxDistance();
-
+		if(charge) {
+			chargeBattery();
+		}else {
+			battery=-1;
+			chargingLocations=null;
+		}
 	}
 	
 	public void setShape(Shape sg){
@@ -101,19 +106,30 @@ public class Uav extends Positionable{
 		return altitude;
 	}
 	
+	/*
+	 * Charging related methods including battery and charge locations
+	 * */
+	
 	public void batteryConsume() {
-		battery--;
+		if(battery!=-1) {
+			battery--;
+		}
+		
 	}
 	
 	public void chargeBattery() {
-		battery=45*60;
+		if(battery!=-1)
+			battery=45*60;
 	}
 	
 	public boolean isBatteryEmpty() {
+		if(battery==-1) {//there is no battery, no charging,battery never drains
+			return false;
+		}
 		return battery==0;
 	}
 	
-	public boolean isOnChargingPos(long ttime) {
+	public boolean isOnAChargingPos(long ttime) {
 		Position p1=getCurrentPositionWithTime(ttime);
 		for(int i=0;i<chargingLocations.length;i++) {
 			if(p1.getScreenPoint().equals(chargingLocations[i])){
@@ -121,9 +137,28 @@ public class Uav extends Positionable{
 			}
 		}
 		return false;
-		
 	}
 
+	public PointP[] getChargingLocations() {
+		return chargingLocations;
+	}
+	
+	public void setChargingLocations(PointP[] clocations) {
+		chargingLocations=clocations;
+	}
+	
+	/*
+	 * This method is for making the UAV wait in the current location for seconds at the giventime
+	 * @param seconds number of seconds to wait in the current location
+	 * @param giventime at the given time
+	 */
+	public void wait(int seconds,long time) {
+		ArrayList<PointP> waitarr=new ArrayList<PointP>(seconds);
+		for(int i=0;i<seconds;i++) {
+			waitarr.add(getCurrentPositionWithTime(time).screenp);
+		}
+		addPathsWithPoints(waitarr,getData(),LocationType.SCREEN);
+	}
 	
 	/**given screen positions, path will be generated according to the shape
 	 * 
@@ -238,14 +273,7 @@ public class Uav extends Positionable{
 	public PointP getRandomScreenLocation() {
 		return getData().getRandomScreenLocation();
 	}
-	
-	public void setChargingLocations(int lenCharging) {
-		chargingLocations=new PointP[lenCharging];
-		for(int i=0;i<lenCharging;i++) {
-			chargingLocations[i]=getRandomScreenLocation();
-		}
-	}
-	
+		
 	/*
 	public PointP getOldScreenRandomLocation(){
 		PointP p1=null;
@@ -477,11 +505,7 @@ public class Uav extends Positionable{
 		double midy = screeny / encs.size();
 		return new PointP(midx, midy);
 	}
-	/*
-	public double mydistance(Position p1,Position p2) {
-		return Lib.relativeDistance(p1.real.getX(),p1.real.getY(),p2.real.getX(),p2.real.getY());
-	}
-	*/
+	
 	/**
 	 * @param currentTime
 	 */
@@ -503,32 +527,6 @@ public class Uav extends Positionable{
 	    numberOfRoutesCompleted += 1;
 	    s.clearPositions();
 	}
-
-	/*
-	public void spiralReroute(long currentTime) {
-		double newx=0;
-		double newy=0;
-		
-		PointP p = getRandomScreenLocation();
-
-	    newx = p.getX();
-	    newy = p.getY();
-	    
-	    rn.clearEncountersWithLimit(encounterTimeLimit, currentTime);
-	    
-	    //newx = getData().convertToScreenX(newx);
-	    //newy = getData().convertToScreenY(newy);
-	    //Lib.p(newx+" "+newy+" CREATED POSITIONS\n");
-	    
-	    initialX = newx;
-	    initialY = newy;
-	    
-	    fillPath(newx, newy);
-	    
-	    numberOfRoutesCompleted += 1;
-	    s.clearPositions();
-	}
-	*/
 	
 	public int getNumberOfRoutesCompleted(){
 		return numberOfRoutesCompleted;
