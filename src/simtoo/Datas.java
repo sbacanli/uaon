@@ -40,6 +40,7 @@ public class Datas {
 	private int timeDifference;
 	private int numberOfDataLines;
 	private boolean eof;
+	private int positionPrecision=7;
 	
 	public Datas(double h,double w){
 		linenumlimit=1000;
@@ -57,7 +58,6 @@ public class Datas {
 		maxtime=Long.MIN_VALUE;
 		maxftime=Long.MIN_VALUE;
 		mintime=Long.MAX_VALUE;
-		precision=6;
 		op=null;
 		AreaRatio=0;
 		eof=false;
@@ -260,6 +260,8 @@ public class Datas {
 	public void makeAllEqual(){
 		widthOfScreen=getMaxX()-getMinX();
 		heightOfScreen=getMaxY()-getMinY();
+		//widthOfScreen=LibRouting.prec(widthOfScreen, positionPrecision);
+		//heightOfScreen=LibRouting.prec(heightOfScreen, positionPrecision);
 	}
 	
 	public void calculateAreaRatio() {
@@ -281,6 +283,8 @@ public class Datas {
 		}else{
 			heightOfScreen=B;
 		}
+		//widthOfScreen=LibRouting.prec(widthOfScreen, positionPrecision);
+		//heightOfScreen=LibRouting.prec(heightOfScreen, positionPrecision);
 	}
 	
 	public ArrayList<Position> readPortion(String fileName, long dataLineStart,int numberOfLinesToBeRead, long timebias){
@@ -366,10 +370,10 @@ public class Datas {
 					Lib.p(e.toString());
 					e.printStackTrace();
 				}
-				maxx=LibRouting.prec(maxx, precision);
-				minx=LibRouting.prec(minx, precision);
-				miny=LibRouting.prec(miny, precision);
-				minx=LibRouting.prec(minx, precision);
+				maxx=LibRouting.prec(maxx, positionPrecision);
+				minx=LibRouting.prec(minx, positionPrecision);
+				miny=LibRouting.prec(miny, positionPrecision);
+				minx=LibRouting.prec(minx, positionPrecision);
 				br=null;
 	}
 	
@@ -409,16 +413,16 @@ public class Datas {
 				xcord=Double.parseDouble(st.nextToken());
 				ycord=Double.parseDouble(st.nextToken());
 				*/
-				xcord=LibRouting.prec(xcord, precision);
-				ycord=LibRouting.prec(ycord, precision);
+				xcord=LibRouting.prec(xcord, positionPrecision);
+				ycord=LibRouting.prec(ycord, positionPrecision);
 				
 				if(i>0){
 					
 					prevtime=arrposition.get(arrposition.size()-1).getTime();
 					prevxcord=arrposition.get(arrposition.size()-1).getRealX();
 					prevycord=arrposition.get(arrposition.size()-1).getRealY();
-					prevxcord=LibRouting.prec(prevxcord, precision);
-					prevycord=LibRouting.prec(prevycord, precision);
+					prevxcord=LibRouting.prec(prevxcord, positionPrecision);
+					prevycord=LibRouting.prec(prevycord, positionPrecision);
 					
 					differenceTime=(int)(time-prevtime);
 					differencex=(xcord-prevxcord)/differenceTime;
@@ -440,12 +444,12 @@ public class Datas {
 							realy=prevycord-h*differencey;
 						}
 						
-						realx=LibRouting.prec(realx, precision);
-						realy=LibRouting.prec(realy, precision);
+						realx=LibRouting.prec(realx, positionPrecision);
+						realy=LibRouting.prec(realy, positionPrecision);
 						calcx=convertToScreenX(realx);
 						calcy=convertToScreenY(realy);
-						calcx=LibRouting.prec(calcx, precision);
-						calcy=LibRouting.prec(calcy, precision);
+						calcx=LibRouting.prec(calcx, positionPrecision);
+						calcy=LibRouting.prec(calcy, positionPrecision);
 						
 						arrposition.add(new Position(
 										prevtime+h,// updated time
@@ -474,28 +478,18 @@ public class Datas {
 		return arrposition;
 	}	
 	
-	public double convertToScreenX(double geoX){
-		if(geoX>getMaxX() || geoX<getMinX()){
-			Lib.p("Geo X is not in the limit geoX "+geoX+" maxX "+getMaxX()+"  minX "+getMinX());
-			if(geoX>getMaxX()){
-				geoX=getMaxX();
-			}
-			if(geoX<getMinX()){
-				geoX=getMinX();
-			}
+	///what do we mean by real is what is the location type in dataset?
+	public double getDistanceBetweenRealPositions(Position p1,Position p2) {
+		if(getLoc()==LocationType.RELATIVE) {
+			return Lib.relativeDistance(p1.getRealX(),p1.getRealY(),p2.getRealX(),p2.getRealY());
+		}else if(getLoc()==LocationType.REAL){
+			return Lib.realdistance(p1.getRealX(),p1.getRealY(),p2.getRealX(),p2.getRealY());
+		}else if(getLoc()==LocationType.SCREEN) {
+			return Lib.screenDistance(p1.getRealX(),p1.getRealY(),p2.getRealX(),p2.getRealY());
+		}else {
+			Lib.p("wrong Location Type at getDistanceBetweenRealPositions");
 		}
-		
-		if(Double.isNaN(geoX)){
-			Lib.p("ERROR:Datas' convertToScreenX is NaN");
-			System.exit(-1);
-		}
-		double createdPos=((geoX-minx) * (double)(widthOfScreen) )/(getLinearXDiff());
-		if(createdPos>getWidth()){
-			//Lib.p("This can not HAPPEN for datas.java at convertToscreenX");
-			createdPos=Math.floor(createdPos);
-			Lib.p("This can not HAPPEN for datas.java at convertToscreenX "+createdPos+"  "+getWidth());
-		}
-		return createdPos;
+		return 0;
 	}
 	
 	public double convertToScreenSpeed(double realSpeed){
@@ -528,6 +522,30 @@ public class Datas {
 		return 0;
 	}
 	
+	public double convertToScreenX(double geoX){
+		if(geoX>getMaxX() || geoX<getMinX()){
+			Lib.p("Geo X is not in the limit geoX "+geoX+" maxX "+getMaxX()+"  minX "+getMinX());
+			if(geoX>getMaxX()){
+				geoX=getMaxX();
+			}
+			if(geoX<getMinX()){
+				geoX=getMinX();
+			}
+		}
+		
+		if(Double.isNaN(geoX)){
+			Lib.p("ERROR:Datas' convertToScreenX is NaN");
+			System.exit(-1);
+		}
+		double createdPos=LibRouting.prec(((geoX-minx) * (double)(widthOfScreen) )/(getLinearXDiff()),positionPrecision);
+		if(createdPos>getWidth()){
+			//Lib.p("This can not HAPPEN for datas.java at convertToscreenX");
+			createdPos=Math.floor(createdPos);
+			Lib.p("This can not HAPPEN for datas.java at convertToscreenX "+createdPos+"  "+getWidth());
+		}
+		return createdPos;
+	}
+	
 	public double convertToScreenY(double geoY){
 		if(geoY>getMaxY() || geoY<getMinY()){
 			//Lib.p("Geo Y is not in the limit");
@@ -543,7 +561,7 @@ public class Datas {
 			Lib.p("ERROR:Datas' convertToScreenY is NaN");
 			System.exit(-1);
 		}
-		double createdPos= ((geoY-miny) * (double)(heightOfScreen) )/(getLinearYDiff());
+		double createdPos=LibRouting.prec(((geoY-miny) * (double)(heightOfScreen) )/(getLinearYDiff()),positionPrecision);
 		createdPos=LibRouting.prec(createdPos, precision);
 		if(createdPos>getHeight()){
 			Lib.p("This can not HAPPEN for datas.java at convertToscreen");
@@ -584,7 +602,7 @@ public class Datas {
 			System.exit(-1);
 		}
 		
-		return (screenX * (getLinearXDiff()) )/(double)(widthOfScreen) + minx;
+		return LibRouting.prec((screenX * (getLinearXDiff()) )/(double)(widthOfScreen) + minx,0);
 	}
 	
 	public double convertToRealY(double screenY){
@@ -606,7 +624,7 @@ public class Datas {
 			System.exit(-1);
 		}
 		
-		return (screenY * (getLinearYDiff()) )/(double)(heightOfScreen) + miny;
+		return LibRouting.prec((screenY * (getLinearYDiff()) )/(double)(heightOfScreen) + miny,0);
 	}
 	
 	//given screen coordinates it will return a position whose time is -1
@@ -623,6 +641,7 @@ public class Datas {
 			Lib.p("xrealgiven "+xrealgiven+" yrealgiven "+yrealgiven);
 			System.exit(-1);
 		}
+		
 		return new Position(-1,xscreengiven,yscreengiven,xrealgiven,yrealgiven);				
 	}
 	
@@ -649,6 +668,7 @@ public class Datas {
 			System.exit(-1);
 		}
 		widthOfScreen=w;
+		//widthOfScreen=LibRouting.prec(widthOfScreen, positionPrecision);
 	}
 
 	public void setHeight(double h) {
@@ -657,11 +677,12 @@ public class Datas {
 			System.exit(-1);
 		}
 		heightOfScreen=h;
+		//heightOfScreen=LibRouting.prec(heightOfScreen, positionPrecision);
 	}
 	
 	
 	//similarity ratio of two rectangles is the square root of their areas
-	public double VirtualToRealDistance(int distScr){
+	public double VirtualToRealDistance(double distScr){
 		
 		return  (distScr * AreaRatio);
 	}
@@ -764,6 +785,8 @@ public class Datas {
 		//double y1=random.Random.nextDouble()*heightOfScreen*0.7+heightOfScreen*0.2;
 		double x1=r.nextDouble()*widthOfScreen*0.6+widthOfScreen*0.2;
 		double y1=r.nextDouble()*heightOfScreen*0.6+heightOfScreen*0.2;
+		y1=LibRouting.prec(y1, positionPrecision);
+		x1=LibRouting.prec(x1, positionPrecision);
 		return new PointP(x1, y1);
 	}
 }

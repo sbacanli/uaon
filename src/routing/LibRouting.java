@@ -1,5 +1,6 @@
 package routing;
 
+import java.io.BufferedReader;
 import java.sql.Date;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -73,6 +74,9 @@ public class LibRouting {
 	 * @return
 	 */
 	public static double prec(double d,int i){
+		if(i==0) {
+			return d;
+		}
 		return limitPrecision(d,i);
 		//return Double.parseDouble(dec.format(d));
 		//return Double.parseDouble(precstr(d,i));
@@ -89,6 +93,10 @@ public class LibRouting {
 	    int multiplier = (int) Math.pow(10, maxDigitsAfterDecimal);
 	    double truncated = (double) ((long) (num * multiplier)) / multiplier;
 	    return truncated;
+	}
+
+	private static double precPt(double value, int precV) {
+		return (double)Math.round(value * Math.pow(10,precV) / Math.pow(10,precV));
 	}
 	
 	//if date s1 is greater than s2 returns true else false
@@ -120,4 +128,5 @@ public class LibRouting {
         }
 		return (int)cl.getTimeInMillis();
 	}
+	
 }

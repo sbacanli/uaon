@@ -46,6 +46,10 @@ public class Lib {
 		return Math.sqrt((x-x1)*(x-x1)+(y-y1)*(y-y1));
 	}
 	
+	public static double screenDistance(PointP a,PointP b) {
+		return screenDistance(a.getX(),a.getY(),b.getX(),b.getY());
+	}
+	
 	/*
 	private static float cudaFunc(String func,float x,float y,float x1,float y1) {
 		int memorySize=Float.SIZE/8;

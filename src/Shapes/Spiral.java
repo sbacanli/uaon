@@ -83,12 +83,14 @@ public class Spiral extends Shape{
 			}//end of if p null check
 		}//end of for
 		
+		//*
 		if(getPoints().size()==0) {
-			Lib.p("Still empty "+getXlim()+" "+getYlim()+" "+xstart+" "+ystart+" in Spiral.java");
+			//Lib.p("Still empty "+getXlim()+" "+getYlim()+" "+xstart+" "+ystart+" maxradius "+maxradius+ "in Spiral.java");
 			addPoint(xstart,ystart);
 		}else {
 		
 		}
+		//*/
 	}
 	
 	private double distance(double x,double y,double x2,double y2) {

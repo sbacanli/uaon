@@ -84,7 +84,6 @@ public class Special extends Rectangle {
 			//it means the limit is reached
 			if(ar2[0]==null && ar2[1]==null) {
 				incNumberOfTours();
-				Lib.p("Tours increased");
 				counter=1;
 				ar2=getPointsFillStart(counter);
 			}
@@ -110,7 +109,7 @@ public class Special extends Rectangle {
 	protected PointP[] getPointsFillStart(int counter) {
 		PointP[] ar2=new PointP[2];
 		if(counter<1) {
-			System.out.println("counter is zero for getpointsfillstart at rectangle");
+			System.out.println("counter is zero for getpointsfillstart at special.java");
 			return null;
 		}
 		double firstTerm=((2*counter)-1)*getMinimumPoint().getX();
@@ -145,6 +144,7 @@ public class Special extends Rectangle {
 			addPoint(pnts.get(i));
 		}
 		s=null;		
+		pnts=null;
 	}
 	
 	

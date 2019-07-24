@@ -339,7 +339,6 @@ public class SimPanel extends JPanel implements MouseListener{
 		//routing checks for UAVs	
 		for(int i=0;i<uavs.size();i++){
 			Uav uav=uavs.get(i);
-			uav.batteryConsume();
 			
 			int pos=uav.getId()*(-1) - 1;
 			uavsPositions[pos]=uav.getCurrentPositionWithTime(time);
@@ -353,21 +352,69 @@ public class SimPanel extends JPanel implements MouseListener{
         		System.exit(-1);
         		//*/
         	}
+	        //WARNING!!!!!
+	        //UAV.getCurrentPositionWithTime should be called only once. After here use only currentPosition()
 	        
-			if(uav.isRouteFinished() && uav.getPositions().size()!=0) {
+	        
+			if(uav.isRouteFinished() && uav.positionsLength()!=0) {
 				Lib.p("PROBLEM in simpanel");
 				uav.writePositions();
 			}
-			
-			if(chargeOn && uav.isBatteryEmpty()) {
-				if(uav.isOnAChargingPos(time)) {
+						
+			if(chargeOn) {
+				
+				PointP closestChargingLocation=uav.getClosestChargingLocation();
+				if(!uav.isWaiting() && !uav.isOnAChargingPos()) {
+					uav.goToCharging(closestChargingLocation,time);
+				}
+				
+				if(uav.isWaiting() && uav.isOnAChargingPos()) {
 					uav.chargeBattery();
-					uav.wait(secondsToWait, time);
-					//TODO: the UAV should remove all the positions and wait here some time
-				}else {
-					Lib.p("Fall down");
+					uav.chargeRouted=false;
+					//Lib.p("Wait route added at time "+time);
+					//Lib.p("************************");
+					//Lib.p("reached to Charging pos "+uavpos);
+					//Lib.p("************************");
+				}else if(uav.isBatteryEmpty() && !uav.isWaiting()){
+					Lib.p("UAV Fall down at position "+uav.getCurrentPosition().screenp+" Charging Location: "+closestChargingLocation+" at time "+time+" battery: "+uav.remainingFlightTime());
+					Lib.p("Distance "+mydata.VirtualToRealDistance(  (int)(Lib.screenDistance(closestChargingLocation, uavpos.screenp))  ) );
+					Lib.p("seconds to reach "+uav.secondsToReach(closestChargingLocation)+" real speed "+uav.getRealSpeed());
+					Lib.p("previous position "+uav.getPreviousPosition());
+					Lib.p("Is it charge Routed? "+uav.chargeRouted);
+					if(uav.isWaiting()) {
+						Lib.p("UAV Waiting at location "+uavpos);
+					}
+					//uav.writePositions();
+					System.exit(-1);
+				}
+				
+				/*
+				if(uav.isCharging()) {
+					Lib.p("UAV charging at time "+time+" with battery "+uav.getBattery());
+				}else if(uav.getBattery()<1) {
+					Lib.p("Battery low but flying "+uav.getBattery()+" chargeRouted "+uav.chargeRouted+" at time "+time);
+				}
+				//*/
+				uav.batteryConsume();
+				if(uav.isBatteryEmpty() && !uav.isOnAChargingPos()) {
+					Lib.p(closestChargingLocation+" "+uavpos+" UAV DOWN"+" battery "+uav.getBattery()+" isRouted "+uav.chargeRouted);
+					System.exit(-1);
 				}
 			}
+			
+			/*
+			if(uav.isWaiting()) {
+				Lib.p("X UAV Waiting at location "+uavpos+" UAV Battery "+uav.getBattery());
+			}
+			*/
+			
+			/*
+			int farthestChargingLocPos=uav.getFarthestChargingLocation();
+			PointP farthestChargingLocation=locations[closestChargingLocPos];
+			*/
+			//not much battery left. Need to charge
+			//Uav will route to charging station if battery is low.
+			//All the checks will be done in that method.
 			
 		}
 		
@@ -478,126 +525,132 @@ public class SimPanel extends JPanel implements MouseListener{
 	public void checkUavDistances(){
 		for(int i=0;i<uavs.size();i++){
 			Uav u1=uavs.get(i);
-			RoutingNode ru1=uavRoutingNodes.get(i);
-			
-			Position encounteru1 =uavsPositions[i];
-			//if the node is not in the scenes now
-			if(encounteru1 != null){
-	        	double x1=encounteru1.getScreenX();
-	        	double y1=encounteru1.getScreenY();
-	        	
-				for(int j=0;j<i;j++){
-					Uav u2=uavs.get(j);
-					RoutingNode ru2=uavRoutingNodes.get(j);
-					
-					Position encounteru2 =uavsPositions[j];
-					if(encounteru2!=null){
-			        	double x2=encounteru2.getScreenX();
-			        	double y2=encounteru2.getScreenY();
-			        	
-			        	//Lib.p(Lib.relativeDistance(x1, y1, x2, y2)+"  UAVS  "+COMMDIST);
-			        	double distancecalc=Lib.screenDistance(x1, y1, x2, y2);
-			        	
-			        	if(distancecalc <= COMMDIST){
-							
-							//if they are not in contact let us make them in contact
-							if(!ru2.isInContactWith(ru1.getId())){
-								addContactsEncounters(ru2,ru1,encounteru2,encounteru1,time);
-								
-								//first touch happened
-								Simulator.uavRoute(ru1,ru2,time+"");
-							}//else it means they are still in contact from last time
-							//this  is a continueing contact
-							//Lib.p("nodes encountered");
-							
-						}else{
-							//if the distance is far and they were in contact before
-							//it means the contact ended.
-							if(ru2.isInContactWith(ru1.getId())){
-								ru2.removeContact(ru1.getId());
-								ru1.removeContact(ru2.getId());
-								Encounter e1=ru1.finishEncounter(ru2.getId(), time);
-								Encounter e2=ru2.finishEncounter(ru1.getId(), time);
-								
-								if(e1==null && e2==null){
-									Lib.p("Encounters are null between UAVs in SimPanel CHECK THIS AT SimPanel.java");
-								}else{
-									//Reporter.writeEncounters(e1,e2,"encounterUavs.txt");
-								}
-							}
-							//if they are far and not in contact, no need to do anything.
-						
-						}//end of else
+			//if uav is charging it can not communicate at all
+			if(!u1.isCharging()) {
+				RoutingNode ru1=uavRoutingNodes.get(i);
+				
+				Position encounteru1 =uavsPositions[i];
+				//if the node is not in the scenes now
+				if(encounteru1 != null){
+		        	double x1=encounteru1.getScreenX();
+		        	double y1=encounteru1.getScreenY();
 		        	
-					}//end of if for position null
-				}//end of inner for
-			
-			}//if encounteru1 is not null
+					for(int j=0;j<i;j++){
+						Uav u2=uavs.get(j);
+						RoutingNode ru2=uavRoutingNodes.get(j);
+						
+						Position encounteru2 =uavsPositions[j];
+						if(encounteru2!=null){
+				        	double x2=encounteru2.getScreenX();
+				        	double y2=encounteru2.getScreenY();
+				        	
+				        	//Lib.p(Lib.relativeDistance(x1, y1, x2, y2)+"  UAVS  "+COMMDIST);
+				        	double distancecalc=Lib.screenDistance(x1, y1, x2, y2);
+				        	
+				        	if(distancecalc <= COMMDIST){
+								
+								//if they are not in contact let us make them in contact
+								if(!ru2.isInContactWith(ru1.getId())){
+									addContactsEncounters(ru2,ru1,encounteru2,encounteru1,time);
+									
+									//first touch happened
+									Simulator.uavRoute(ru1,ru2,time+"");
+								}//else it means they are still in contact from last time
+								//this  is a continueing contact
+								//Lib.p("nodes encountered");
+								
+							}else{
+								//if the distance is far and they were in contact before
+								//it means the contact ended.
+								if(ru2.isInContactWith(ru1.getId())){
+									ru2.removeContact(ru1.getId());
+									ru1.removeContact(ru2.getId());
+									Encounter e1=ru1.finishEncounter(ru2.getId(), time);
+									Encounter e2=ru2.finishEncounter(ru1.getId(), time);
+									
+									if(e1==null && e2==null){
+										Lib.p("Encounters are null between UAVs in SimPanel CHECK THIS AT SimPanel.java");
+									}else{
+										//Reporter.writeEncounters(e1,e2,"encounterUavs.txt");
+									}
+								}
+								//if they are far and not in contact, no need to do anything.
+							
+							}//end of else
+			        	
+						}//end of if for position null
+					}//end of inner for
+				
+				}//if encounteru1 is not null
+			}//if uav is not charging
 		}//end of outer for
 	}
 	
 	public void checkUavNodeDistances(){
 		for(int i=0;i<uavs.size();i++){
 			Uav u=uavs.get(i);
-        	RoutingNode ruav=uavRoutingNodes.get(i);
-        	
-        	Position encounterUav = uavsPositions[i];
-        	if(encounterUav!=null){
-        		//Lib.p(u.getPosition(0).toString());
-        		//Lib.p("SIMPANEL checkUAvNodeDistance Problem "+u.positionsLength()+"  "+time);
-        	
-	        	double xuav=encounterUav.getScreenX();
-	        	double yuav=encounterUav.getScreenY();
+			//if uav is charging it can not communicate at all
+			if(!u.isCharging()) {
+	        	RoutingNode ruav=uavRoutingNodes.get(i);
 	        	
-				for(int j=0;j<nodes.size();j++){
-					Node n=nodes.get(j);
-		        	RoutingNode rnode=routingNodes.get(j);
+	        	Position encounterUav = uavsPositions[i];
+	        	if(encounterUav!=null){
+	        		//Lib.p(u.getPosition(0).toString());
+	        		//Lib.p("SIMPANEL checkUAvNodeDistance Problem "+u.positionsLength()+"  "+time);
+	        	
+		        	double xuav=encounterUav.getScreenX();
+		        	double yuav=encounterUav.getScreenY();
 		        	
-		        	Position encounterNode = nodesPositions[j];
-		        	
-		        	if(n.isVisible() && encounterNode!=null){
-			        	double xnode=encounterNode.getScreenX();
-			        	double ynode=encounterNode.getScreenY();
-			        	//Lib.p(Lib.relativeDistance(xuav, yuav, xnode, ynode)+"  BETWEEN  "+COMMDIST);
-			        	double distancecalc=0;
-			        	distancecalc=Lib.screenDistance(xuav, yuav, xnode, ynode);
+					for(int j=0;j<nodes.size();j++){
+						Node n=nodes.get(j);
+			        	RoutingNode rnode=routingNodes.get(j);
 			        	
-			        	if(distancecalc <= btwdistance){
-		
-							//if they are not in contact let us make them in contact
-							if(!rnode.isInContactWith(ruav.getId())){
-								addContactsEncounters(rnode,ruav,encounterNode,encounterUav,time);
-								
-								//first touch happened
-								Simulator.uavNodeRoute(ruav,rnode,time+"");
-							}//else it means they are still in contact from last time
-							//this  is a continueing contact
-							//Lib.p("nodes encountered");
-							
-						}else{
-							//if the distance is far and they were in contact before
-							//it means the contact ended.
-							if(rnode.isInContactWith(ruav.getId())){
-								rnode.removeContact(ruav.getId());
-								ruav.removeContact(rnode.getId());
-								Encounter e1=ruav.finishEncounter(rnode.getId(), time);
-								Encounter e2=rnode.finishEncounter(ruav.getId(), time);
-								
-								if(e1==null && e2==null){
-									Lib.p("Encounters are null between UAV and Nodes in SimPanel CHECK THIS AT SimPanel.java");
-								}else{
-									//Reporter.writeEncounters(e1,e2,"encountersUavNodes.txt");
-								}
-							}
-							//if they are far and not in contact, no need to do anything.
-						
-						}//end of else
+			        	Position encounterNode = nodesPositions[j];
 			        	
-		        	}//encounter node if else check
-				}//end of inner for
+			        	if(n.isVisible() && encounterNode!=null){
+				        	double xnode=encounterNode.getScreenX();
+				        	double ynode=encounterNode.getScreenY();
+				        	//Lib.p(Lib.relativeDistance(xuav, yuav, xnode, ynode)+"  BETWEEN  "+COMMDIST);
+				        	double distancecalc=0;
+				        	distancecalc=Lib.screenDistance(xuav, yuav, xnode, ynode);
+				        	
+				        	if(distancecalc <= btwdistance){
 			
-        	}//end of if
-        	
+								//if they are not in contact let us make them in contact
+								if(!rnode.isInContactWith(ruav.getId())){
+									addContactsEncounters(rnode,ruav,encounterNode,encounterUav,time);
+									
+									//first touch happened
+									Simulator.uavNodeRoute(ruav,rnode,time+"");
+								}//else it means they are still in contact from last time
+								//this  is a continueing contact
+								//Lib.p("nodes encountered");
+								
+							}else{
+								//if the distance is far and they were in contact before
+								//it means the contact ended.
+								if(rnode.isInContactWith(ruav.getId())){
+									rnode.removeContact(ruav.getId());
+									ruav.removeContact(rnode.getId());
+									Encounter e1=ruav.finishEncounter(rnode.getId(), time);
+									Encounter e2=rnode.finishEncounter(ruav.getId(), time);
+									
+									if(e1==null && e2==null){
+										Lib.p("Encounters are null between UAV and Nodes in SimPanel CHECK THIS AT SimPanel.java");
+									}else{
+										//Reporter.writeEncounters(e1,e2,"encountersUavNodes.txt");
+									}
+								}
+								//if they are far and not in contact, no need to do anything.
+							
+							}//end of else
+				        	
+			        	}//encounter node if else check
+					}//end of inner for
+				
+	        	}//end of if encounter is not null
+	        	
+			}//end of if uav is charging
 		}//end of outer for
 	}
 	
@@ -702,9 +755,7 @@ public class SimPanel extends JPanel implements MouseListener{
         	/*else {
         		updater();  
         	}	*/
-        	
-        	
-        }     
+        }//end of actionPerformed      
     }//end of inner class TimerListener
     
 }

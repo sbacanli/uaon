@@ -1,6 +1,8 @@
 package simtoo;
 
 import java.io.Serializable;
+import routing.LibRouting;
+
 
 public class PointP implements Serializable {
 
@@ -13,14 +15,14 @@ public class PointP implements Serializable {
 			Lib.p("PointP's x or y is NaN in the constructor");
 			System.exit(-1);
 		}
-		this.x=x;
-		this.y=y;
+		this.x=precPt(x);
+		this.y=precPt(y);
 		this.cluster_number=0;
 	}
 	
 	public PointP(PointP screenPoint) {
-		x=screenPoint.x;
-		y=screenPoint.y;
+		x=precPt(screenPoint.x);
+		y=precPt(screenPoint.y);
 	}
 
 	public double getX() {
@@ -69,8 +71,18 @@ public class PointP implements Serializable {
 		return x+", "+y;
 	}
 	
+	private double precPt(double value) {
+		return value; 
+		//LibRouting.prec(value, 7);
+	}
+	
 	public boolean equals(PointP p){
-		return p.x==x && p.y==y;
+		//return LibRouting.prec(p.getX(),6)==LibRouting.prec(getX(),6) && LibRouting.prec(p.getY(),6)==LibRouting.prec(getY(),6);
+		return precPt(p.getX())==precPt(getX()) && precPt(p.getY())==precPt(getY());
+	}
+	
+	public boolean closeEnough(PointP p) {
+			return LibRouting.prec(p.getX(),7)==LibRouting.prec(getX(),7) && LibRouting.prec(p.getY(),7)==LibRouting.prec(getY(),7);
 	}
 	
 }

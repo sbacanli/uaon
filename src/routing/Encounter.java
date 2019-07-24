@@ -96,7 +96,6 @@ public class Encounter implements Comparable<Encounter>,java.io.Serializable {
 
 	@Override
 	public int compareTo(Encounter o) {
-		// TODO Auto-generated method stub
 		if(o.getReceiverId()==getReceiverId()) return 0;
 		if(o.getReceiverId()<getReceiverId()) return -1;
 		return 1;

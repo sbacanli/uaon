@@ -110,7 +110,7 @@ public class Options {
     		return hm.get(s);
     	}
 
-		Lib.p("ERROR: Entry not found for call getParamString in class Options");
+		Lib.p("ERROR: Entry not found for call getParamString in class Options for option "+s);
     	return null;
     }
     

@@ -1,6 +1,8 @@
 package simtoo;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 import Shapes.*;
@@ -57,6 +59,7 @@ public class Simulator {
 	private PointP[] chargingLocations;
 	private int numberOfChargingLocations;
 	private double spiralAconverted;
+	private int batteryLife=-1;
 
 
 	public Simulator(Options op,Datas datagiven)
@@ -139,7 +142,6 @@ public class Simulator {
 				uavRouting=processRoutingParameter(op.getParamString("UAVRouting"),messageLifeInSeconds);
 			} else {
 				uavRouting = new UAONRouting(air, interUAVProb);
-				
 				((UAONRouting)uavRouting).setEncounterHistoryExchange(op.getParamBoolean("encounterHistoryExchange"));
 			}
 			
@@ -151,14 +153,23 @@ public class Simulator {
 				interRouting = new Probabilistic(air, internodeUAVProb);
 			}
 			
-			Lib.p("CHARGING LOCAS");
-			numberOfChargingLocations=10;
-			chargingLocations=new PointP[numberOfChargingLocations];
-			for(int i=0;i<numberOfChargingLocations;i++) {
-				chargingLocations[i]=data.getRandomScreenLocation();
-				Lib.p(chargingLocations[i]);
+			if(chargeOn) {
+				batteryLife=op.getParamInt("batteryLife");
+				numberOfChargingLocations=op.getParamInt("NumberOfChargingLocations");
+				if(numberOfChargingLocations==-1) {
+					String locationNames=op.getParamString("chargingLocationsFile");
+					chargingLocations=readLocations(locationNames);
+				}else {
+					chargingLocations=new PointP[numberOfChargingLocations];
+					for(int i=0;i<numberOfChargingLocations;i++) {
+						chargingLocations[i]=data.getRandomScreenLocation();
+					}
+				}
+				
+				
+				
 			}
-		
+			
 		}else {//no UAV exists
 			uavRouting=new Probabilistic(air,0);
 			interRouting=new Probabilistic(air,0);
@@ -258,56 +269,19 @@ public class Simulator {
 					System.exit(-1);
 				}
 					
-				setSpiralParameters(op.getParamInt("SpiralA"),op.getParamDouble("MaxSpiralRadius"));
+				setSpiralParameters(op.getParamInt("SpiralA"),-1);
 				
 				s = new Shapes.Special(spiralAconverted, maxSpiralRadius, 
 						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("TourLimit"));
 				clusterparam = new ClusterParam(clustertech, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
-			} else if (shapeUAV.toLowerCase().equals("linecluster")) {
-				numberofClusters = op.getParamInt("numberOfClusters");
-				clusterRadiusCoefficient = op.getParamInt("RadiusCoefficient");
-
-				aRect = op.getParamInt("RectangleWidth");
-				bRect = op.getParamInt("RectangleHeight");
-				double aRectconverted = data.RealToVirtualDistance(aRect);
-				double bRectconverted = data.RealToVirtualDistance(bRect);
-
-				clusterTechique = op.getParamString("ClusterTechnique");
-				if ((aRect <= 0) || (bRect <= 0)) {
-					Lib.p("aRect or bRect should be greater than 0");
-					System.exit(-1);
-				}
-
-				if (clusterTechique.toLowerCase().equals("dbscan")) {
-					clustertech = ClusterTechnique.DBSCAN;
-					maxDistanceForDBSCAN=op.getParamDouble("MaxDistanceForDBSCAN");
-					maxDistanceForDBSCAN=data.RealToVirtualDistance(maxDistanceForDBSCAN);
-					
-				} else if (clusterTechique.toLowerCase().equals("kmeans")) {
-					clustertech = ClusterTechnique.KMEANS;
-				} else {
-					Lib.p("Undefined Cluster technique at config file");
-					System.exit(-1);
-				}
-				
-				
-				setSpiralParameters(Integer.MIN_VALUE,Double.MIN_VALUE);//maximum spiral radius set very small
-				
-				clusterparam = new ClusterParam(clustertech, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
-				//setting maximum spiral radius as 1 (as small as possible) to create line effect
-				s = new Shapes.ClusterLine(spiralAconverted, maxSpiralRadius, 
-						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("LimitCountForCluster"));
-
-			}else {
+			} else {
 				Lib.p("Unknown Shape at config file");
 				System.exit(-1);
 			}
 			encounterTimeLimit = op.getParamInt("EncounterTimeLimit");//in terms of seconds
 
-			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,chargeOn);
-			if(chargeOn) {
-				u.setChargingLocations(chargingLocations);
-			}
+			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,chargingLocations,batteryLife);
+			
 			
 			/*
 			for(int b=0;b<chargingLocations.length;b++) {
@@ -443,6 +417,35 @@ public class Simulator {
 		return null;
 	}
 	
+	//reads the locations from the specified file name and returns the array of Locations
+	public static PointP[] readLocations(String locsF) {
+		ArrayList<PointP> locs=new ArrayList<PointP>();
+		BufferedReader br;
+		String line;
+		int cnt=0;
+		try {
+			br=new BufferedReader(new FileReader(locsF));
+			while((line=br.readLine())!=null) {
+				String[] art=line.split("\t");
+				double xloc = Double.parseDouble(art[0]);
+				double yloc = Double.parseDouble(art[1]);
+				locs.add(new PointP(xloc,yloc));
+				cnt++;
+			}			
+			br.close();
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		PointP[] res=new PointP[cnt];
+		for(int i=0;i<cnt;i++) {
+			res[i]=new PointP(locs.get(i));
+		}
+		locs.clear();
+		locs=null;
+		
+		return res;
+	}
 	
 	/*
 	 * 
@@ -480,7 +483,7 @@ public class Simulator {
 
 	public String toString(){
 		//text+="_gx_"+GridXDistance+"_gy_"+GridYDistance;
-		String text=getSimulationName()+"_"+dataFolder;
+		String text=getSimulationName();//+"_"+dataFolder;
 		/*
 		if(shapeUAV.equals("Spiral")|| shapeUAV.equals("spiral")){
 			text+="_spiralR_"+spiralRadiusInitial;

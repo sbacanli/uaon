@@ -32,31 +32,39 @@ public class Uav extends Positionable{
 	private int numberOfClusters;
 	private String shapename;
 	private double maxDistanceForDBSCAN;
-	private PointP[] chargingLocations;
+	private PointP[] chargingLocations;//Screen coordinates!
 	private int battery;
+	public boolean chargeRouted;
+	private int batteryLife;
 	
 	Uav(int uid, Shape sg, double speedreal, int altitudegiven, 
-			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam,boolean charge){
+			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam,PointP[] chargingLocationsGiven,int batteryLife){
 		super(uid,givendata);
 		setRealSpeed(speedreal);
 		setScreenSpeed(givendata.RealToVirtualDistance(speedreal));
 		this.rn=rn;
 		s=sg;
-		PointP initialPoint=s.initialPoint();
-		initialX=initialPoint.getX();
-		initialY=initialPoint.getY();
 		shapename = shapeName;
-		//adding initial screen position
-		Position posGen=getData().getPositionWithScreen(initialX, initialY);
-		posGen.setTime(getData().getMinTime());
-		setCurrentPosition(posGen);
-		ArrayList<Position> p1=new ArrayList<Position>();
-		p1.add(posGen);
-		addPathsWithPositions(p1,getData(),LocationType.SCREEN);
+		chargeRouted=false;
+		
+		PointP initialPoint=s.initialPoint();
+		addInitialScreenPoint(initialPoint);
 		
 		setPreviousPosition(null);
 		
 		//after the first position the positions will be consumed and reroute will be run
+		
+		
+		chargingLocations=chargingLocationsGiven;
+		//if charging enabled, the first location is the first charging station
+		if(chargingLocationsGiven!=null) {
+			this.batteryLife=batteryLife;
+			chargeBattery();
+			initialPoint=chargingLocations[0];
+		}else {
+			battery=-1;
+			chargingLocations=null;
+		}
 		
 		xnum=0;
 		ynum=0;
@@ -77,13 +85,9 @@ public class Uav extends Positionable{
 		clusterTechnique = cparam.getTechnique();
 		numberOfClusters = cparam.getNumberOfClusters();
 		maxDistanceForDBSCAN=cparam.getMaxDistance();
-		if(charge) {
-			chargeBattery();
-		}else {
-			battery=-1;
-			chargingLocations=null;
-		}
+		
 	}
+	
 	
 	public void setShape(Shape sg){
 		s=sg;
@@ -112,31 +116,88 @@ public class Uav extends Positionable{
 	
 	public void batteryConsume() {
 		if(battery!=-1) {
-			battery--;
+			if(battery==0) {
+				Lib.p("Battery Empty at UAV.java!!!!!!");
+				Lib.p("is empty "+isBatteryEmpty()+" UAV waiting "+isWaiting());
+				System.exit(-1);
+			}else {
+				battery--;
+			}
 		}
-		
+	}
+	
+	public int getBattery() {
+		return battery;
 	}
 	
 	public void chargeBattery() {
 		if(battery!=-1)
-			battery=45*60;
+			battery=batteryLife;
 	}
 	
 	public boolean isBatteryEmpty() {
 		if(battery==-1) {//there is no battery, no charging,battery never drains
 			return false;
 		}
-		return battery==0;
+		return battery<=0;
 	}
 	
-	public boolean isOnAChargingPos(long ttime) {
-		Position p1=getCurrentPositionWithTime(ttime);
+	public boolean isCharging() {
+		//if chargeon option is off it will return false
+		if(getBattery()!=-1 && isWaiting() && isOnAChargingPos()) {
+			return true;
+		}
+		return false;
+	}
+	
+	//number of seconds left for the UAV to fly using its battery.
+	public int remainingFlightTime() {
+		return (int)(Math.floor(battery));
+	}
+	
+	public boolean isOnAChargingPos() {
+		Position p1=getCurrentPosition();
 		for(int i=0;i<chargingLocations.length;i++) {
-			if(p1.getScreenPoint().equals(chargingLocations[i])){
+			double screendist=Lib.screenDistance(p1.getScreenPoint(), chargingLocations[i]);
+			if(getData().VirtualToRealDistance(screendist)<1.0d) {
 				return true;
 			}
 		}
 		return false;
+	}
+	
+	public PointP getClosestChargingLocation() {
+		Position p1=getCurrentPosition();
+		int i=0;
+		double mindist=Lib.screenDistance(chargingLocations[i].getX(),chargingLocations[i].getY(),p1.screenp.getX(),p1.screenp.getY());
+		int chargingLoc=0;
+		
+		for(i=1;i<chargingLocations.length;i++) {
+			double distanceCharging=Lib.screenDistance(chargingLocations[i].getX(),chargingLocations[i].getY(),p1.screenp.getX(),p1.screenp.getY());
+			
+			if(distanceCharging < mindist){
+				mindist=distanceCharging;
+				chargingLoc=i;
+			}
+		}
+		return chargingLocations[chargingLoc];
+	}
+	
+	public int getFarthestChargingLocation() {
+		Position p1=getCurrentPosition();
+		int i=0;
+		double maxdist=Lib.screenDistance(chargingLocations[i].getX(),chargingLocations[i].getY(),p1.screenp.getX(),p1.screenp.getY());
+		int chargingLoc=0;
+		
+		for(i=1;i<chargingLocations.length;i++) {
+			double distanceCharging=Lib.screenDistance(chargingLocations[i].getX(),chargingLocations[i].getY(),p1.screenp.getX(),p1.screenp.getY());
+			
+			if(distanceCharging > maxdist){
+				maxdist=distanceCharging;
+				chargingLoc=i;
+			}
+		}
+		return chargingLoc;
 	}
 
 	public PointP[] getChargingLocations() {
@@ -146,18 +207,51 @@ public class Uav extends Positionable{
 	public void setChargingLocations(PointP[] clocations) {
 		chargingLocations=clocations;
 	}
-	
 	/*
-	 * This method is for making the UAV wait in the current location for seconds at the giventime
-	 * @param seconds number of seconds to wait in the current location
-	 * @param giventime at the given time
+	 * routing through the charging location if close to the chargingLocation
+	 * @param ChargingLocation as screen PointP
 	 */
-	public void wait(int seconds,long time) {
-		ArrayList<PointP> waitarr=new ArrayList<PointP>(seconds);
-		for(int i=0;i<seconds;i++) {
-			waitarr.add(getCurrentPositionWithTime(time).screenp);
+	public void goToCharging(PointP chargingLocation,long timet) {
+		long secsReach=secondsToReach(chargingLocation);
+		int remFlight=remainingFlightTime();
+		if(!chargeRouted && secsReach< remFlight &&  remFlight-secsReach<5 ) {
+			chargeRouted=true;
+			//Lib.p("SECONDS TO REACH "+secsReach+" REM FLIGHT "+remFlight);
+			//Lib.p("************************");
+			//Lib.p("Route charging Location "+chargingLocation+" inside at time "+timet);
+			//writePositions();
+			//Lib.p("************************");
+			//Lib.p("Before Clear");
+			//Lib.p("Distance "+getData().VirtualToRealDistance(  (int)(Lib.screenDistance(chargingLocation, getCurrentPosition().screenp))  ) );
+			clearPositionsExceptCurrent();
+			ArrayList<PointP> arrpos=new ArrayList<PointP>();
+			arrpos.add(chargingLocation);
+			addPathsWithPoints(arrpos,getData(),LocationType.SCREEN);
+			wait(30);
+			//Lib.p("Positions written now: ************************************");
+			//writePositions();
+			//Lib.p("*********************************************************\nDistance "+getData().VirtualToRealDistance(  (int)(Lib.screenDistance(chargingLocation, getCurrentPosition().screenp))  ) );
+			//Lib.p("seconds to reach "+secondsToReach(chargingLocation)+" realspeed:"+getRealSpeed());
+			//Lib.p("*******************\nAfter adding lcoations");
+			//writePositions(); 
+			//help garbageCollector
+			arrpos.clear();
+			arrpos=null;
 		}
-		addPathsWithPoints(waitarr,getData(),LocationType.SCREEN);
+	}
+	
+	//return the time to reach at location PointP in terms of seconds
+	public long secondsToReach(PointP location) {
+		Position current=getCurrentPosition();
+		Position destination=getData().getPositionWithScreen(location.getX(), location.getY());
+		double distance=getData().getDistanceBetweenRealPositions(current, destination);
+		double realtime=distance/getRealSpeed();
+		if(realtime<0) {
+			Lib.p("Problem in secondsToReach method at UAV.java");
+			return 0;
+		}
+		//Lib.p("seconds to Reach in method "+realtime);
+		return (long)(Math.ceil(realtime))+1;
 	}
 	
 	/**given screen positions, path will be generated according to the shape
@@ -169,7 +263,7 @@ public class Uav extends Positionable{
 		//initial X and Y coordinate on the screen
 		//writePositions();
 		if(positionsLength()==0) {
-			Lib.p("positions are empty interestingly.fillpath");
+			Lib.p("positions are empty interestingly. Check where do you call fillPath!");
 		}
 		ArrayList<PointP> arr=null;
 		s.setRandomRadius();

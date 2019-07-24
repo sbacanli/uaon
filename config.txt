@@ -34,7 +34,10 @@ GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
 Visible:yes
+
 chargeOn:yes
+batteryLife:300
+NumberOfChargingLocations:2
 
 Shape:spiral
 SpiralA:200

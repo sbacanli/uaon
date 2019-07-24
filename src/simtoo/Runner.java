@@ -62,7 +62,7 @@ public class Runner {
 			j.addWindowListener(new WindowAdapter() {
 				  public void windowClosing(WindowEvent we) {
 					  j.dispose();
-					  Lib.p("DONE");
+					  //Lib.p("DONE");
 					  System.exit(0);
 				  }
 			});
