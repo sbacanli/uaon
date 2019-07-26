@@ -33,6 +33,7 @@ public class Options {
 		}catch(Exception e){
 			Lib.p("Problem in reading config file "+conf+" "+e.getMessage());
 			e.printStackTrace();
+			System.exit(-1);
 			
 		}
 	}
