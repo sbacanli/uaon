@@ -8,6 +8,8 @@ import Shapes.*;
 import grider.Grider;
 
 import java.util.ArrayList;
+import java.util.Random;
+
 import routing.*;
 
 public class Uav extends Positionable{
@@ -48,7 +50,7 @@ public class Uav extends Positionable{
 		chargeRouted=false;
 		
 		PointP initialPoint=s.initialPoint();
-		addInitialScreenPoint(initialPoint);
+		
 		
 		setPreviousPosition(null);
 		
@@ -60,12 +62,15 @@ public class Uav extends Positionable{
 		if(chargingLocationsGiven!=null) {
 			this.batteryLife=batteryLife;
 			chargeBattery();
-			initialPoint=chargingLocations[0];
+			Random r=new Random();
+			int randompos=r.nextInt(chargingLocations.length);
+			initialPoint=chargingLocations[randompos];
 		}else {
 			battery=-1;
 			chargingLocations=null;
 		}
 		
+		addInitialScreenPoint(initialPoint);
 		xnum=0;
 		ynum=0;
 		prevEnc=new ArrayList<Encounter>();
@@ -504,11 +509,13 @@ public class Uav extends Positionable{
 					newx = tempp.getX();
 					newy = tempp.getY();
 					fillPath(newx, newy);
+					Lib.p("Cluster Empty");
 				} else {
 					int sizeResult=clusterResult.size();
 					if(sizeResult>numberOfClusters) {
 						sizeResult=numberOfClusters;
 					}
+					Lib.p("Number of Clusters "+sizeResult+" XMIN "+xmin+" XMAX "+xmax+" route "+s.getNumberOfTours());
 					for (int j = 0; (j < sizeResult); j++) {
 						s.setMaxRadius(getRadiusOfCluster(clusterResult.get(j).getPointPs()) / radiusCoefficient);
 						fillPath((clusterResult.get(j)).getCentroid().getX(), ((Cluster)clusterResult.get(j)).getCentroid().getY());
@@ -653,6 +660,7 @@ public class Uav extends Positionable{
 				//position
 				//Lib.p("dequeed for time "+giventime);
 				//Lib.p("Reroute needed "+giventime);
+				//Lib.p("RErouted");
 				reRoute(giventime);
 				
 				//now we need to remove the first

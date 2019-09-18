@@ -56,10 +56,11 @@ public class Simulator {
 	private int numberofClusters;
 	private double maxDistanceForDBSCAN;
 	private boolean chargeOn;
-	private PointP[] chargingLocations;
+	private PointP[] screenChargingLocations;
 	private int numberOfChargingLocations;
 	private double spiralAconverted;
 	private int batteryLife=-1;
+	private String chargingLocationNames;
 
 
 	public Simulator(Options op,Datas datagiven)
@@ -99,10 +100,12 @@ public class Simulator {
 
 		ArrayList<File> datafiles = null;
 		if (!isRandomMobility) {
-			dataFolder = op.getParamString("dataFolder");
-			foldername = (System.getProperty("user.dir") + seperator + "datasets" + seperator + dataFolder + seperator + "processedData");
+			
+			foldername = op.getParamString("dataFolder");
+			
+			//foldername = (System.getProperty("user.dir") + seperator + "datasets" + seperator + dataFolder + seperator + "processedData");
 			datafiles = data.getDataFiles(foldername);
-
+			
 			if (numberOfNodes == -1) {
 				numberOfNodes = datafiles.size();
 			}
@@ -118,6 +121,8 @@ public class Simulator {
 		}
 		data.calculateAreaRatio();
 		data.setMaxTime(maxTime);
+		height = data.getHeight();
+		width = data.getWidth();
 
 		COMMDISTANCE = data.RealToVirtualDistance(realDistance);
 
@@ -157,17 +162,19 @@ public class Simulator {
 				batteryLife=op.getParamInt("batteryLife");
 				numberOfChargingLocations=op.getParamInt("NumberOfChargingLocations");
 				if(numberOfChargingLocations==-1) {
-					String locationNames=op.getParamString("chargingLocationsFile");
-					chargingLocations=readLocations(locationNames);
-				}else {
-					chargingLocations=new PointP[numberOfChargingLocations];
-					for(int i=0;i<numberOfChargingLocations;i++) {
-						chargingLocations[i]=data.getRandomScreenLocation();
+					chargingLocationNames=op.getParamString("chargingLocationsFile");
+					PointP[] realChargingLocations=readLocations(chargingLocationNames);
+					screenChargingLocations=new PointP[realChargingLocations.length];
+					
+					for(int iloc=0;iloc<screenChargingLocations.length;iloc++) {
+						screenChargingLocations[iloc]=new PointP( data.convertToScreenX(realChargingLocations[iloc].getX()), data.convertToScreenY(realChargingLocations[iloc].getY()) );
 					}
-				}
-				
-				
-				
+				}else {
+					screenChargingLocations=new PointP[numberOfChargingLocations];
+					
+					for(int iloc=0;iloc<numberOfChargingLocations;iloc++) {
+						screenChargingLocations[iloc]=data.getRandomScreenLocation();					}
+				}				
 			}
 			
 		}else {//no UAV exists
@@ -189,8 +196,7 @@ public class Simulator {
 		uavs = new ArrayList<Uav>(numberOfUAVs);
 		routingNodeUavs = new ArrayList<RoutingNode>(numberOfUAVs);
 
-		height = data.getHeight();
-		width = data.getWidth();
+		
 
 		for (int i = 1; i <= numberOfNodes; i++) {
 			RoutingNode rn = new RoutingNode(i);
@@ -280,7 +286,8 @@ public class Simulator {
 			}
 			encounterTimeLimit = op.getParamInt("EncounterTimeLimit");//in terms of seconds
 
-			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,chargingLocations,batteryLife);
+			
+			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,screenChargingLocations,batteryLife);
 			
 			
 			/*
@@ -426,9 +433,20 @@ public class Simulator {
 		try {
 			br=new BufferedReader(new FileReader(locsF));
 			while((line=br.readLine())!=null) {
-				String[] art=line.split("\t");
-				double xloc = Double.parseDouble(art[0]);
-				double yloc = Double.parseDouble(art[1]);
+				int p1=line.indexOf(",");
+				String xstr=line.substring(0,p1).trim();
+				String ystr=line.substring(p1+2).trim();
+				
+				int xdot=xstr.indexOf(".");
+				int ydot=ystr.indexOf(".");
+				if(xdot+8 < xstr.length()) {
+					xstr=xstr.substring(0,xdot+8);
+				}
+				if(ydot+8 < ystr.length()) {
+					ystr=ystr.substring(0,ydot+8);
+				}
+				double xloc = Double.parseDouble(xstr);
+				double yloc = Double.parseDouble(ystr);
 				locs.add(new PointP(xloc,yloc));
 				cnt++;
 			}			
@@ -483,7 +501,12 @@ public class Simulator {
 
 	public String toString(){
 		//text+="_gx_"+GridXDistance+"_gy_"+GridYDistance;
-		String text=getSimulationName();//+"_"+dataFolder;
+		String text="";
+		/*if(chargeOn) {
+			text=chargingLocationNames;
+		}
+		*/
+		text=getSimulationName()+text;//+"_"+dataFolder;
 		/*
 		if(shapeUAV.equals("Spiral")|| shapeUAV.equals("spiral")){
 			text+="_spiralR_"+spiralRadiusInitial;

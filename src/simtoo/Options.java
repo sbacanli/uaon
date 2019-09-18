@@ -22,9 +22,9 @@ public class Options {
 		    while ((line = br.readLine()) != null) {
 		    	// // is commenting in the config file
 		    	if(!line.startsWith("//") && line.trim().length()!=0){
-		    		StringTokenizer st=new StringTokenizer(line,":");
-		    		String s1=st.nextToken();
-		    		String s2=st.nextToken();
+		    		int p1=line.indexOf(':');
+		    		String s1=line.substring(0, p1);
+		    		String s2=line.substring(p1+1);
 		    		hm.put(s1, s2);
 		    	}
 		    	// lines starting with // are comment lines and they are ignored

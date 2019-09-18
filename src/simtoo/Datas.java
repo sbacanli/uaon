@@ -185,6 +185,7 @@ public class Datas {
 	}	
 	//*/
 	
+	//for debugging purposes
 	public String FindData(String folderName,String searched){
 		File f=new File(folderName);
 		File[] files=f.listFiles();

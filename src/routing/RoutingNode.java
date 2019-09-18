@@ -1,12 +1,9 @@
 package routing;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import simtoo.Lib;
 import simtoo.Position;
 
@@ -115,18 +112,6 @@ public class RoutingNode
 	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 	boolean addMessageToBuffer(Message message, String time)
 	{
 		if (searchBufferMessageId(message.getId()) == -1) {
@@ -139,17 +124,9 @@ public class RoutingNode
 					}
 				}
 
-
+				//after attempt to delete old messages, if it is still full
 				if (isBufferFull())
 				{
-
-
-
-
-
-
-
-
 					Reporter.bufferFull(getId(), time);
 					String policy = getMemPolicy();
 					if (policy.equals("lrr"))
@@ -158,13 +135,6 @@ public class RoutingNode
 						}
 				}
 			}
-
-
-
-
-
-
-
 			messageBuffer.add(message);
 		}
 
@@ -291,6 +261,12 @@ public class RoutingNode
 		return all;
 	}
 
+	/*
+	 * This methods checks the buffer for the messageId specified and sends that message to air with tts value
+	 * @param Air a, messageId
+	 * 
+	 * @return The message is in the air or disappeared in the air.
+	 */
 	public void sendMessageFromBufferDiffTTS(Air a, int messageId, int receiverId, String time, int tts)
 	{
 		Message found = getMessageFromBuffer(messageId);

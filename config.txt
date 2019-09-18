@@ -1,9 +1,9 @@
-SimulationName:Random
+SimulationName:KMEANS5
 //yes or no for Random Mobility
 //parameter for maximum distance is 2000
 randomMobility:no
 
-dataFolder:NCSU
+dataFolder:C:\\Users\\Kara\\Desktop\\SimRunner\\datasets\\NCSU\\processedData
 LocationType:RELATIVE
 
 interUavsProbability:1.0
@@ -13,7 +13,7 @@ interProbability:1.0
 CommDistance:250
 Altitude:100
 numberOfNodes:-1
-numberOfUAVs:1
+numberOfUAVs:10
 
 //3 hours as message life : 10800
 MessageLifeInSeconds:10800
@@ -21,7 +21,7 @@ MessageLifeInSeconds:10800
 EncounterTimeLimit:1800
 //with every rerouting encounters less than 1200 seconds old will be deleted
 //-1 will delete all encounters
-SpeedOfUAVs:33
+SpeedOfUAVs:10
 //cruising speed of Bayraktar UAV
 //messages will be created in every X seconds
 MessageTimesForUAVs:0
@@ -33,11 +33,12 @@ MessageErrorTimesForNodes:60
 GridXDistance:2000
 //The base will be partitioned to grids which have height YDistance
 GridYDistance:2000
-Visible:yes
+Visible:no
 
 chargeOn:yes
-batteryLife:300
-NumberOfChargingLocations:2
+batteryLife:2700
+NumberOfChargingLocations:-1
+chargingLocationsFile:KMEANS5_300.txt
 
 Shape:spiral
 SpiralA:200
@@ -50,3 +51,5 @@ ProjectionTimeLimit:300
 //for large files this should be small as the simulator makes projection automatically.
 NumberOfDataLines:100
 MaxSimulationTime:-1
+
+//batteryLife is 45 minutes or 2700 seconds

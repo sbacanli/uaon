@@ -107,7 +107,6 @@ public class Message {
 		return hopCount;
 	}
 	
-	
 	/**
 	 * The time when the message will be expired
 	 * @return expirationTime as String
@@ -156,7 +155,9 @@ public class Message {
 	//returns true if it decreased which means the message can be sent
 	// if this returns false it means message can not be sent.
 	public void decRemaining(){
-		if(isTTSEnabled()){
+		//only the messages who are created the node itself will get TTS decreased 
+		//this is for sprayAndWait fix.
+		if(isTTSEnabled() && getSender()==getReceiver()){
 			if(getRemaining()>0){
 				remaining--;
 			}else{
@@ -174,8 +175,8 @@ public class Message {
 		if(!isExpired(timegiven)){
 			if(isTTSEnabled()){
 				if(getRemaining()>0){
-					return true;
-				}
+						return true;
+				}				
 			}else{
 				//not expired and tts is not greater than 0
 				//which means tts is disabled
