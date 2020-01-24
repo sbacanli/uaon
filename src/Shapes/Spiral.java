@@ -68,20 +68,25 @@ public class Spiral extends Shape{
 		if(randomGenerate) {
 			maxradius=r.nextInt((int)minOf)+1;
 		}
-		for(double y=degree;p!=null;y=y+degree){
-			p=equation(y,xstart,ystart);
-			if(p!=null) {
-				double distan=distance(p.getX(),p.getY(),xstart,ystart);
-				if (maxradius==-2 || distan<maxradius) {
-					addPoint(p.getX(),p.getY());
+		if(maxradius==0) {
+			addPoint(xstart,ystart);
+		}else {
+			for(double y=degree;p!=null;y=y+degree){
+				p=equation(y,xstart,ystart);
+				if(p!=null) {
+					double distan=distance(p.getX(),p.getY(),xstart,ystart);
+					if (maxradius==-2 || distan<maxradius) {
+						addPoint(p.getX(),p.getY());
+					}else {
+						//Lib.p("maxradius " +maxradius+" distance "+distan+" degree "+degree+" y "+y);
+						break;
+					}			
 				}else {
-					//Lib.p("maxradius " +maxradius+" distance "+distan+" degree "+degree+" y "+y);
-					break;
-				}			
-			}else {
-				//Lib.p("It is null at spiral " +xstart+" "+ystart+" "+y);
-			}//end of if p null check
-		}//end of for
+					//Lib.p("It is null at spiral " +xstart+" "+ystart+" "+y);
+				}//end of if p null check
+			}//end of for
+		}
+
 		
 		//*
 		if(getPoints().size()==0) {

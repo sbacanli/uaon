@@ -40,13 +40,16 @@ public class Uav extends Positionable{
 	private int batteryLife;
 	
 	Uav(int uid, Shape sg, double speedreal, int altitudegiven, 
-			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam,PointP[] chargingLocationsGiven,int batteryLife){
+			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam,
+			PointP[] chargingLocationsGiven,boolean oneperchargingLocation,int batteryLife){
 		super(uid,givendata);
 		setRealSpeed(speedreal);
 		setScreenSpeed(givendata.RealToVirtualDistance(speedreal));
 		this.rn=rn;
 		s=sg;
 		shapename = shapeName;
+		//It has enough battery to cruise around. NO need to chargeRouted
+		// If it is set to true, it will move to closest charging location
 		chargeRouted=false;
 		
 		PointP initialPoint=s.initialPoint();
@@ -63,8 +66,11 @@ public class Uav extends Positionable{
 			this.batteryLife=batteryLife;
 			chargeBattery();
 			Random r=new Random();
-			int randompos=r.nextInt(chargingLocations.length);
-			initialPoint=chargingLocations[randompos];
+			//The charging stations are shuffled every time so here we don't need to randomize again.
+			//If more UAVs then the charging stations now we have at least one in every station and it is random
+			//this is not possible for now but I am adding this check
+			int desiredPosition=((uid*-1)-1)%chargingLocations.length;
+			initialPoint=chargingLocations[desiredPosition];
 		}else {
 			battery=-1;
 			chargingLocations=null;
@@ -509,13 +515,13 @@ public class Uav extends Positionable{
 					newx = tempp.getX();
 					newy = tempp.getY();
 					fillPath(newx, newy);
-					Lib.p("Cluster Empty");
+					//Lib.p("Cluster Empty");
 				} else {
 					int sizeResult=clusterResult.size();
 					if(sizeResult>numberOfClusters) {
 						sizeResult=numberOfClusters;
 					}
-					Lib.p("Number of Clusters "+sizeResult+" XMIN "+xmin+" XMAX "+xmax+" route "+s.getNumberOfTours());
+					//Lib.p("Number of Clusters "+sizeResult+" XMIN "+xmin+" XMAX "+xmax+" route "+s.getNumberOfTours());
 					for (int j = 0; (j < sizeResult); j++) {
 						s.setMaxRadius(getRadiusOfCluster(clusterResult.get(j).getPointPs()) / radiusCoefficient);
 						fillPath((clusterResult.get(j)).getCentroid().getX(), ((Cluster)clusterResult.get(j)).getCentroid().getY());

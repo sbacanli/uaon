@@ -185,6 +185,16 @@ public class Datas {
 	}	
 	//*/
 	
+	public static String filePath(String fp) {
+		if(fp.contains("\\")){
+			return fp.replace("\\",File.separatorChar+"");
+		}else if (fp.contains("/")){
+			return fp.replace("/",File.separatorChar+"");
+		}else {
+			return (System.getProperty("user.dir")) + File.separatorChar + fp;
+		}
+	}
+	
 	//for debugging purposes
 	public String FindData(String folderName,String searched){
 		File f=new File(folderName);

@@ -1,5 +1,6 @@
 package Shapes;
 
+import simtoo.PointP;
 
 public class Line extends Shape {
 
@@ -34,6 +35,12 @@ public class Line extends Shape {
 		clearPositions();
 		addPoint(xpos, ypos);
 		
+	}
+
+	@Override
+	public PointP initialPoint() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

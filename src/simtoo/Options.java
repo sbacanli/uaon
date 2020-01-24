@@ -22,6 +22,9 @@ public class Options {
 		    while ((line = br.readLine()) != null) {
 		    	// // is commenting in the config file
 		    	if(!line.startsWith("//") && line.trim().length()!=0){
+		    		//the first occurence of the semicolon is the option preference.
+		    		//the remainin charactes are all the option
+		    		//this is necessary to define a web page or local path like c:\ etc..
 		    		int p1=line.indexOf(':');
 		    		String s1=line.substring(0, p1);
 		    		String s2=line.substring(p1+1);
@@ -54,6 +57,7 @@ public class Options {
     	}
     	
     	if(hm.get(s) !=null){
+    		s=s.trim();
     		return Double.parseDouble(hm.get(s));
     	}
     	Lib.p("ERROR: config file empty for call getParamDouble in class Options for option "+s);
@@ -67,6 +71,7 @@ public class Options {
     	}
     	
     	if(hm.get(s) !=null){
+    		s=s.trim();
     		return Integer.parseInt(hm.get(s));
     	}
     	//made this number specifically like that  so that it will be easy to debug. just search the number.
@@ -75,12 +80,14 @@ public class Options {
     }
     
     public long getParamLong(String s){
+    	
     	if(hm.isEmpty()){
     		Lib.p("ERROR: config file empty ");
     		return -999;
     	}
     	
     	if(hm.get(s) !=null){
+    		s=s.trim();
     		return Long.parseLong(hm.get(s));
     	}
     	Lib.p("ERROR: config file empty for call getParamLong in class Options for option "+s);
@@ -94,6 +101,7 @@ public class Options {
     	}
     	
     	if(hm.get(s) !=null){
+    		s=s.trim();
     		return hm.get(s).equalsIgnoreCase("yes");
     	}
 
@@ -108,6 +116,7 @@ public class Options {
     	}
     	
     	if(hm.get(s) !=null){
+    		s=s.trim();
     		return hm.get(s);
     	}
 

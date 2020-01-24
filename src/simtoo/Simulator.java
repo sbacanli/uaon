@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Random;
 
 import Shapes.*;
 import routing.*;
@@ -37,7 +38,6 @@ public class Simulator {
 	private int messageTimesForUAVs;
 	private int messageErrorTimesForNodes;
 	private int messageErrorTimesForUAVs;
-	//private int GridXDistance,GridYDistance;
 	private boolean isVisible;
 	private String shapeUAV;
 	private int aRect;
@@ -61,6 +61,7 @@ public class Simulator {
 	private double spiralAconverted;
 	private int batteryLife=-1;
 	private String chargingLocationNames;
+	private boolean onepercharger=false;
 
 
 	public Simulator(Options op,Datas datagiven)
@@ -70,8 +71,6 @@ public class Simulator {
 		air = new Air();
 
 		numberOfNodes = op.getParamInt("numberOfNodes");
-
-		char seperator = File.separatorChar;
 
 		String loctypestr = op.getParamString("LocationType");
 		if (loctypestr.equals("SCREEN")) {
@@ -102,9 +101,9 @@ public class Simulator {
 		if (!isRandomMobility) {
 			
 			foldername = op.getParamString("dataFolder");
-			
-			//foldername = (System.getProperty("user.dir") + seperator + "datasets" + seperator + dataFolder + seperator + "processedData");
-			datafiles = data.getDataFiles(foldername);
+			String processedFolderName=Datas.filePath(foldername);
+			//foldername = (System.getProperty("user.dir") + separator + "datasets" + separator + dataFolder + separator + "processedData");
+			datafiles = data.getDataFiles(processedFolderName);
 			
 			if (numberOfNodes == -1) {
 				numberOfNodes = datafiles.size();
@@ -135,7 +134,7 @@ public class Simulator {
 			nodeRouting = new Probabilistic(air, internodesprob);
 		}
 		
-		if (numberOfUAVs > 0) {
+		if (numberOfUAVs != 0) {
 			messageTimesForUAVs = op.getParamInt("MessageTimesForUAVs");
 			messageErrorTimesForUAVs = op.getParamInt("MessageErrorTimesForUAVs");
 			altitude = op.getParamInt("Altitude");
@@ -169,12 +168,31 @@ public class Simulator {
 					for(int iloc=0;iloc<screenChargingLocations.length;iloc++) {
 						screenChargingLocations[iloc]=new PointP( data.convertToScreenX(realChargingLocations[iloc].getX()), data.convertToScreenY(realChargingLocations[iloc].getY()) );
 					}
+					Random rit=new Random();
+					//shuffle the screen Charging locations
+					int numIterations=screenChargingLocations.length;
+					for(int b=0;b<numIterations;b++) {
+						int swapPos=rit.nextInt(numIterations);
+						PointP tempP=null;
+						//swap positions
+						tempP=screenChargingLocations[b];
+						screenChargingLocations[b]=screenChargingLocations[swapPos];
+						screenChargingLocations[swapPos]=tempP;
+					}
+					
 				}else {
 					screenChargingLocations=new PointP[numberOfChargingLocations];
 					
 					for(int iloc=0;iloc<numberOfChargingLocations;iloc++) {
 						screenChargingLocations[iloc]=data.getRandomScreenLocation();					}
-				}				
+				}
+				//numberofUAv can be given as -1 if and only if chargeOn is yes
+				if(numberOfUAVs==-1) {
+					numberOfUAVs=numberOfChargingLocations;
+				}
+				
+				
+				
 			}
 			
 		}else {//no UAV exists
@@ -184,10 +202,6 @@ public class Simulator {
 		
 		messageTimesForNodes = op.getParamInt("MessageTimesForNodes");
 		messageErrorTimesForNodes = op.getParamInt("MessageErrorTimesForNodes");
-		
-
-		//GridXDistance = op.getParamInt("GridXDistance");
-		//GridYDistance = op.getParamInt("GridYDistance");
 
 		shapeUAV = op.getParamString("Shape");
 
@@ -221,6 +235,7 @@ public class Simulator {
 		ClusterParam clusterparam = null;
 		ClusterTechnique clustertech = null;
 
+		//boolean isStartUAV=false;
 		for (int i = 1; i <= numberOfUAVs; i++) {
 			
 			Shapes.Shape s = null;
@@ -238,7 +253,7 @@ public class Simulator {
 					Lib.p("aRect or bRect should be greater than 0");
 					System.exit(-1);
 				}
-				if (i % 2 == 1) {
+				if (i % 2 == 0) {
 					s = new Rectangle(true, aRectconverted, bRectconverted, data.getWidth(), data.getHeight());
 				} else {
 					s = new Rectangle(false, aRectconverted, bRectconverted, data.getWidth(), data.getHeight());
@@ -277,8 +292,11 @@ public class Simulator {
 					
 				setSpiralParameters(op.getParamInt("SpiralA"),-1);
 				
-				s = new Shapes.Special(spiralAconverted, maxSpiralRadius, 
+				s = new Special(spiralAconverted, maxSpiralRadius, 
 						aRectconverted, bRectconverted, data.getWidth(), data.getHeight(),op.getParamInt("TourLimit"));
+					((Special)s).setIsStart(i%2==0);
+					//((Special)s).setIsStart(true);
+				
 				clusterparam = new ClusterParam(clustertech, numberofClusters, clusterRadiusCoefficient,maxDistanceForDBSCAN);
 			} else {
 				Lib.p("Unknown Shape at config file");
@@ -287,7 +305,7 @@ public class Simulator {
 			encounterTimeLimit = op.getParamInt("EncounterTimeLimit");//in terms of seconds
 
 			
-			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,screenChargingLocations,batteryLife);
+			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,screenChargingLocations,onepercharger,batteryLife);
 			
 			
 			/*
@@ -295,7 +313,6 @@ public class Simulator {
 				Lib.p(chargingLocations[b]);
 			}
 			*/
-			//u.setGriderParams(GridXDistance, GridYDistance);
 			/*
 			if(isCharging) {
 				
@@ -303,7 +320,7 @@ public class Simulator {
 			*/
 			uavs.add(u);
 			
-		}
+		}//end of UAVs for
 		
 
 		routing.Reporter.init(toString());
@@ -500,7 +517,6 @@ public class Simulator {
 	}
 
 	public String toString(){
-		//text+="_gx_"+GridXDistance+"_gy_"+GridYDistance;
 		String text="";
 		/*if(chargeOn) {
 			text=chargingLocationNames;
@@ -514,9 +530,6 @@ public class Simulator {
 			text+="_arect_"+aRect+"_brect_"+bRect;
 		}else{
 
-		}
-		if(randomGrid){
-			text+="_Random";
 		}
 		 */
 		return text;

@@ -1,7 +1,10 @@
 package Shapes;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 
+import simtoo.Lib;
 import simtoo.PointP;
 
 enum ShapeType{
@@ -41,7 +44,6 @@ public abstract class Shape
 		return maxRadius;
 	}
 
-
 	public int getNumberOfTours()
 	{
 		return numberOfTours;
@@ -51,7 +53,7 @@ public abstract class Shape
 		numberOfTours += 1;
 	}
 
-	public ArrayList<simtoo.PointP> getPoints() {
+	public ArrayList<PointP> getPoints() {
 		return arr;
 	}
 
@@ -67,44 +69,39 @@ public abstract class Shape
 		arr.add(new simtoo.PointP(x, y));
 	}
 
-	public void addPoint(simtoo.PointP p) {
-		arr.add(p); 
+	public void addPoint(PointP p) {
+		if(p==null) {
+			System.out.println("******************ERROR*****************************");
+			System.out.println("******************ERROR*****************************");
+			System.out.println("******************ERROR*****************************");
+			System.out.println("p is null at Shape.java at addPoint(PointP p) method!");
+			Exception e=new NullPointerException();
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			Lib.p(sw.toString());
+			System.exit(-1);
+		}else {
+			arr.add(p);
+		}		 
 	}
-
-
-
 
 	public abstract void fill(double paramDouble1, double paramDouble2);
 
-
-
-
 	public abstract void fill();
-
-
-
 
 	public abstract void updateSuccess();
 
-
-
 	public abstract void updateFail();
-
-
 
 	public abstract void updateFail(double paramDouble);
 
-
-
-	public simtoo.PointP initialPoint()
-	{
-		return null;
-	}
+	public abstract simtoo.PointP initialPoint();
+	//{return null;}
 
 	public final void clearPositions() {
 		arr.clear();
 	}
-
 
 	public void setRandomRadius() {}
 

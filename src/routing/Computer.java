@@ -40,9 +40,16 @@ public class Computer {
 	    Reporter.writeMessagesAddedToBuffers();
 	    Reporter.writeMessagesReceived();
 	    
+	    String allTours="";
 	    for (int h = 0; h < uav.size(); h++) {
-	      Lib.p("Number of tours for UAV" + ((Uav)uav.get(h)).getShape().getNumberOfTours());
+	      Lib.p("Number of tours for UAV " + (h+1) +" is "+uav.get(h).getNumberOfRoutesCompleted());
+	      allTours=allTours+uav.get(h).getNumberOfRoutesCompleted()+"\n";
 	    }
+	    if(allTours.length()==0) {
+	    	allTours="0";
+	    }
+	    
+	    Reporter.writeToFile("UAVTours.txt",allTours);
 	}
 	
 	
