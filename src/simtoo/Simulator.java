@@ -61,7 +61,6 @@ public class Simulator {
 	private double spiralAconverted;
 	private int batteryLife=-1;
 	private String chargingLocationNames;
-	private boolean onepercharger=false;
 
 
 	public Simulator(Options op,Datas datagiven)
@@ -305,7 +304,7 @@ public class Simulator {
 			encounterTimeLimit = op.getParamInt("EncounterTimeLimit");//in terms of seconds
 
 			
-			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,screenChargingLocations,onepercharger,batteryLife);
+			Uav u = new Uav(-1 * i, s, speeduavReal, altitude, data, rn, shapeUAV, encounterTimeLimit, clusterparam,screenChargingLocations,batteryLife);
 			
 			
 			/*

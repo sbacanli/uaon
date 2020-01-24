@@ -41,7 +41,7 @@ public class Uav extends Positionable{
 	
 	Uav(int uid, Shape sg, double speedreal, int altitudegiven, 
 			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam,
-			PointP[] chargingLocationsGiven,boolean oneperchargingLocation,int batteryLife){
+			PointP[] chargingLocationsGiven,int batteryLife){
 		super(uid,givendata);
 		setRealSpeed(speedreal);
 		setScreenSpeed(givendata.RealToVirtualDistance(speedreal));
