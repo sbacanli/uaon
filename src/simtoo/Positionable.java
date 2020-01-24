@@ -114,6 +114,11 @@ public class Positionable {
 		public void addPathsWithPoints(final ArrayList<PointP> path,Datas mydata,LocationType op){
 			for(int i=0;i<path.size();i++){
 				PointP pelement=path.get(i);
+				if(pelement==null) {
+					Lib.p("pelement null at addPathsWithPoints");
+					new NullPointerException().printStackTrace();
+					System.exit(-1);
+				}
 				if(op==LocationType.REAL) {
 					Position p=mydata.getPositionWithReal(pelement.getX(),pelement.getY());		
 					addPathWithSpeed(p, mydata,op);	

@@ -13,7 +13,7 @@ public class Rectangle extends Shape{
 	
 	public Rectangle(boolean isStart,double a,double b,double xlim,double ylim){
 		super(xlim,ylim);
-		this.isStart=false;//isStart;
+		this.isStart=isStart;//true
 		this.a=a;
 		this.b=b;
 		counter=1;
@@ -71,6 +71,10 @@ public class Rectangle extends Shape{
 	public boolean getIsStart() {
 		return isStart;
 	}
+	
+	public void setIsStart(boolean gstart) {
+		isStart=gstart;
+	}
 
 	public void fill(){
 		if(!isPositionsEmpty()) {
@@ -127,12 +131,12 @@ public class Rectangle extends Shape{
 	*/
 	
 	/**
-	 * <p>This is for filling the points from start for route</p>
+	 * <p>This is for filling the points from start for route (starts from left most top corner on the screen)</p>
 	 * @param counter will be used by the caller method should be greater than 1 
 	 * @return the array of points to be added to points(projection should be done)
 	 * @see PointP
 	 */
-	protected PointP[] getPointsFillStart(int counter) {
+	protected PointP[] getPointsFillStart(final int counter) {
 		PointP[] ar2=new PointP[2];
 		if(counter<1) {
 			System.out.println("counter is zero for getpointsfillstart at rectangle");
@@ -156,18 +160,19 @@ public class Rectangle extends Shape{
 			ar2[1]=p2;
 		}
 		if(ar2==null) {
-			System.out.println("AR2  null");
+			System.out.println("AR2 null in Rectangle");
 		}
 		return ar2;		
 	}
 	
 	/**
-	 * <p>This is for filling the points from end for route. Will be necessary for second UAV</p>
+	 * <p>This is for filling the points from end for route. Will be necessary for second UAV
+	 * Starts from right corner and ends in left hand side bottom corner </p>
 	 * @param counter will be used by the caller method should be greater than 1 
 	 * @return the array of points to be added to points(projection should be done)
 	 * @see PointP
 	 */
-	protected PointP[] getPointsFillEnd(int counter) {
+	protected PointP[] getPointsFillEnd(final int counter) {
 		PointP[] ar2=new PointP[2];
 		if(counter<1) {
 			System.out.println("counter is zero for getpointsfillend at rectangle");
