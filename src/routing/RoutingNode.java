@@ -11,7 +11,7 @@ public class RoutingNode
 {
 	private int id;
 	private ArrayList<Message> messageBuffer;
-	private ArrayList<Encounter> contacts;
+	private HashMap<Integer,Encounter> contacts;
 	private ArrayList<Encounter> encounterHistory;
 	private ArrayList<Integer> sents;
 	private int limit;
@@ -33,7 +33,7 @@ public class RoutingNode
 	public RoutingNode(int givenid)
 	{
 		id = givenid;
-		contacts = new ArrayList<Encounter>();
+		contacts = new HashMap<Integer,Encounter>();
 		encounterHistory = new ArrayList<Encounter>();
 		encounterHistoryWithNodes = new ArrayList<Encounter>();
 		ExtendedEncounters = new ArrayList<Encounter>();
@@ -493,62 +493,35 @@ public class RoutingNode
 		return getStringFromMessageVector(v);
 	}
 
-
-
-
-
-
+	/*
+	 * Only one contact can be done with the same receiverId
+	 */
 	public void addContact(int idcon, Position p, long time)
 	{
-		for (int i = 0; i < contacts.size(); i++) {
-			if (((Encounter)contacts.get(i)).getReceiverId() == idcon)
-			{
-
-
-
-
-				return;
-			}
-		}
-
-
 		Encounter e = new Encounter(getId(), idcon, p, time);
-		contacts.add(e);
+		if(contacts.containsKey(idcon)) {
+			Lib.p("This should not happen. They are already in contact");
+			Exception myEx= new Exception();
+			myEx.printStackTrace();
+		}else {
+			contacts.put(idcon, e);
+		}		
 	}
 
 	public void removeContact(int idcon) {
 		if (!contacts.isEmpty()) {
-			for (int i = 0; i < contacts.size(); i++) {
-				if (((Encounter)contacts.get(i)).getReceiverId() == idcon)
-				{
-					contacts.remove(i);
-					return;
-				}
-			}
+			contacts.remove(idcon);
+		}else {
+			Lib.p("This should not happen. the contacts are empty but we are trying to remove it.");
+			Exception myEx= new Exception();
+			myEx.printStackTrace();
 		}
 	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-	public boolean isInContactWith(int idcon)
-	{
-		for (int i = 0; i < contacts.size(); i++) {
-			if (((Encounter)contacts.get(i)).getReceiverId() == idcon)
-			{
-				return true;
-			}
+	public boolean isInContactWith(int idcon){
+		if(!contacts.isEmpty() && contacts.containsKey(idcon)) {
+			return true;
 		}
 		return false;
 	}
@@ -561,19 +534,11 @@ public class RoutingNode
 		contacts.clear();
 	}
 
-
-
-
-
-
-
-
 	public Encounter lastEncounterWith(int nodeId)
 	{
 		Encounter e = null;
 		for (int i = encounterHistory.size() - 1; i > -1; i--) {
 			e = (Encounter)encounterHistory.get(i);
-
 
 			if ((e.getReceiverId() == nodeId) && (!e.isFinished()))
 			{
@@ -604,26 +569,33 @@ public class RoutingNode
 			if ((e.getReceiverId() == nodeId) && (!e.isFinished()))
 			{
 				e.setFinishingTime(time);
-				if (nodeId < 0) {
-					Encounter e1 = null;
+				
+			}
+			
+			//PUT Here
+		}
+		if (nodeId > 0) {
+			//encounter with a node
+			//The routing node that calls this. The caller might be uav or node
+			Encounter e1 = null;
 
-
-					for (int j = 0; j < encounterHistoryWithNodes.size(); j++) {
-						e1 = (Encounter)encounterHistoryWithNodes.get(j);
-						if ((e1.getReceiverId() == nodeId) && (!e1.isFinished())) {
-							e1.setFinishingTime(time);
-						}
-						if ((uniqueEncsWithNodes.containsKey(Integer.valueOf(e1.getReceiverId()))) && (!((Encounter)uniqueEncsWithNodes.get(Integer.valueOf(e1.getReceiverId()))).isFinished())) {
-							e1.setFinishingTime(time);
-							uniqueEncsWithNodes.put(Integer.valueOf(e1.getReceiverId()), e1);
-						}
+			for (int j = 0; j < encounterHistoryWithNodes.size(); j++) {
+				e1 = (Encounter)encounterHistoryWithNodes.get(j);
+				if ((e1.getReceiverId() == nodeId) && (!e1.isFinished())) {
+					e1.setFinishingTime(time);
+					Integer recIdhere=Integer.valueOf(e1.getReceiverId());
+					if ( uniqueEncsWithNodes.containsKey(recIdhere) && !uniqueEncsWithNodes.get(recIdhere).isFinished() ) {
+						e1.setFinishingTime(time);
+						uniqueEncsWithNodes.put(Integer.valueOf(e1.getReceiverId()), e1);
 					}
+					break;
 				}
-
-				return e;
+				
 			}
 		}
+		//if the encounter wasnt with a node no need to check encounterHistoryWithNodes and uniqueEncsWithNodes
 		return e;
+		//This may return null as sometimes encounters might be cleared before real encounters finish.
 	}
 
 	public void addEncounter(int nodeId, Position p, long time) {
