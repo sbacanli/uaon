@@ -62,6 +62,9 @@ public class Spiral extends Shape{
 	
 	//xstart and ystart are screen coordinates
 	public void fill(double xstart,double ystart){
+		// if maxradius is 0 spiral becomes 0 meter radius so only the center point.
+		//if maxradius is -2 the spiral is as large as the environment
+		//if maxradius is -1 then there is a random maximum radius
 		clearPositions();
 		double degree=Math.PI/180*10;
 		PointP p=new PointP(0,0);
