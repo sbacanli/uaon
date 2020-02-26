@@ -336,26 +336,19 @@ public class SimPanel extends JPanel implements MouseListener{
 	}
 	
 	private void updatePositions() {
-		//routing checks for UAVs	
+		//It was all here
+
+		onlyUpdatePositions(time);
+		
 		for(int i=0;i<uavs.size();i++){
+	        //WARNING!!!!!
+	        //UAV.getCurrentPositionWithTime should be called only once. After here use only currentPosition()
 			Uav uav=uavs.get(i);
 			
 			int pos=uav.getId()*(-1) - 1;
-			uavsPositions[pos]=uav.getCurrentPositionWithTime(time);
+			uavsPositions[pos]=uav.getCurrentPosition();
 			Position uavpos=uavsPositions[pos];
-        	
-	        if(uavpos==null){
-	    		//*
-        		Lib.p("time is "+time+" in update positions");
-        		Lib.p(uav.getPosition(0));
-        		Lib.p("This part can not be null");
-        		System.exit(-1);
-        		//*/
-        	}
-	        //WARNING!!!!!
-	        //UAV.getCurrentPositionWithTime should be called only once. After here use only currentPosition()
-	        
-	        
+			
 			if(uav.isRouteFinished() && uav.positionsLength()!=0) {
 				Lib.p("PROBLEM in simpanel");
 				uav.writePositions();
@@ -386,7 +379,7 @@ public class SimPanel extends JPanel implements MouseListener{
 					}
 					//uav.writePositions();
 					System.exit(-1);
-				}
+				}///end of if battery drained check
 				
 				/*
 				if(uav.isCharging()) {
@@ -400,7 +393,8 @@ public class SimPanel extends JPanel implements MouseListener{
 					Lib.p(closestChargingLocation+" "+uavpos+" UAV DOWN"+" battery "+uav.getBattery()+" isRouted "+uav.chargeRouted);
 					System.exit(-1);
 				}
-			}
+				
+			}//end of if chargeOn check
 			
 			/*
 			if(uav.isWaiting()) {
@@ -417,14 +411,38 @@ public class SimPanel extends JPanel implements MouseListener{
 			//All the checks will be done in that method.
 			
 		}
-		
-		for(int i=0;i<nodes.size();i++){
-			Node node=nodes.get(i);
-			int pos=node.getId()-1;
-			nodesPositions[pos]=node.getCurrentPositionWithTime(time);
-		}
+		//Nothing should be written after this
 		
 	}
+	
+	private void onlyUpdatePositions(long utime) {
+
+		//routing checks for UAVs	
+		for(int uavcounter=0;uavcounter<uavs.size();uavcounter++)
+		{
+			Uav uav=uavs.get(uavcounter);
+			
+			int pos=uav.getId()*(-1) - 1;
+			uavsPositions[pos]=uav.getCurrentPositionWithTime(utime);
+			Position uavpos=uavsPositions[pos];
+        	
+	        if(uavpos==null){
+	    		//*
+        		Lib.p("time is "+time+" in update positions");
+        		Lib.p(uav.getPosition(0));
+        		Lib.p("This part can not be null");
+        		System.exit(-1);
+        		//*/
+        	}
+		}
+		
+		for(int i=0;i<nodes.size();i++) {
+			Node node=nodes.get(i);
+			int pos=node.getId()-1;
+			nodesPositions[pos]=node.getCurrentPositionWithTime(utime);
+		}
+	}
+	
 	
 	public void addMessage(RoutingNode n,long timegiven){
 		//48 hours Expiration time
@@ -485,8 +503,9 @@ public class SimPanel extends JPanel implements MouseListener{
 							if(!rn2.isInContactWith(rn1.getId())){
 								addContactsEncounters(rn2,rn1,encountern2,encountern1,time);
 								
-								//first touch happened
-								Simulator.nodeRoute(rn1,rn2,time+"");
+								//first contact happened
+								
+								Simulator.nodeRoute(rn1,rn2,n1,n2,time+"");
 							}//else it means they are still in contact from last time
 							//this  is a continueing contact
 							//Lib.p("nodes encountered");
@@ -554,7 +573,7 @@ public class SimPanel extends JPanel implements MouseListener{
 									addContactsEncounters(ru2,ru1,encounteru2,encounteru1,time);
 									
 									//first touch happened
-									Simulator.uavRoute(ru1,ru2,time+"");
+									Simulator.uavRoute(ru1,ru2,u1,u2,time+"");
 								}//else it means they are still in contact from last time
 								//this  is a continueing contact
 								//Lib.p("nodes encountered");
@@ -621,7 +640,7 @@ public class SimPanel extends JPanel implements MouseListener{
 									addContactsEncounters(rnode,ruav,encounterNode,encounterUav,time);
 									
 									//first touch happened
-									Simulator.uavNodeRoute(ruav,rnode,time+"");
+									Simulator.uavNodeRoute(ruav,rnode,u,n,time+"");
 								}//else it means they are still in contact from last time
 								//this  is a continueing contact
 								//Lib.p("nodes encountered");

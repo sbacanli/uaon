@@ -234,10 +234,11 @@ public class Positionable {
 			
 		}
 		
-		/*
+		/**
 		 * This method is only for adding initialPosition
 		 * Not to be used anywhere else! it is put there as pointsp is private
 		 * Adds the position if it is initial
+		 * @param PointP addedPoint
 		 */
 		public void addInitialScreenPoint(PointP padded) {
 			if(positionsLength()==0) {
@@ -248,7 +249,7 @@ public class Positionable {
 			}
 		}
 		
-		/*
+		/**
 		 * wait numberOfSeconds
 		 */
 		public void wait(int numberOfSeconds) {
@@ -275,8 +276,7 @@ public class Positionable {
 			}
 			double lastposx=0;
 			double lastposy=0;
-			double xa=0;
-			double ya=0;
+			
 			double num=0;
 			if(positionsLength() !=0){
 				long lasttime=0;
@@ -312,6 +312,8 @@ public class Positionable {
 				double xspeed=Math.abs(lastposx-x)/totaltime;
 				double yspeed=Math.abs(lastposy-y)/totaltime;
 				
+				double xa=0;
+				double ya=0;
 				for(int k=1;k<=totaltime;k++){
 					num=((double)k);
 					if(lastposx>=x && lastposy>=y){
@@ -330,27 +332,31 @@ public class Positionable {
 					
 					Position pCreated=null;				
 					if(op==LocationType.REAL || op==LocationType.RELATIVE) {
-						pCreated=mydata.getPositionWithReal(xa,ya);
+						
+						//Not very likely but after some precision, the calculated number might be passing the limit
+						//The sooner we prevent this, the better it will be
+						
 						if(xa >mydata.getMaxX() || xa < mydata.getMinX() || ya <mydata.getMinY() || ya > mydata.getMaxY()){
 							xa=LibRouting.prec(xa, 6);
 							ya=LibRouting.prec(ya, 6);
 							if(xa >mydata.getMaxX() || xa < mydata.getMinX() || ya <mydata.getMinY() || ya > mydata.getMaxY()){
 								Lib.p("This can not happen:addPathWithRealCoordinates for real cords at positionable");
 								Lib.p("xa "+xa+" width "+mydata.getWidth()+" ya "+ya+" height "+mydata.getHeight());
-								try{throw new Exception();}catch(Exception e) {e.printStackTrace();}
+								try{throw new IllegalArgumentException();}catch(Exception e) {e.printStackTrace();}
 							}							
 						}
+						pCreated=mydata.getPositionWithReal(xa,ya);
 					}else if(op==LocationType.SCREEN) {
-						pCreated=mydata.getPositionWithScreen(xa,ya);
 						if(xa >mydata.getWidth() || xa < 0 || ya <0 || ya > mydata.getHeight()){
 							xa=LibRouting.prec(xa, 6);
 							ya=LibRouting.prec(ya, 6);
 							if(xa >mydata.getWidth() || xa < 0 || ya <0 || ya > mydata.getHeight()){
 								Lib.p("This can not happen:addPathWithRealCoordinates for screen coords at positionable.java");
 								Lib.p("xa "+xa+" width "+mydata.getWidth()+" ya "+ya+" height "+mydata.getHeight());
-								try{throw new Exception();}catch(Exception e) {e.printStackTrace();}
+								try{throw new IllegalArgumentException();}catch(Exception e) {e.printStackTrace();}
 							}							
 						}
+						pCreated=mydata.getPositionWithScreen(xa,ya);
 					}
 					lasttime++;
 					pCreated.setTime(lasttime);
@@ -460,7 +466,7 @@ public class Positionable {
 							if(xa >mydata.getMaxX() || xa < mydata.getMinX() || ya <mydata.getMinY() || ya > mydata.getMaxY()){
 								Lib.p("This can not happen:addPathWithRealCoordinates for real cords at positionable");
 								Lib.p("xa "+xa+" width "+mydata.getWidth()+" ya "+ya+" height "+mydata.getHeight());
-								try{throw new Exception();}catch(Exception e) {e.printStackTrace();}
+								Lib.createException("Problem at Positionable.java");
 							}							
 						}
 					}else if(op==LocationType.SCREEN) {
@@ -471,7 +477,7 @@ public class Positionable {
 							if(xa >mydata.getWidth() || xa < 0 || ya <0 || ya > mydata.getHeight()){
 								Lib.p("This can not happen:addPathWithRealCoordinates for screen coords at positionable.java");
 								Lib.p("xa "+xa+" width "+mydata.getWidth()+" ya "+ya+" height "+mydata.getHeight());
-								try{throw new Exception();}catch(Exception e) {e.printStackTrace();}
+								Lib.createException("Problem at Positionable.java");
 							}							
 						}
 					}
@@ -508,7 +514,7 @@ public class Positionable {
 		
 		/**
 		* for every time getScreenPosition or getRealPosition is called pointsiterator increased.
-		* If we just want the current position we should call this method
+		* If we just want the current position we should NOT call this method
 		* 
 		* @param int the current time is given
 		* @return Position it returns the Position from the positions queue that has screen and real coordinates 
@@ -527,7 +533,7 @@ public class Positionable {
 			return returned;
 		}
 		
-		public void calculateDistance() {
+		protected void calculateDistance() {
 			double distance=0;
 			if(getPreviousPosition()!=null && getCurrentPosition() !=null) {
 				if(getData().getLoc()==LocationType.RELATIVE){
@@ -561,7 +567,6 @@ public class Positionable {
 			if(pointsp.isEmpty()) {
 				return null;
 			}
-			
 			if(time==0) {
 				return pointsp.peek();
 			}else {

@@ -18,9 +18,13 @@ public class Probabilistic extends Epidemic {
 	}
 	
 	public boolean isOKToSend(){
-		if(p==0) {
+		if(p<=0) {
 			return false;
 		}
+		if(p>=1) {
+			return true;
+		}
+		
 		double rnd=r.nextDouble();
 		if(rnd<p){
 			return true;

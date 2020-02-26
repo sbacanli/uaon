@@ -126,13 +126,6 @@ public class Simulator {
 
 		messageLifeInSeconds = op.getParamInt("MessageLifeInSeconds");
 		
-		double internodesprob = op.getParamDouble("interNodesProbability");
-		if (internodesprob == -1) {
-			nodeRouting=processRoutingParameter(op.getParamString("NodeRouting"),messageLifeInSeconds);
-		} else {
-			nodeRouting = new Probabilistic(air, internodesprob);
-		}
-		
 		if (numberOfUAVs != 0) {
 			messageTimesForUAVs = op.getParamInt("MessageTimesForUAVs");
 			messageErrorTimesForUAVs = op.getParamInt("MessageErrorTimesForUAVs");
@@ -140,23 +133,9 @@ public class Simulator {
 			chargeOn=op.getParamBoolean("chargeOn");
 			altitudeconverted = data.RealToVirtualDistance(altitude);
 			speeduavReal = op.getParamInt("SpeedOfUAVs");
-			double interUAVProb=op.getParamDouble("interUavsProbability");
-			if (interUAVProb == -1) {
-				uavRouting=processRoutingParameter(op.getParamString("UAVRouting"),messageLifeInSeconds);
-			} else {
-				uavRouting = new UAONRouting(air, interUAVProb);
-				((UAONRouting)uavRouting).setEncounterHistoryExchange(op.getParamBoolean("encounterHistoryExchange"));
-			}
 			
-			double internodeUAVProb=op.getParamDouble("interProbability");
-			if (internodeUAVProb == -1) {
-				interRouting=processRoutingParameter(op.getParamString("UAVandNodeRouting"),messageLifeInSeconds);
-			} else {
-				//routing between UAV and nodes
-				interRouting = new Probabilistic(air, internodeUAVProb);
-			}
 			
-			if(chargeOn) {
+			if(isChargeOn()) {
 				batteryLife=op.getParamInt("batteryLife");
 				numberOfChargingLocations=op.getParamInt("NumberOfChargingLocations");
 				if(numberOfChargingLocations==-1) {
@@ -167,6 +146,8 @@ public class Simulator {
 					for(int iloc=0;iloc<screenChargingLocations.length;iloc++) {
 						screenChargingLocations[iloc]=new PointP( data.convertToScreenX(realChargingLocations[iloc].getX()), data.convertToScreenY(realChargingLocations[iloc].getY()) );
 					}
+					
+					//Do not use real charging locations after
 					Random rit=new Random();
 					//shuffle the screen Charging locations
 					int numIterations=screenChargingLocations.length;
@@ -190,14 +171,38 @@ public class Simulator {
 					numberOfUAVs=numberOfChargingLocations;
 				}
 				
-				
-				
+			}///end of if chargeOn
+			
+			if(numberOfUAVs>1) {
+				double interUAVProb=op.getParamDouble("interUavsProbability");
+				if (interUAVProb == -1) {
+					uavRouting=processRoutingParameter(op.getParamString("UAVRouting"),messageLifeInSeconds);
+				} else {
+					uavRouting = new UAONRouting(air, interUAVProb);
+					((UAONRouting)uavRouting).setEncounterHistoryExchange(op.getParamBoolean("encounterHistoryExchange"));
+				}
+			}else {
+				uavRouting=new Probabilistic(air,0);
 			}
+			
+			
+			//Since there is a UAV, UAV and Node routing should be decided
+			double internodeUAVProb=op.getParamDouble("interProbability");
+			if (internodeUAVProb == -1) {
+				interRouting=processRoutingParameter(op.getParamString("UAVandNodeRouting"),messageLifeInSeconds);
+			} else {
+				//routing between UAV and nodes
+				interRouting = new Probabilistic(air, internodeUAVProb);
+			}
+			/////////////////////////////////////////////////////////////////
+			
 			
 		}else {//no UAV exists
 			uavRouting=new Probabilistic(air,0);
 			interRouting=new Probabilistic(air,0);
 		}
+		
+		
 		
 		messageTimesForNodes = op.getParamInt("MessageTimesForNodes");
 		messageErrorTimesForNodes = op.getParamInt("MessageErrorTimesForNodes");
@@ -228,9 +233,20 @@ public class Simulator {
 				ArrayList<PointP> path = data.fillRandomPositions(numberOfPositions);
 				currentNode.addPathsWithPoints(path, data, LocationType.SCREEN);
 			}
+		}//end of for of nodes initialization
+		
+		
+		//Routing between nodes. Nodes each other
+		////////////////////////////////////////////////////////////////////////////////
+		double internodesProb=op.getParamDouble("interNodesProbability");
+		if (internodesProb == -1) {
+			nodeRouting=processRoutingParameter(op.getParamString("NodeRouting"),messageLifeInSeconds);
+		} else {
+			//routing between UAV and nodes
+			nodeRouting = new Probabilistic(air, internodesProb);
 		}
-
-
+		/////////////////////////////////////////////////////////////////////////////
+		
 		ClusterParam clusterparam = null;
 		ClusterTechnique clustertech = null;
 
@@ -321,10 +337,10 @@ public class Simulator {
 			
 		}//end of UAVs for
 		
-
+		
 		routing.Reporter.init(toString());
 
-	}
+	}//end of Simulator constructor
 
 	public double getConvertedAltitude() {
 		if (numberOfUAVs > 0) {
@@ -435,6 +451,13 @@ public class Simulator {
 			return new VOIRouting(air, Double.parseDouble(exploded[1]),messageLife);
 		}else if(exploded[0].equals("VOI2")) {
 			return new VOIRouting(air, Double.parseDouble(exploded[1]),messageLife);
+		}else if(exploded[0].equals("ChargingR")) {
+			if(isChargeOn()) {
+				return new ChargeRouting(air, screenChargingLocations,data.RealToVirtualDistance(Double.parseDouble(exploded[1])) ) ;
+			}else {
+				Lib.p("Charge on set to no but the internode routing is charging based. PROBLEM! Error!");
+				Lib.createException("Simulator.java in processRoutingParameter method");
+			}
 		}
 		System.out.println("UNKNOWN ROUTING TYPE at PARAMETER "+parameterName);
 		return null;
@@ -481,33 +504,43 @@ public class Simulator {
 		return res;
 	}
 	
-	/*
+	/**
 	 * 
-	 * Routing between Nodes
+	 * @param RoutingNode r1,RoutingNode r2, Node senderNode1, Node receiverNode2
+	 * @param String time
 	 */
-	public static void nodeRoute(RoutingNode r1,RoutingNode r2, String time){
+	public static void nodeRoute(RoutingNode r1,RoutingNode r2, Positionable senderNode1, Positionable receiverNode2, String time){
 		nodeRouting.setSender(r1);
+		nodeRouting.setSenderNode(senderNode1);
 		nodeRouting.setReceiver(r2);
+		nodeRouting.setReceiverNode(receiverNode2);
 		nodeRouting.send(time);
 	}
 
-	/*
+	/**
 	 * 
-	 * Routing between UAVs
+	 * @param RoutingNode uav1,RoutingNode uav2,  Node senderNodeuav1, Node receiverNodeuav2
+	 * @param String time
 	 */
-	public static void uavRoute(RoutingNode uav1,RoutingNode uav2, String time){
+	public static void uavRoute(RoutingNode uav1,RoutingNode uav2,  Positionable senderNodeuav1, Positionable receiverNodeuav2, String time){
 		uavRouting.setSender(uav1);
+		uavRouting.setSenderNode(senderNodeuav1);
 		uavRouting.setReceiver(uav2);
+		uavRouting.setReceiverNode(receiverNodeuav2);
 		uavRouting.send(time);
 	}
 
-	/*
+	/**
 	 * 
-	 * Routing between UAV and Nodes
+	 * @param RoutingNode uav,RoutingNode r2, Node uavNode, Node receiverNode
+	 * @param String time
+	 * 
 	 */
-	public static void uavNodeRoute(RoutingNode uav,RoutingNode r2, String time){
+	public static void uavNodeRoute(RoutingNode uav,RoutingNode r2, Positionable uavNode, Positionable receiverNode, String time){
 		interRouting.setSender(uav);
+		interRouting.setSenderNode(uavNode);
 		interRouting.setReceiver(r2);
+		interRouting.setReceiverNode(receiverNode);
 		interRouting.send(time);
 	}
 

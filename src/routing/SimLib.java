@@ -13,8 +13,6 @@ public class SimLib {
 	 * Simulator class's Library functions that are dealing with
 	 * arraylists, searching etc...
 	 */
-
-	
 	//number of received packets for that message
 	public static int howManyReceived(ArrayList<RoutingNode> nodes,Message message){
 		int count=0;

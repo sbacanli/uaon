@@ -15,7 +15,7 @@ enum LocationType{
 	      case REAL: return "REAL";
 	      case RELATIVE: return "RELATIVE";
 	      case SCREEN: return "SCREEN";
-	      default: throw new IllegalArgumentException();
+	      default: throw new IllegalArgumentException("LocationType is illegal");
 	    }
 	  }
 }
@@ -78,6 +78,10 @@ public class Datas {
 	
 	public LocationType getLoc() {
 		return op;
+	}
+	
+	public boolean isLocationReal() {
+		return op == LocationType.REAL;
 	}
 	
 	public void setNumberOfDataLines(int ns) {
@@ -620,14 +624,7 @@ public class Datas {
 		if(screenY>getHeight() || screenY<0){
 			
 			Lib.p("Screen Y is not in the limit "+screenY+" the limit is "+getHeight());
-			try{
-				Exception e=new Exception();
-				throw e;
-			}catch(Exception e){
-				e.printStackTrace();
-				System.exit(-1);
-			}
-			
+			Lib.createException("Problem at Data.java convertToRealY");
 		}
 		
 		if(Double.isNaN(screenY)){
@@ -645,8 +642,23 @@ public class Datas {
 			Lib.p("screengivenx"+xscreengiven+"screengiveny"+yscreengiven);
 			System.exit(-1);
 		}
-		double xrealgiven=convertToRealX(xscreengiven);
-		double yrealgiven=convertToRealY(yscreengiven);
+		
+		double xrealgiven=0;
+		double yrealgiven=0;
+		
+		if (xscreengiven >= 0) {
+			xrealgiven=convertToRealX(xscreengiven);
+		}else {			
+			Lib.createException("Problem at Data.java xrealgiven at function getPositionwithScreen");			
+		}
+		
+		if (yscreengiven >= 0) {
+			yrealgiven=convertToRealY(yscreengiven);
+		}else {
+			Lib.createException("Problem at Data.java yrealgiven at function getPositionwithScreen");	
+		}
+		
+		
 		if(Double.isNaN(xrealgiven) || Double.isNaN(yrealgiven)){
 			Lib.p("Positionable addPositionWithScreen one of the generated real variables are NaN");
 			Lib.p("xrealgiven "+xrealgiven+" yrealgiven "+yrealgiven);

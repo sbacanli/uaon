@@ -641,6 +641,10 @@ public class Uav extends Positionable{
 
 	
 	@Override
+	/**
+	 * This method updates the current position every time it is called.
+	 * 
+	 */
 	public Position getCurrentPositionWithTime(long giventime){
 		int lengthBefore=positionsLength();
 		boolean dequeued=false;
@@ -702,9 +706,10 @@ public class Uav extends Positionable{
 				//Lib.p("Dequed here 2");
 			}else {
 				Lib.p("Not dequeued - length is more");
-				writePositions();
+				Lib.p(getPosition(0).toString()+"\n"+giventime);
+				//writePositions();
 				System.exit(-1);
-				//PROBLEM HERE AQ
+				//PROBLEM HERE
 			}
 		}
 		
@@ -713,6 +718,20 @@ public class Uav extends Positionable{
 			Lib.p("time is: "+giventime);
 		}
 		
+		return returned;
+	}
+	
+	public Position getCurrentPositionWithTimeNoUpdate(long giventime){
+		Position returned=null;
+		
+		if(positionsLength()==0){
+			setRouteFinished(true);
+		}else if(getPosition(0).time==giventime)
+		{
+			returned=new Position(getPosition(0));
+			setRouteFinished(false);				
+			dequeuePosition();
+		}	
 		return returned;
 	}
 	

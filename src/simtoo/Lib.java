@@ -177,15 +177,25 @@ public class Lib {
 
 	    /** Write the object to a Base64 string. */
 	public static String toString( Serializable o ){
-	    	try {
-	    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	        ObjectOutputStream oos = new ObjectOutputStream( baos );
-	        oos.writeObject( o );
-	        oos.close();
-	        return Base64.getEncoder().encodeToString(baos.toByteArray()); 
-	    	}catch(Exception e) {
-			   e.printStackTrace();
-		   }
-	    	return null;
-	    }
+    	try {
+    		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    		ObjectOutputStream oos = new ObjectOutputStream( baos );
+    		oos.writeObject( o );
+    		oos.close();
+    		return Base64.getEncoder().encodeToString(baos.toByteArray()); 
+    	}catch(Exception e) {
+		   e.printStackTrace();
+    	}
+	    return null;
+	}
+	
+	public static void createException(String mesg) {
+		try{
+			IllegalArgumentException e=new IllegalArgumentException(mesg);
+			throw e;
+		}catch(Exception e){
+			e.printStackTrace();
+			System.exit(-1);
+		}
+	}
 }

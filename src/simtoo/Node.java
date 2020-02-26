@@ -66,8 +66,6 @@ public class Node extends Positionable{
 					//System.exit(-1);
 					//it means that node data is finished
 				}
-				
-				
 			
 				/*
 				Lib.p("CREATED for node "+getId()+" "+getDataFile());
@@ -88,6 +86,7 @@ public class Node extends Positionable{
 			}//end of length==0
 			
 		}//end of if dataline==-1 check		
+		
 	}
 	
 	public boolean isVisible() {
@@ -138,6 +137,4 @@ public class Node extends Positionable{
 		
 		return returned;
 	}
-	
-	
 }
