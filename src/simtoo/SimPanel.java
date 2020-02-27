@@ -359,6 +359,7 @@ public class SimPanel extends JPanel implements MouseListener{
 				PointP closestChargingLocation=uav.getClosestChargingLocation();
 				if(!uav.isWaiting() && !uav.isOnAChargingPos()) {
 					uav.goToCharging(closestChargingLocation,time);
+					Reporter.increaseLandTimesForUAV();
 				}
 				
 				if(uav.isWaiting() && uav.isOnAChargingPos()) {

@@ -39,6 +39,10 @@ public class Computer {
 		Reporter.writeDistanceTravelled(uav);
 	    Reporter.writeMessagesAddedToBuffers();
 	    Reporter.writeMessagesReceived();
+	    //if UAVs are being charged (chargeOn option is true) then UAV landings can be counted else not.
+	    if(uav.get(0).getChargingLocations()!=null) {
+	    	Reporter.writeToFile("UAVLandings.txt", Reporter.getNumberOfLandTakeOffByUAV()*2+"");
+	    }
 	    
 	    String allTours="";
 	    for (int h = 0; h < uav.size(); h++) {

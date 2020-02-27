@@ -56,7 +56,7 @@ public class Simulator {
 	private int numberofClusters;
 	private double maxDistanceForDBSCAN;
 	private boolean chargeOn;
-	private PointP[] screenChargingLocations;
+	private PointP[] screenChargingLocations=null;
 	private int numberOfChargingLocations;
 	private double spiralAconverted;
 	private int batteryLife=-1;

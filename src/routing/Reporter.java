@@ -43,6 +43,8 @@ public class Reporter
   private static int numberOfNonProtocolSentByUAVToUAVs = 0;
   private static int numberOfNonProtocolSentByUAVToNodes = 0;
   
+  private static int numberOfLandTakeOffByUAV=0;
+  
 
 
 
@@ -51,20 +53,20 @@ public class Reporter
   
   public Reporter() {}
   
-  //the written filename will be in fact the parameters of the simulation
-	//that will be someVariable_Value_someVariable_Value etc...
-  public static void init(String params) {
-    foldername = params;
-    File fold = new File(foldername);
-    if ((!fold.exists()) || (!fold.isDirectory())) {
-      fold.mkdir();
-    }
-    
-    resetNumbers();
-    Lib.p("***************************************************************");
-    runstart = getCurrentTime();
-  }
-  
+	  //the written filename will be in fact the parameters of the simulation
+		//that will be someVariable_Value_someVariable_Value etc...
+	  public static void init(String params) {
+	    foldername = params;
+	    File fold = new File(foldername);
+	    if ((!fold.exists()) || (!fold.isDirectory())) {
+	      fold.mkdir();
+	    }
+	    
+	    resetNumbers();
+	    Lib.p("***************************************************************");
+	    runstart = getCurrentTime();
+	  }
+	  
 
 
 
@@ -121,6 +123,8 @@ public class Reporter
     numberOfNonProtocolSentByNodeToNodes = 0;
     numberOfNonProtocolSentByUAVToUAVs = 0;
     numberOfNonProtocolSentByUAVToNodes = 0;
+    
+    numberOfLandTakeOffByUAV=0;
   }
   
   public static int getNumberOfSentBetweenUAVs() {
@@ -170,6 +174,14 @@ public class Reporter
   
   public static int getNumberOfSent() {
     return getNumberOfSentByNodes() + getNumberOfSentByUAVs();
+  }
+  
+  public static int getNumberOfLandTakeOffByUAV() {
+	  return numberOfLandTakeOffByUAV;
+  }
+  
+  public static void increaseLandTimesForUAV() {
+	  numberOfLandTakeOffByUAV++;
   }
   
   public static void writePacketsSents() {
@@ -344,15 +356,16 @@ public class Reporter
   
   public static void writeToFile(String fileName, String s)
   {
-    try
-    {
-      bwriter = new BufferedWriter(new FileWriter(foldername + "/" + fileName, true));
-      bwriter.write(s);
-      bwriter.close();
-    } catch (Exception e) {
-      Lib.p("Reporter can not write to file " + foldername + "/" + fileName);
-      e.printStackTrace();
-    }
+	  
+	  try
+	  {
+		  bwriter = new BufferedWriter(new FileWriter(foldername + "/" + fileName, true));
+		  bwriter.write(s);
+		  bwriter.close();
+	  } catch (Exception e) {
+		  Lib.p("Reporter can not write to file " + foldername + "/" + fileName);
+		  e.printStackTrace();
+	  }
   }
   
   public static String PacketInfo()
