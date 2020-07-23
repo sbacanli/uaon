@@ -172,6 +172,14 @@ public class Reporter
     return numberOfAddedToBufferByUAVs / getNumberOfReceivedByUAVs();
   }
   
+  public static double nonProtocolMessagesPercentageSentByNodes() {
+	  return (numberOfNonProtocolSentByNodeToNodes+numberOfNonProtocolSentByNodeToUAVs)/getNumberOfSentByNodes();
+  }
+  
+  public static double nonProtocolMessagesPercentageSentByUAVs() {
+	  return (numberOfNonProtocolSentByUAVToNodes+numberOfNonProtocolSentByUAVToUAVs)/getNumberOfSentByUAVs();
+  }
+  
   public static int getNumberOfSent() {
     return getNumberOfSentByNodes() + getNumberOfSentByUAVs();
   }
@@ -192,78 +200,75 @@ public class Reporter
   }
   
 
-//the sender receiver and time is given to these methods but they are not used
+  	//the sender receiver and time is given to these methods but they are not used
 	//For future implementations these values can be found and this class can be further extended
   public static void addPacketSent(int sender, int receiver, String time, boolean isProtocol)
   {
-    if (isProtocol) {
-      if (sender < 0) {
-        if (receiver < 0) {
-          numberOfProtocolSentByUAVToUAVs += 1;
-        } else {
-          numberOfProtocolSentByUAVToNodes += 1;
-        }
-      }
-      else if (receiver < 0) {
-        numberOfProtocolSentByNodeToUAVs += 1;
-      } else {
-        numberOfProtocolSentByNodeToNodes += 1;
-      }
-      
-    }
-    else if (sender < 0) {
-      if (receiver < 0) {
-        numberOfNonProtocolSentByUAVToUAVs += 1;
-      } else {
-        numberOfNonProtocolSentByUAVToNodes += 1;
-      }
-    }
-    else if (receiver < 0) {
-      numberOfNonProtocolSentByNodeToUAVs += 1;
-    } else {
-      numberOfNonProtocolSentByNodeToNodes += 1;
-    }
-  }
+	  if (isProtocol) {
+		    if (sender < 0) {
+		        //sender is UAV
+		        if (receiver < 0) {
+		            //receiver is UAV
+		            numberOfProtocolSentByUAVToUAVs += 1;
+		        } else {
+		            //receiver is node
+		            numberOfProtocolSentByUAVToNodes += 1;
+		        } //if receiver < 0
+		        
+		    } //if sender <0
+		    else if (receiver < 0) {
+		    	//receiver is UAV sender is node 
+		        numberOfProtocolSentByNodeToUAVs += 1;
+		    } else {
+		    	//sender is node receiver is node
+		        numberOfProtocolSentByNodeToNodes += 1;
+		    }
+
+		} else {
+			//non protocol messages
+			if (sender < 0) {
+			    if (receiver < 0) {
+			        numberOfNonProtocolSentByUAVToUAVs += 1;
+			    } else {
+			    	//receiver is node
+			        numberOfNonProtocolSentByUAVToNodes += 1;
+			    }
+			} else if (receiver < 0) {
+				//receiver is UAV sender is node 
+				numberOfNonProtocolSentByNodeToUAVs += 1;
+			} else {
+				//sender is node receiver is nodeAV
+			    numberOfNonProtocolSentByNodeToNodes += 1;
+			}
+			
+		}//if protocol check
+	  
+  }//end of addPacketSent()
   
-
-
-
 
   public static void addPacketReceived(int sender, int receiver, String time, boolean isProtocol)
   {
     if (isProtocol) {
-      if (sender < 0) {
         if (receiver < 0) {
+        	//receiver is UAV
           numberOfProtocolReceivedByUAVs += 1;
         } else {
+        	//receiver is Node
           numberOfProtocolReceivedByNodes += 1;
         }
-      }
-      else if (receiver < 0) {
-        numberOfProtocolReceivedByUAVs += 1;
-      } else {
-        numberOfProtocolReceivedByNodes += 1;
-      }
-      
-    }
-    else if (sender < 0) {
-      if (receiver < 0) {
-        numberOfNonProtocolReceivedByUAVs += 1;
-      } else {
-        numberOfNonProtocolReceivedByNodes += 1;
-      }
-    }
-    else if (receiver < 0) {
-      numberOfNonProtocolReceivedByUAVs += 1;
-    } else {
-      numberOfNonProtocolReceivedByNodes += 1;
+    }else {
+    	//non protocol messages
+    	if (receiver < 0) {
+    		//receiver is UAV
+    	    numberOfNonProtocolReceivedByUAVs += 1;
+    	} else {
+    		//receiver is Node
+    	    numberOfNonProtocolReceivedByNodes += 1;
+    	}
     }
   }
   
-
-
-
-
+  
   public static void addPacketAddedToBuffer(int sender, int receiver, String time)
   {
     if (receiver < 0) {
@@ -283,26 +288,6 @@ public class Reporter
     }
   }
   
-
-
-
-
-
-
-	//that method is for reporting the cases where the receiver's buffer is full
-	//that method is not called in the simulator now
-	//for further development that case might be used!
-  public static void bufferFull(int id, String time) {
-	  /*
-		String line="bufferFull for node "+id+" time "+time; 
-		try{
-			bw.write(line+"\r\n");
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		//*/
-	  
-  }
   
 //reads the fname(exact path should be given) to String ArrayList
 	//each element will be line
@@ -335,38 +320,7 @@ public class Reporter
     printExecutionTime();
   }
   
-  public static void writeTrace(ArrayList<String> s, String fname) {
-    try {
-      bwriter = new BufferedWriter(new FileWriter(fname));
-      for (int i = 0; i < s.size(); i++) {
-        StringTokenizer st = new StringTokenizer((String)s.get(i));
-        while (st.hasMoreTokens()) {
-          String nt = st.nextToken();
-          
-          bwriter.write(nt + "\t");
-        }
-        
-        bwriter.write("\r\n");
-      }
-    }
-    catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-  
-  public static void writeToFile(String fileName, String s)
-  {
-	  
-	  try
-	  {
-		  bwriter = new BufferedWriter(new FileWriter(foldername + "/" + fileName, true));
-		  bwriter.write(s);
-		  bwriter.close();
-	  } catch (Exception e) {
-		  Lib.p("Reporter can not write to file " + foldername + "/" + fileName);
-		  e.printStackTrace();
-	  }
-  }
+  /*File writing methods below*/
   
   public static String PacketInfo()
   {
@@ -387,28 +341,40 @@ public class Reporter
       "*****************************";
     return res;
   }
-  
-	//writes message_delays and success rates
-	//writes to text file called all.txt
-	//with a tab between delay and success rate result paths
-  public static void writeAllTextFile()
-  {
-    String fnameDelay = foldername + "/Message_Delays.txt";
-    String fnameSuccess = foldername + "/success_rate.txt";
-    File allf = new File("all.txt");
-    try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(allf, true)))) {
-		    fnameDelay="./"+fnameDelay;
-		    fnameSuccess="./"+fnameSuccess;
-		    //fnameDelay=fnameDelay.replace("/", "//");
-		    //fnameSuccess=fnameSuccess.replace("/", "//");
-			out.println(fnameDelay+"\r\n"+fnameSuccess);
-			//System.out.println(fnameDelay+"\r\n"+fnameSuccess);
-		}catch (IOException e) {
-		    e.printStackTrace();
-		}
-  }
-  
 
+  
+  	public static void writeTrace(ArrayList<String> s, String fname) {
+	    try {
+	      bwriter = new BufferedWriter(new FileWriter(fname));
+	      for (int i = 0; i < s.size(); i++) {
+	        StringTokenizer st = new StringTokenizer((String)s.get(i));
+	        while (st.hasMoreTokens()) {
+	          String nt = st.nextToken();
+	          
+	          bwriter.write(nt + "\t");
+	        }
+	        
+	        bwriter.write("\r\n");
+	      }
+	    }
+	    catch (Exception e) {
+	      e.printStackTrace();
+	    }
+	  }
+	  
+	  public static void writeToFile(String fileName, String s)
+	  {
+		  try
+		  {
+			  bwriter = new BufferedWriter(new FileWriter(foldername + "/" + fileName, true));
+			  bwriter.write(s);
+			  bwriter.close();
+		  } catch (Exception e) {
+			  Lib.p("Reporter can not write to file " + foldername + "/" + fileName);
+			  e.printStackTrace();
+		  }
+	  }
+	  
 	//the key method
 	//writes the results (message delay or success rates to the specified file)
   public static void writeArrayToFile(double[] arr, String s)
@@ -463,7 +429,7 @@ public class Reporter
     writeToFile("UAVDistances.txt", all);
   }
   
-  public static void writeMessagesAddedToBuffers() {
+  public static void writeNumberOfAddedToBuffer() {
     String all = "";
     all = numberOfAddedToBufferByNodes + "\r\n";
     writeToFile("NumberOfAddedToBufferByNodes.txt", all);
@@ -491,7 +457,16 @@ public class Reporter
     writeToFile("AddedToBufferPercentageByUAVs.txt", all);
   }
   
-
+  public static void writeNonProtocolMessagesReceivedPercentage() {
+	    String all = "";
+	    all = nonProtocolMessagesPercentageSentByNodes() + "\r\n";
+	    writeToFile("nonProtocolMessagesPercentageSentByNodes.txt", all);
+	    
+	    all = nonProtocolMessagesPercentageSentByUAVs() + "\r\n";
+	    writeToFile("nonProtocolMessagesPercentageSentByUAVs.txt", all);
+	  }
+	  
+  
 //this is used in SimPanel.java
 	//Precondition: the encounters are not both null!
 	public static void writeEncounters(Encounter e1,Encounter e2,String fname){
@@ -505,7 +480,22 @@ public class Reporter
 		}else{
 			//write e2
 			writeToFile(fname, e2.toString());
-		}
-		
-	}
+		}	
+	}//end of write encounters
+	
+	
+		//that method is for reporting the cases where the receiver's buffer is full
+		//that method is not called in the simulator now
+		//for further development that case might be used!
+	  public static void bufferFull(int id, String time) {
+		  /*
+			String line="bufferFull for node "+id+" time "+time; 
+			try{
+				bw.write(line+"\r\n");
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			//*/
+		  
+	  }
 }

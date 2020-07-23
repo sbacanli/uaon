@@ -133,6 +133,11 @@ public class Datas {
 		}
 	}
 	
+	/**
+	 * From the dataset folder, all the data files which has txt ending will be written to the ArrayList
+	*@param Dataset folder path
+	*@return ArrayList containing the path of the each data file as txt for each nodes
+	**/
 	public ArrayList<File> getDataFiles(String folderName){
 		ArrayList<File> arr=new ArrayList<File>();
 		File f=new File(folderName);

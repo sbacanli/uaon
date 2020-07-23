@@ -1,15 +1,17 @@
-SimulationName:DBSCANNCSU2
+SimulationName:DBSCANNCSU2SprayAndWait
 //yes or no for Random Mobility
 //parameter for maximum distance is 2000
 randomMobility:no
-dataFolder:C:\\Users\\Kara\\Desktop\\SimRunner\\datasets\\KAISTnew\\processedData
+dataFolder:C:\\Users\\Kara\\eclipse-workspace\\UAON\\datasets\\KAISTnew\\processedData
 LocationType:RELATIVE
 
 interUavsProbability:1.0
-interNodesProbability:-1.0
+interNodesProbability:1.0
 interProbability:1.0
 //NodeRouting:SCR 0.25 0.99 0.99 2
-NodeRouting:ChargingR 250
+//NodeRouting:ChargingR 250
+
+sprayAndWaitNumber:7
 
 CommDistance:250
 Altitude:100

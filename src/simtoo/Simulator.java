@@ -31,6 +31,7 @@ public class Simulator {
 
 	private double speeduavReal;
 	private int messageLifeInSeconds;
+	private int sprayAndWaitNumber;
 	private int numberOfPositions;
 	private int spiralRadiusInitial;
 	private String dataFolder; 
@@ -125,6 +126,7 @@ public class Simulator {
 		COMMDISTANCE = data.RealToVirtualDistance(realDistance);
 
 		messageLifeInSeconds = op.getParamInt("MessageLifeInSeconds");
+		sprayAndWaitNumber=op.getParamInt("sprayAndWaitNumber");
 		
 		if (numberOfUAVs != 0) {
 			messageTimesForUAVs = op.getParamInt("MessageTimesForUAVs");
@@ -354,6 +356,10 @@ public class Simulator {
 		return messageLifeInSeconds;
 	}
 
+	public int getSprayAndWaitNumber() {
+		return sprayAndWaitNumber;
+	}
+	
 	public void setNodeRouting(Routing rout){
 		nodeRouting=rout;
 	}

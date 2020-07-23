@@ -260,7 +260,35 @@ public class RoutingNode
 		all = all.substring(0, all.length() - 1);
 		return all;
 	}
-
+	
+	/*
+	 * if sprayandwait number is enabled meaning not -1 it decreases the number of copies that the node has
+	 * @param messageId
+	 * @return returns true if it is not enabled
+	 */
+	public boolean decreaseSprayAndWaitNumber(int messageid)
+	{
+		if (isBufferEmpty()) {
+			Lib.p("Buffer empty but decreasing spray and Wait");
+			return false;
+		}
+		Message changed=getMessageFromBuffer(messageid);
+		if(changed == null) {
+			Lib.p("no such message in decreaseSprayAndWaitNumber in RoutingNode.java");
+			return false;
+		}
+		if(changed.getSprayAndWaitNumber()>0) {
+			changed.decreaseSprayAndWaitNumber();
+		}else if(changed.getSprayAndWaitNumber()==0) {
+			//It is zero can not decrease further
+			Lib.p("This should not happen as isSendable function should not allow this to be reduced further in RoutingNode.java ");
+			return false;
+		}
+		//else it is -1 which means not enabled
+		return true;
+		
+	}
+	
 	/*
 	 * This methods checks the buffer for the messageId specified and sends that message to air with tts value
 	 * @param Air a, messageId
@@ -273,23 +301,24 @@ public class RoutingNode
 		if (found == null) {
 			System.out.println("PROBLEM in RoutingNode.java. No message with that id");
 
-
-
 		}
 		else if (found.isSendable(time)) {
 			found.decRemaining();
+			
 			Message sent = new Message(found.getPacketId(), 
 					getId(), 
 					receiverId, 
 					found.getMessageText(), 
 					messageId, 
 					time, 
+					found.getSprayAndWaitNumber(),
 					tts, 
 					found.getExpiration(), 
 					found.getHopCount());
 
 			sent.incHop();
 			sendMessage(a, sent, time);
+			decreaseSprayAndWaitNumber(messageId);
 		}
 	}
 
@@ -311,17 +340,20 @@ public class RoutingNode
 						found.getMessageText(), 
 						messageId, 
 						time, 
+						found.getSprayAndWaitNumber(),
 						found.getTTS(), 
 						found.getExpiration(), 
 						found.getHopCount());
 
 				sent.incHop();
+				//original message's spray and wait value is decreased not the new one's!
+				decreaseSprayAndWaitNumber(messageId);
+				// The node has created a new message and decreased the spray and wait number in it records. 
+				// the node can not know if the message is received or not but the spray and wait number will be decreased anyway.
 				return sendMessage(a, sent, time);
 			}
 			System.out.println("PROBLEM in RoutingNode.java. message not sendable from buffer");
 		}
-
-
 		return false;
 	}
 
@@ -333,17 +365,14 @@ public class RoutingNode
 			System.out.println("air null problem in Routingnode.java");
 		}
 
-
-
 		Reporter.addPacketSent(getId(), receiverNodeId, time, m.isProtocolMessage());
 
 		if (!air.addMessage(m)) {
 			Reporter.addPacketDropped(getId(), receiverNodeId, time);
 			return false;
 		}
+		return false;
 
-
-		return true;
 	}
 
 	public boolean sendEncounterHistory(Air air, int receiverId, String time) {
@@ -393,24 +422,16 @@ public class RoutingNode
 		if (m.isProtocolMessage())
 		{
 
-
 			System.out.println("PROBLEM in RoutingNode.java: Trying to add neg id message to buffer");
 			return false;
 		}
 
 		boolean b = addMessageToBuffer(m, time);
 
-
 		if (b) {
 			Reporter.addPacketAddedToBuffer(m.getSender(), m.getReceiver(), time);
 			return true;
 		}
-
-
-
-
-
-
 
 		return false;
 	}
@@ -421,16 +442,9 @@ public class RoutingNode
 		{
 			return null;
 		}
-
-
-
-
 		receiveRealMessage(message, time);
 		return message;
 	}
-
-
-
 
 
 	private void receiveRealMessage(Message message, String time)
@@ -742,11 +756,6 @@ public class RoutingNode
 			}
 		}
 	}
-
-
-
-
-
 
 	public String toString()
 	{

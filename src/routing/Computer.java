@@ -9,7 +9,7 @@ import simtoo.Uav;
 public class Computer {
 
 	public static void run(ArrayList<Node> nodes, ArrayList<RoutingNode> routingNodes, 
-			ArrayList<Uav> uav, ArrayList<RoutingNode> uavRouting,int numberofMessages){
+		ArrayList<Uav> uav, ArrayList<RoutingNode> uavRouting,int numberofMessages){
 
 	
 		ArrayList<RoutingNode> arrcopy = new ArrayList<RoutingNode>(routingNodes);
@@ -36,12 +36,15 @@ public class Computer {
 		
 		Lib.p(Reporter.PacketInfo());
 		Lib.p(Reporter.getDistanceTravelled(uav));
+		
 		Reporter.writeDistanceTravelled(uav);
-	    Reporter.writeMessagesAddedToBuffers();
+	    Reporter.writeNumberOfAddedToBuffer();
 	    Reporter.writeMessagesReceived();
+	    Reporter.writeNonProtocolMessagesReceivedPercentage(); 
+	    
 	    //if UAVs are being charged (chargeOn option is true) then UAV landings can be counted else not.
 	    if(uav.get(0).getChargingLocations()!=null) {
-	    	Reporter.writeToFile("UAVLandings.txt", Reporter.getNumberOfLandTakeOffByUAV()*2+"");
+	    	Reporter.writeToFile("UAVLandings.txt", Reporter.getNumberOfLandTakeOffByUAV()*2+"\n");
 	    }
 	    
 	    String allTours="";

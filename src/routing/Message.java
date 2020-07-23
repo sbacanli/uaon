@@ -15,15 +15,19 @@ public class Message {
 	private String message;
 	private static int staticmesid=0;
 	private int packetId;
+	
 	private int messageId;
 	//the given messageId which is given in constructor
+	
 	private String time;
 	private int tts;//number of packets to be sent as setted
 	private int remaining;// remaining number of packets to be sent
 	private String expirationTime;// expiration time for the message
+	
 	private int hopCount;// hop count for the message
 	//how many times it has been sent
 	private int prevPacketId;
+	private int sprayAndWaitNumber;
 	
 	
 	//this is used in sending the vector packet in epidemic routing
@@ -51,7 +55,7 @@ public class Message {
 	
 	//real message
 	public Message(int gprevPacketId,int senderId,int receiverId,String mes,int messageid,
-			String timegiven,int ttsgiven,String expirationgiven,int hopcount){
+			String timegiven,int sprayAndWaitNumberGiven,int ttsgiven,String expirationgiven,int hopcount){
 		prevPacketId=gprevPacketId;
 		this.receiverId=receiverId;
 		this.senderId=senderId;
@@ -61,6 +65,7 @@ public class Message {
 		packetId=staticmesid;
 		messageId=messageid;
 		tts=ttsgiven;
+		sprayAndWaitNumber=sprayAndWaitNumberGiven;
 		//TTL Value is not changed but remaining is being changed.
 		//this is for the reason that if TTL values are to be set differently
 		//for the newly messages we would like to have data of the setted TTL
@@ -68,6 +73,14 @@ public class Message {
 		remaining=tts;
 		expirationTime=expirationgiven;
 		hopCount=hopcount;
+	}
+	
+	public int getSprayAndWaitNumber() {
+		return sprayAndWaitNumber;
+	}
+	
+	public void decreaseSprayAndWaitNumber() {
+		sprayAndWaitNumber--;
 	}
 	
 	public String getMessageText(){
@@ -178,9 +191,13 @@ public class Message {
 						return true;
 				}				
 			}else{
-				//not expired and tts is not greater than 0
-				//which means tts is disabled
-				return true;
+				//if sprayand wait is disabled or we have copies then it is sendable
+				if(getSprayAndWaitNumber()>0 || getSprayAndWaitNumber()==-1) {
+					return true;
+				}
+				//not expired and tts is not greater than 0 but we have no sprayandwait copies left
+				
+				return false;
 			}
 		}
 		return false;
