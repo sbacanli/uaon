@@ -127,7 +127,7 @@ public class Simulator {
 
 		messageLifeInSeconds = op.getParamInt("MessageLifeInSeconds");
 		sprayAndWaitNumber=op.getParamInt("sprayAndWaitNumber");
-		
+		 
 		if (numberOfUAVs != 0) {
 			messageTimesForUAVs = op.getParamInt("MessageTimesForUAVs");
 			messageErrorTimesForUAVs = op.getParamInt("MessageErrorTimesForUAVs");

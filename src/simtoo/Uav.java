@@ -65,7 +65,7 @@ public class Uav extends Positionable{
 		if(chargingLocationsGiven!=null) {
 			this.batteryLife=batteryLife;
 			chargeBattery();
-			Random r=new Random();
+			//Random r=new Random();
 			//The charging stations are shuffled every time so here we don't need to randomize again.
 			//If more UAVs then the charging stations now we have at least one in every station and it is random
 			//this is not possible for now but I am adding this check
@@ -528,6 +528,7 @@ public class Uav extends Positionable{
 						//Lib.p("fill number "+j+" "+sizeResult+" clustersize "+clusterResult.size()+" numberofCluster "+numberOfClusters);
 					}
 				}
+				rnc=null;
 			}
 			s.incNumberOfTours();
 			rn.clearContacts();

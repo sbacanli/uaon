@@ -41,6 +41,7 @@ public class Computer {
 	    Reporter.writeNumberOfAddedToBuffer();
 	    Reporter.writeMessagesReceived();
 	    Reporter.writeNonProtocolMessagesReceivedPercentage(); 
+	    Reporter.writeNonProtocolMessagesSentPercentage();
 	    
 	    //if UAVs are being charged (chargeOn option is true) then UAV landings can be counted else not.
 	    if(uav.get(0).getChargingLocations()!=null) {

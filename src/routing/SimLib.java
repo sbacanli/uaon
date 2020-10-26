@@ -2,6 +2,7 @@ package routing;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 
 
@@ -17,7 +18,7 @@ public class SimLib {
 	public static int howManyReceived(ArrayList<RoutingNode> nodes,Message message){
 		int count=0;
 		for(int i=0; i<nodes.size(); i++){
-			if(nodes.get(i).searchBufferMessageId(message.getId()) != -1){
+			if(nodes.get(i).searchBufferMessageId(message.getId()) ==true){
 				count++;
 			}
 		}
@@ -61,18 +62,20 @@ public class SimLib {
 	// hop count of a message says how many times it has been sent
 	public static ArrayList<Double> hopCounts(ArrayList<RoutingNode> nodes){
 		ArrayList<Double> arr=new ArrayList<Double>();
-		
+		Collection<Message> messageCollection=null;
 		for(int i=0;i<nodes.size();i++){
-			ArrayList<Message> buf=nodes.get(i).getMessageBuffer();
-			if(buf !=null){
-				for(int j=0;j<buf.size();j++){
-					int hopn=buf.get(j).getHopCount();
+			messageCollection=nodes.get(i).getMessageBuffer();
+			if(messageCollection != null && !messageCollection.isEmpty()){
+				for(Message m:messageCollection){
+					int hopn=m.getHopCount();
 					if(hopn != 0){
 						arr.add(new Double((double) hopn));
 					}
 				}
 			}//if buff not null
+			
 		}
+		messageCollection=null;//freeing the messageCollection
 		return arr; 
 	}
 	
@@ -81,17 +84,17 @@ public class SimLib {
 	//and the list of all nodes it finds the success rates of the each message
 	public static ArrayList<Double> successRate(final int numberOfmessages,ArrayList<RoutingNode> nodes){
 		double[] srate=new double[numberOfmessages];
-		
-		ArrayList<Double> sratearr=new ArrayList<Double>();
+		Collection<Message> messageCollection=null;
+		ArrayList<Double> sratearr=new ArrayList<Double>(srate.length);
 		for(int i=0;i<nodes.size();i++){
-			ArrayList<Message> list=nodes.get(i).getMessageBuffer();
-			if(list != null && !list.isEmpty()){
-				for(int j=0;j<list.size();j++){
-					srate[list.get(j).getId()-1]++;	
+			messageCollection=nodes.get(i).getMessageBuffer();
+			if(messageCollection != null && !messageCollection.isEmpty()){
+				for(Message m:messageCollection){
+					srate[m.getId()-1]++;	
 				}
 			}
 		}
-		
+		messageCollection=null;
 		for(int i=0;i<srate.length;i++){
 				srate[i]=srate[i]/nodes.size();
 				if(srate[i]>1){
@@ -125,24 +128,24 @@ public class SimLib {
 		for(int h=0;h<numberOfMessages;h++){
 			messageArr.add(new ArrayList<Message>());
 		}
-		
+		Collection<Message> messageCollection=null;
 		for(int i=0;i<nodes.size();i++){
 			RoutingNode n=nodes.get(i);
 			if( !n.isBufferEmpty() ){
-				ArrayList<Message> m=n.getMessageBuffer();
+				messageCollection=n.getMessageBuffer();
 				
-				for(int j=0;j<m.size();j++){
-					Message message=m.get(j);
-					int pos=message.getId();
-					messageArr.get(pos-1).add(message);			
+				for(Message mymessage:messageCollection){
+					int pos=mymessage.getId();
+					messageArr.get(pos-1).add(mymessage);			
 				}
 			}
 		}
-		
+		messageCollection=null;
 		
 		double[] mdelay=new double[numberOfMessages];
+		ArrayList<Message> m=null;
 		for(int i=0;i<messageArr.size();i++){
-			ArrayList<Message> m=messageArr.get(i);
+			m=messageArr.get(i);
 			//System.out.println(i);
 			if(m != null && !m.isEmpty() && m.size() > 1){
 				
@@ -189,7 +192,7 @@ public class SimLib {
 			}//message is empty null >1 check
 		}
 		Arrays.sort(mdelay);
-		
+		m=null;
 		return mdelay;
 	}
 	/**Message Delay related functions   *******************/
@@ -219,41 +222,39 @@ public class SimLib {
 		ArrayList<Double> arr=new ArrayList<Double>();
 		
 		for(int i=0;i<nodes.size();i++){
-			ArrayList<Message> buf=nodes.get(i).getMessageBuffer();
-			if(buf !=null){
-				for(int j=0;j<buf.size();j++){
-					int rem=buf.get(j).getRemaining();
-					arr.add(new Double((double) rem));
-				}
-			}//if buff not null
-		}
+			arr.addAll(nodes.get(i).getAllRemainingFromMessageBuffer());
+		}//end of for
 		return arr; 
 	}
 	
 	//finds the common numbers between ArrayList a and b
 	//returns the arraylist of common numbers
+	/*
+	 * This method is updated on 24 june 2020 It used to sort them and check the common items. now this is more efficient
 	public static ArrayList<Integer> commonNumbers(ArrayList<Integer> a, ArrayList<Integer> b){
 		ArrayList<Integer> commons=new ArrayList<Integer>();
 		//if one of them is empty it means no common elements
 		if(a.isEmpty() || b.isEmpty()){
 			return commons;
-		}
-		
-		Collections.sort(a);
-		Collections.sort(b);
-		
-		for(int i=0;i<a.size();i++){
-			for(int j=0;j<b.size();j++){
-				if(a.get(i)<b.get(j)){
-					break;
-				}
-				if(a.get(i)==b.get(j)){
-					commons.add(a.get(i));
-				}
-			}
-		}
+		}		
+
+        HashSet<Integer> hashset= new HashSet<Integer>();
+
+        for (Integer i : a){
+            hashset.add(i);
+        }
+        
+        for (Integer i : b) 
+        {
+            if (hashset.contains(i))
+        	{
+            	// found duplicate!   
+                commons.add(i);
+        	}
+       }
 	
 		return commons;
 	}
+	*/
 	
 }

@@ -2,6 +2,8 @@ package routing;
 
 import java.util.ArrayList;
 
+import simtoo.Lib;
+
 
 
 public class Epidemic extends Routing{
@@ -39,13 +41,14 @@ public class Epidemic extends Routing{
 			//Lib.p("Epidemic: all the messages are expired!");
 			return;
 		}
+		
 		int messageid=-1;//that means the message is vector and it won't be put to buffer
 		//creating message Vector
 		Message sentmes=new Message(senderid,receiverid,v,messageid,time);
 		//try to send the message until it is received correctly 
 		Message receivedmes=null;
 		do{
-			receivedmes=sendreceive(sender,receiver,sentmes,time);
+			receivedmes=sendreceive(sender,receiver,sentmes,time); 
 		}while(receivedmes == null);
 		/*   SENDER SENT THE MESSAGE VECTOR, RECEIVER GOT IT */
 		
@@ -57,7 +60,6 @@ public class Epidemic extends Routing{
 			//Lib.p("Epidemic: If the sender has the exactly same messages with receiver then dont do anything close communication");
 			return;
 		}
-		
 		
 		/* RECEIVER IS SENDING THE IDS THAT IT WANTS*/
 		String mv=RoutingNode.getStringFromMessageVector(vd);
@@ -90,10 +92,9 @@ public class Epidemic extends Routing{
 	}
 	
 	private Message sendreceive(RoutingNode sender,RoutingNode receiver,Message sentmes,String time){
-		//Lib.p("Epidemic class sendreceive");
-		boolean isGot=sender.sendMessage(getAir(), sentmes, time);	
 		Message receivedmes=null;
-		if(isGot){
+		boolean isGot=sender.sendMessage(getAir(), sentmes, time);	
+		if(isGot){			
 			receivedmes=receiver.receiveMessage(getAir(), time);
 		}
 		return receivedmes;

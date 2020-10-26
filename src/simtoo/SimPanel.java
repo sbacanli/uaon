@@ -114,10 +114,10 @@ public class SimPanel extends JPanel implements MouseListener{
 			System.out.println("MessageTimes are all 0 \r\nPlease check config file ");
 			System.exit(-1);
 		}
-		if(messageTimesForNodes != 0 && !nodes.isEmpty()){
+		if(messageTimesForNodes > 0 && !nodes.isEmpty()){
 			addScheduleForNodes();
 		}
-		if(messageTimesForUAVs != 0 && !uavs.isEmpty()){
+		if(messageTimesForUAVs >0  && !uavs.isEmpty()){
 			addScheduleForUAVs();
 		}
 		

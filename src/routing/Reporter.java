@@ -89,7 +89,7 @@ public class Reporter
   
   public static Date getCurrentTime()
   {
-    DateFormat dateFormat = new java.text.SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+    //DateFormat dateFormat = new java.text.SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     Calendar cal = Calendar.getInstance();
     return cal.getTime();
   }
@@ -111,6 +111,7 @@ public class Reporter
 	//number of messages which are added to buffer!
 	// not all messages are added to buffer
 	//a node may receive a message but it might be in the buffer already
+    //NOT SURE ABOUT THE STATEMENT ABOVE
     numberOfAddedToBufferByNodes = 0;
     numberOfAddedToBufferByUAVs = 0;
     
@@ -165,20 +166,60 @@ public class Reporter
   }
   
   public static double addedToBufferPercentageByNodes() {
-    return numberOfAddedToBufferByNodes / getNumberOfReceivedByNodes();
+	  double numberRatioTemp=numberOfAddedToBufferByNodes;
+	  if(getNumberOfReceivedByNodes()==0) {//this is not likely but possible if there is no node
+		  Lib.p("NumberofmessagesReceivedByNodes in Reporter is zero!");
+		  return -1;
+	  }
+	  return numberRatioTemp / getNumberOfReceivedByNodes();
   }
   
   public static double addedToBufferPercentageByUAVs() {
-    return numberOfAddedToBufferByUAVs / getNumberOfReceivedByUAVs();
+    	double numberRatioTemp=numberOfAddedToBufferByUAVs;
+    	if(getNumberOfReceivedByNodes()==0) {//this is not likely but possible if there is no node
+  		  Lib.p("NumberofmessagesReceivedByNodes in Reporter is zero!");
+  	  		return -1;
+    	}
+    	return numberRatioTemp / getNumberOfReceivedByNodes();
   }
   
   public static double nonProtocolMessagesPercentageSentByNodes() {
-	  return (numberOfNonProtocolSentByNodeToNodes+numberOfNonProtocolSentByNodeToUAVs)/getNumberOfSentByNodes();
+	//If the messages sent by Nodes is 0
+	  if(getNumberOfSentByNodes()==0) {
+		  return -1;
+	  }
+	  double numberRatioTemp=getNumberOfSentByNodes();
+	  return (numberOfNonProtocolSentByNodeToNodes+numberOfNonProtocolSentByNodeToUAVs)/numberRatioTemp;
   }
   
   public static double nonProtocolMessagesPercentageSentByUAVs() {
-	  return (numberOfNonProtocolSentByUAVToNodes+numberOfNonProtocolSentByUAVToUAVs)/getNumberOfSentByUAVs();
+	  //If the messages sent by UAVs is 0
+	  if(getNumberOfSentByUAVs()==0) {
+		  return -1;
+	  }
+	  double numberRatioTemp=getNumberOfSentByUAVs();
+	  return (numberOfNonProtocolSentByUAVToNodes+numberOfNonProtocolSentByUAVToUAVs)/numberRatioTemp;
   }
+  
+  
+  public static double nonProtocolMessagesPercentageReceivedByNodes() {
+	//If the messages sent by UAVs is 0
+	  if(getNumberOfReceivedByNodes()==0) {
+		  return -1;
+	  }
+	  double numberRatioTemp=getNumberOfReceivedByNodes();
+	  return numberOfNonProtocolReceivedByNodes/numberRatioTemp;
+  }
+  
+  public static double nonProtocolMessagesPercentageReceivedByUAVs() {
+	  //If the messages sent by UAVs is 0
+	  if(getNumberOfReceivedByUAVs()==0) {
+		  return -1;
+	  }
+	  double numberRatioTemp=getNumberOfReceivedByUAVs();
+	  return (numberOfNonProtocolReceivedByUAVs)/numberRatioTemp;
+  }
+  
   
   public static int getNumberOfSent() {
     return getNumberOfSentByNodes() + getNumberOfSentByUAVs();
@@ -333,8 +374,8 @@ public class Reporter
       "\t" + numberOfAddedToBufferByUAVs + " packets added to Buffer by UAVs\r\n" + 
       numberOfDroppedByNodes + " packets dropped  totally\r\n" + 
       getNumberOfSent() + " packets sent  totally\r\n" + 
-      "\t" + getNumberOfSentNodesToUAVs() + " packets sent to UAVs from nodes\r\n" + 
-      "\t" + getNumberOfSentUAVToNodes() + " packets sent to nodes from UAVs\r\n" + 
+      "\t" + getNumberOfSentNodesToUAVs() + " packets sent Nodes to UAVs\r\n" + 
+      "\t" + getNumberOfSentUAVToNodes() + " packets sent to UAVs to Nodes\r\n" + 
       "\t" + getNumberOfSentBetweenUAVs() + " packets sent between UAVs\r\n" + 
       "\t" + getNumberOfSentBetweenNodes() + " packets sent between Nodes\r\n" + 
       
@@ -395,6 +436,7 @@ public class Reporter
     writeToFile(s, all);
   }
   
+  //This method is used to write the metric results. The results have 4 precision
   public static void writeArrayListToFile(ArrayList<Double> srate, String fname) {
     String all = "";
     for (int i = 0; i < srate.size(); i++) {
@@ -455,18 +497,43 @@ public class Reporter
     
     all = addedToBufferPercentageByUAVs() + "\r\n";
     writeToFile("AddedToBufferPercentageByUAVs.txt", all);
+    all=null;
   }
   
-  public static void writeNonProtocolMessagesReceivedPercentage() {
+  	public static void writeNonProtocolMessagesReceivedPercentage() {
 	    String all = "";
-	    all = nonProtocolMessagesPercentageSentByNodes() + "\r\n";
-	    writeToFile("nonProtocolMessagesPercentageSentByNodes.txt", all);
+	    double ratio=nonProtocolMessagesPercentageReceivedByNodes();
+	    if(ratio>=0) {
+	    	all = ratio+ "\r\n";
+		    writeToFile("nonProtocolMessagesPercentageReceivedByNodes.txt", all);
+	    }
 	    
-	    all = nonProtocolMessagesPercentageSentByUAVs() + "\r\n";
-	    writeToFile("nonProtocolMessagesPercentageSentByUAVs.txt", all);
-	  }
+	    ratio=nonProtocolMessagesPercentageReceivedByUAVs();
+	    if(ratio >=0) {
+	    	all = ratio + "\r\n";
+	    	writeToFile("nonProtocolMessagesPercentageReceivedByUAVs.txt", all);
+  		}
+	    all=null;
+ 	}
 	  
-  
+  	public static void writeNonProtocolMessagesSentPercentage() {
+	    String all = "";
+	    double ratio=nonProtocolMessagesPercentageSentByNodes();
+	    if(ratio>=0) {
+	    	all = ratio+ "\r\n";
+		    writeToFile("nonProtocolMessagesPercentageSentByNodes.txt", all);
+	    }
+	    
+	    ratio=nonProtocolMessagesPercentageSentByUAVs();
+	    if(ratio >=0) {
+	    	all = ratio + "\r\n";
+	    	writeToFile("nonProtocolMessagesPercentageSentByUAVs.txt", all);
+  		}
+	    all=null;
+ 	}
+  	
+  	
+  	
 //this is used in SimPanel.java
 	//Precondition: the encounters are not both null!
 	public static void writeEncounters(Encounter e1,Encounter e2,String fname){

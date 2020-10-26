@@ -2,7 +2,6 @@ package Shapes;
 
 import java.util.ArrayList;
 
-import javafx.scene.chart.PieChart.Data;
 import simtoo.Lib;
 import simtoo.PointP;
 

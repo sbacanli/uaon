@@ -29,7 +29,7 @@ MessageTimesForNodes:3600
 //plus or minus
 MessageErrorTimesForUAVs:60
 MessageErrorTimesForNodes:60
-Visible:no
+Visible:yes
 
 
 Shape:spiralcluster

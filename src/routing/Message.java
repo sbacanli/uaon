@@ -3,6 +3,8 @@ package routing;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import simtoo.Lib;
+
 
 /**
  * @author Kara
@@ -191,13 +193,11 @@ public class Message {
 						return true;
 				}				
 			}else{
-				//if sprayand wait is disabled or we have copies then it is sendable
+				//if tts is disabled or we have copies then it is sendable
 				if(getSprayAndWaitNumber()>0 || getSprayAndWaitNumber()==-1) {
 					return true;
 				}
 				//not expired and tts is not greater than 0 but we have no sprayandwait copies left
-				
-				return false;
 			}
 		}
 		return false;
@@ -263,6 +263,8 @@ public class Message {
 		while(st.hasMoreTokens()){
 			ret.add(new Integer(Integer.parseInt(st.nextToken())));
 		}
+		st=null;
+		s=null;
 		return ret;
 	}
 }

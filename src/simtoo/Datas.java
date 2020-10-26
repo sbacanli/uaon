@@ -243,11 +243,9 @@ public class Datas {
 						return line;
 					}
 				}
-				st=null;
-				
 			}
-			st=null;
 			br.close();
+			st=null;
 		
 		}catch( IOException e) {
 			e.printStackTrace();

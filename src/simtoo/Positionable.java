@@ -141,8 +141,9 @@ public class Positionable {
 		// considering that the node is at pos (1,1) at time 5 and at (5,5) at time 11 then at time 6 (2,2) etcc
 		// the distance is taken with constant speed
 		public void addPathsWithPositions(ArrayList<Position> path,Datas mydata,LocationType op){
+			Position p1=null;
 			for(int i=0;i<path.size();i++){
-				Position p1=path.get(i);
+				p1=path.get(i);
 				addPositionWithCoordinates(p1,mydata,op);		
 			}
 		}		
@@ -564,6 +565,7 @@ public class Positionable {
 		}
 		
 		public Position getPosition(int time){
+			Position result=null;
 			if(pointsp.isEmpty()) {
 				return null;
 			}
@@ -575,9 +577,10 @@ public class Positionable {
 				  iterator.next();
 				  time--;
 				}
-				return (Position)iterator.next();
+				result=(Position)iterator.next();
+				iterator=null;
 			}
-			
+			return result;
 		}
 		
 		/******************************************************/

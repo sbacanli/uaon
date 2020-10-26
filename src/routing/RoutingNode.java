@@ -1,23 +1,30 @@
 package routing;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import simtoo.Lib;
 import simtoo.Position;
 
 public class RoutingNode
 {
 	private int id;
-	private ArrayList<Message> messageBuffer;
+	private HashMap<Integer,Message> messageBuffer;
+	//message ids as keys and messages as values in HashMap
 	private HashMap<Integer,Encounter> contacts;
+	//Receiver IDs as keys and Encounters as values.
+	//only one contact can be done with the receiver
 	private ArrayList<Encounter> encounterHistory;
 	private ArrayList<Integer> sents;
 	private int limit;
 	private boolean isIdle;
 	private String lastEnc;
-	private String mempolicy = "lrr";
+	private String mempolicy = "lrr";// this is not used
 
 	private boolean gotNewPacket;
 
@@ -37,7 +44,7 @@ public class RoutingNode
 		encounterHistory = new ArrayList<Encounter>();
 		encounterHistoryWithNodes = new ArrayList<Encounter>();
 		ExtendedEncounters = new ArrayList<Encounter>();
-		messageBuffer = new ArrayList<Message>();
+		messageBuffer = new HashMap<Integer,Message>();
 		isIdle = false;
 		sents = new ArrayList<Integer>();
 		limit = -1;
@@ -57,9 +64,9 @@ public class RoutingNode
 		gotNewPacket = g;
 	}
 
-	public ArrayList<Message> getMessageBuffer()
+	public Collection<Message> getMessageBuffer()
 	{
-		return messageBuffer;
+		return (Collection<Message>)(messageBuffer.values());
 	}
 
 	public int getId() {
@@ -114,116 +121,124 @@ public class RoutingNode
 
 	boolean addMessageToBuffer(Message message, String time)
 	{
-		if (searchBufferMessageId(message.getId()) == -1) {
+		
+		if (searchBufferMessageId(message.getId()) ==false) {
 			if (isBufferFull())
 			{
-				for (int i = 0; i < messageBuffer.size(); i++) {
-					Message t = (Message)messageBuffer.get(i);
+				Set<Integer> mkeys=messageBuffer.keySet();
+				for (Integer el:mkeys) {
+					Message t = (Message)messageBuffer.get(el);
 					if (t.isExpired(time)) {
 						deleteMessageFromBuffer(t.getId());
 					}
 				}
-
+				mkeys=null;
 				//after attempt to delete old messages, if it is still full
 				if (isBufferFull())
 				{
 					Reporter.bufferFull(getId(), time);
 					String policy = getMemPolicy();
-					if (policy.equals("lrr"))
-						messageBuffer.remove(0); else {
-							policy.equals("random");
-						}
+					/*
+					 * This is to be implemented for future research
+					 * Least recently used, not most recently used, random etc...
+					 */
 				}
 			}
-			messageBuffer.add(message);
+			//buffer is never full so this if is useless but I am keeping it
+			messageBuffer.put(message.getId(), message);
 		}
-
 
 		return true;
 	}
 
-
+	/*This is not used! Used only if the buffer is full*/
 	public boolean deleteMessageFromBuffer(int messageid)
 	{
 		if (isBufferEmpty()) {
 			System.out.println("Message buffer is empty, PROBLEM in Node.java ");
 			return false;
 		}
-
-		for (int i = 0; i < messageBuffer.size(); i++) {
-			Message t = (Message)messageBuffer.get(i);
-			if (t.getId() == messageid) {
-				messageBuffer.remove(i);
-
-				return true;
-			}
+		Message m1=messageBuffer.get(messageid);
+		if(m1==null) {
+			return false;
+		}else {
+			messageBuffer.remove(messageid);
 		}
-		return false;
+		m1=null;
+		return true;
 	}
-
+	
+	
 	public Message getMessageFromBuffer(int messageid)
 	{
 		if (isBufferEmpty()) {
 			return null;
 		}
 
-		for (int i = 0; i < messageBuffer.size(); i++) {
-			Message t = (Message)messageBuffer.get(i);
-			if (t.getId() == messageid) {
-				return t;
-			}
-		}
-		return null;
+		return messageBuffer.get(messageid);
+			
 	}
-
-	public int searchBufferMessageId(int messageid) {
+	
+	
+	public boolean searchBufferMessageId(int messageid) {
 		if (isBufferEmpty()) {
-			return -1;
+			return false;
 		}
-		for (int i = 0; i < messageBuffer.size(); i++) {
-			Message t = (Message)messageBuffer.get(i);
-			if (t.getId() == messageid) {
-				return i;
-			}
+		if( messageBuffer.get(messageid) == null ) {
+			return false;
 		}
-		return -1;
+		return true;
 	}
-
+	
+	
 	public String getAllBuffer()
 	{
-		String sum = "";
+		StringBuilder sum1=new StringBuilder("");
 		if (messageBuffer.isEmpty()) {
 			Lib.p("Message Buffer Empty for Node " + getId());
 			return null;
 		}
-
-		for (int i = 0; i < messageBuffer.size(); i++) {
-			sum = sum + ((Message)messageBuffer.get(i)).toString() + "\r\n***************\r\n";
+		
+		Set<Integer> mkeys=messageBuffer.keySet();
+		for (Integer el:mkeys) {
+			Message t = (Message)messageBuffer.get(el);
+			sum1.append(t.toString());
+			sum1.append("\r\n***************\r\n");
 		}
-
-
-		return sum;
+		mkeys=null;
+		return sum1.toString();
 	}
 
 
-
+	//since all the messages are stored in hashmap with messageIds as keys
+	//we can get all the keys and concetenate
 	public String allids()
 	{
-		String all = "";
-		ArrayList<Integer> a = new ArrayList<Integer>();
-		for (int y = 0; y < messageBuffer.size(); y++) {
-			int idm = ((Message)messageBuffer.get(y)).getId();
-			if (!a.contains(new Integer(idm))) {
-				a.add(new Integer(idm));
-				all = all + "," + idm;
-			}
+		Set<Integer> allIDs=messageBuffer.keySet();
+		StringBuilder all=new StringBuilder("");
+		String result=null;
+		for(Integer id:allIDs) {
+			
+			all.append(id);all.append(",");
 		}
-		if (messageBuffer.size() != a.size()) {
-			System.out.println("RoutingNode.java allids method problem");
-		}
-		return all;
+		result=all.toString();
+		all=null;
+		allIDs=null;
+		return result;
 	}
-
+	
+	public ArrayList<Double> getAllRemainingFromMessageBuffer() {
+		ArrayList<Double> remain=new ArrayList<Double>();
+		Set<Integer> mkeys=messageBuffer.keySet();
+		Message t=null;
+		for (Integer el:mkeys) {
+			t = (Message)messageBuffer.get(el);
+			remain.add((double) t.getRemaining());
+		}
+		t=null;
+		mkeys=null;
+		return remain;
+	}
 
 	public ArrayList<Integer> vectorDifference(Message v)
 	{
@@ -238,10 +253,11 @@ public class RoutingNode
 
 		for (int i = 0; i < messageIds.size(); i++) {
 			int mid = ((Integer)messageIds.get(i)).intValue();
-			if (searchBufferMessageId(mid) == -1) {
+			if (searchBufferMessageId(mid)==false) {
 				ret.add(new Integer(mid));
 			}
 		}
+		messageIds=null;
 		return ret;
 	}
 
@@ -251,14 +267,16 @@ public class RoutingNode
 			return "all";
 		}
 
-		String all = "";
+		StringBuilder all=new StringBuilder("");
 		for (int i = 0; i < v.size(); i++) {
 			int el = ((Integer)v.get(i)).intValue();
-			all = all + el + ":";
+			all.append(el);all.append(":");
 		}
 
-		all = all.substring(0, all.length() - 1);
-		return all;
+		all.substring(0, all.length() - 1);
+		String result= all.toString();
+		all=null;
+		return result;
 	}
 	
 	/*
@@ -268,6 +286,7 @@ public class RoutingNode
 	 */
 	public boolean decreaseSprayAndWaitNumber(int messageid)
 	{
+		
 		if (isBufferEmpty()) {
 			Lib.p("Buffer empty but decreasing spray and Wait");
 			return false;
@@ -318,6 +337,7 @@ public class RoutingNode
 
 			sent.incHop();
 			sendMessage(a, sent, time);
+			
 			decreaseSprayAndWaitNumber(messageId);
 		}
 	}
@@ -328,7 +348,6 @@ public class RoutingNode
 		Message found = getMessageFromBuffer(messageId);
 		if (found == null) {
 			System.out.println("PROBLEM in RoutingNode.java. No message with that id");
-
 		}
 		else
 		{
@@ -362,7 +381,8 @@ public class RoutingNode
 	{
 		int receiverNodeId = m.getReceiver();
 		if (air == null) {
-			System.out.println("air null problem in Routingnode.java");
+			Lib.p("air null problem in Routingnode.java");
+			System.exit(-1);
 		}
 
 		Reporter.addPacketSent(getId(), receiverNodeId, time, m.isProtocolMessage());
@@ -371,7 +391,7 @@ public class RoutingNode
 			Reporter.addPacketDropped(getId(), receiverNodeId, time);
 			return false;
 		}
-		return false;
+		return true;
 
 	}
 
@@ -425,14 +445,15 @@ public class RoutingNode
 			System.out.println("PROBLEM in RoutingNode.java: Trying to add neg id message to buffer");
 			return false;
 		}
-
+		
 		boolean b = addMessageToBuffer(m, time);
 
 		if (b) {
 			Reporter.addPacketAddedToBuffer(m.getSender(), m.getReceiver(), time);
+			
 			return true;
 		}
-
+		
 		return false;
 	}
 
@@ -475,13 +496,15 @@ public class RoutingNode
 			return "all";
 		}
 		ArrayList<Integer> v = new ArrayList<Integer>();
-		for (int i = 0; i < messageBuffer.size(); i++) {
-			int el = ((Message)messageBuffer.get(i)).getId();
+		Collection<Message> messageCollection=messageBuffer.values();
+		for (Message mymessage:messageCollection) {
+			int el = mymessage.getId();
 			Integer intel = new Integer(el);
-			if ((!v.contains(intel)) && (((Message)messageBuffer.get(i)).isSendable(time))) {
+			if ((!v.contains(intel)) && (mymessage.isSendable(time))) {
 				v.add(intel);
 			}
 		}
+		messageCollection=null;
 
 		return getStringFromMessageVector(v);
 	}
@@ -492,17 +515,19 @@ public class RoutingNode
 			return "all";
 		}
 		ArrayList<Integer> v = new ArrayList<Integer>();
-		for (int i = 0; i < messageBuffer.size(); i++) {
-			int el = ((Message)messageBuffer.get(i)).getId();
-			if (((Message)messageBuffer.get(i)).getPrevPacketId() == -1)
+		
+		Collection<Message> messageCollection=messageBuffer.values();
+		for (Message mymessage:messageCollection) {
+			int myMessageId = mymessage.getId();
+			if (mymessage.getPrevPacketId() == -1)
 			{
-				Integer intel = new Integer(el);
-				if ((!v.contains(intel)) && (((Message)messageBuffer.get(i)).isSendable(time))) {
+				Integer intel = new Integer(myMessageId);
+				if ((!v.contains(intel)) && (mymessage.isSendable(time))) {
 					v.add(intel);
 				}
 			}
 		}
-
+		messageCollection=null;
 
 		return getStringFromMessageVector(v);
 	}
@@ -656,6 +681,7 @@ public class RoutingNode
 				it.remove();
 			}
 		}
+		it=null;
 	}
 
 	public void clearAllEncounters() {
@@ -686,16 +712,6 @@ public class RoutingNode
 		}
 	}
 
-
-
-
-
-
-
-
-
-
-
 	public ArrayList<Encounter> uniqueEncounters()
 	{
 		ArrayList<Encounter> allencs = new ArrayList<Encounter>();
@@ -706,23 +722,13 @@ public class RoutingNode
 			Encounter currentEnc = (Encounter)e.getValue();
 			allencs.add(currentEnc);
 		}
+		it=null;
 		return allencs;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-	public void eavesdrop(Air air, String time)
+	private void eavesdrop(Air air, String time)
 	{
-		ArrayList<Message> allmes = air.receiveEnvironmentMessages(time);
+		ArrayList<Message> allmes = null;//air.receiveEnvironmentMessages(time);
 		if (allmes != null) { allmes.isEmpty();
 		}
 
@@ -730,27 +736,19 @@ public class RoutingNode
 		for (int i = 0; i < allmes.size(); i++) {
 			Message m = (Message)allmes.get(i);
 
-
-
 			if ((m.getReceiver() != getId()) && (m.getSender() != getId())) {
 				Reporter.addPacketReceived(m.getSender(), m.getReceiver(), time, m.isProtocolMessage());
 
-
 				if (m.getId() > 0)
 				{
-
-
 					boolean b = addtoBuffer(m, time);
 
 					if (!b) {
 						System.out.println("Can not add to buffer PROBLEM in RoutingNode.java");
 					}
-
-
 				}
 				else
 				{
-
 					System.out.println("Problem in RoutingNode.java at method eavesdrop");
 				}
 			}
