@@ -38,6 +38,7 @@ public class Uav extends Positionable{
 	private int battery;
 	public boolean chargeRouted;
 	private int batteryLife;
+	private int batteryChargingTime;
 	
 	Uav(int uid, Shape sg, double speedreal, int altitudegiven, 
 			Datas givendata, RoutingNode rn, String shapeName, int encounterTimeLimit, ClusterParam cparam,
@@ -54,7 +55,7 @@ public class Uav extends Positionable{
 		
 		PointP initialPoint=s.initialPoint();
 		
-		
+		batteryChargingTime=30; //Battery charging time is 30 seconds
 		setPreviousPosition(null);
 		
 		//after the first position the positions will be consumed and reroute will be run
@@ -238,7 +239,9 @@ public class Uav extends Positionable{
 			ArrayList<PointP> arrpos=new ArrayList<PointP>();
 			arrpos.add(chargingLocation);
 			addPathsWithPoints(arrpos,getData(),LocationType.SCREEN);
-			wait(30);
+			
+			//Battery Exchange time/Charging time
+			wait(batteryChargingTime);
 			//Lib.p("Positions written now: ************************************");
 			//writePositions();
 			//Lib.p("*********************************************************\nDistance "+getData().VirtualToRealDistance(  (int)(Lib.screenDistance(chargingLocation, getCurrentPosition().screenp))  ) );

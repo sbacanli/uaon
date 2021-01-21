@@ -16,10 +16,10 @@ public class ClusterParam
    * @param ClusterTechnique, numberOfClusters,radiusCoefficient, maxDistanceForDBSCAN
    * <>
    * ClusterTechnique as Enum KMEANS or DBSCAN
-   * numberOfClusters used in KMEANS clustering.
+   * numberOfClusters used in KMEANS clustering only.
    * radiusCoefficient used in all clustering techniques. The maximum distance between 2 points in the same cluster is
    * divided by that number to create a spiral with that result radius size. 
-   * maxDistanceForDBSCAN DBSCAN algorithm does not take number of clusters are parameter 
+   * maxDistanceForDBSCAN DBSCAN algorithm does not take number of clusters as parameter 
    * but the maximum distance between 2 arbitrary nodes
    * </p>
    */

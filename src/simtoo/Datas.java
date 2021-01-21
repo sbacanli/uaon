@@ -142,6 +142,10 @@ public class Datas {
 		ArrayList<File> arr=new ArrayList<File>();
 		File f=new File(folderName);
 		File[] files=f.listFiles();
+		if(files.length==0) {
+			Lib.p(folderName+" can not be read or empty");
+			System.exit(-1);
+		}
 		for(int i=0;i<files.length;i++){
 			if(files[i].getName().contains(".txt") && files[i].length() != 0){
 				arr.add(files[i]);
