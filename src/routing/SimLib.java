@@ -39,6 +39,7 @@ public class SimLib {
 		return sum;
 	}
 	
+	//NOT USED
 	//find the node with that id
 	public static int findId(ArrayList<RoutingNode> nodes,int id){
 		for(int i=0;i<nodes.size();i++){
@@ -69,7 +70,7 @@ public class SimLib {
 				for(Message m:messageCollection){
 					int hopn=m.getHopCount();
 					if(hopn != 0){
-						arr.add(new Double((double) hopn));
+						arr.add(Double.valueOf((double) hopn));
 					}
 				}
 			}//if buff not null
@@ -100,7 +101,7 @@ public class SimLib {
 				if(srate[i]>1){
 					System.out.println("PROBLEM in SimLib.java Success rate can not be greater than 1");
 				}
-				sratearr.add(new Double(srate[i]));
+				sratearr.add(Double.valueOf(srate[i]));
 		}
 		 
 

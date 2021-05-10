@@ -1,6 +1,9 @@
 package routing;
 
 import java.util.ArrayList;
+import java.util.ListIterator;
+
+import dstruct.LimitedQueue;
 
 public class SCRouting extends Probabilistic {
 
@@ -84,38 +87,37 @@ public class SCRouting extends Probabilistic {
 	}
 	
 	public final boolean isNodeIdle(RoutingNode sender,RoutingNode receiver,int time){
-		ArrayList<Encounter> encounters=sender.getEncounterHistoryWithNodes();
+		
+		LimitedQueue<Encounter> encounters = sender.getEncounterHistoryWithNodes();
 		if(encounters.size()>2) {
 			
-			ArrayList<Encounter> last3=new ArrayList<Encounter>();
+			ArrayList<Encounter> last3=new ArrayList<Encounter>(3);
 			int count=0;
-			int index=1;
 			//getting last 3 finished encounters
 			Encounter current=null;
-			while(count<3 && index<=encounters.size()) {
-				//starting from the last this method adds the finished encounters to last3
-				current=encounters.get(encounters.size()-index);
+			ListIterator<Encounter> it = encounters.listIterator(encounters.size());
+			//It is possible that last encounters array has less than 3 elements.
+			while (count<3 && it.hasPrevious()) {
+				current=it.previous();
 				if(current.isFinished()) {
 					last3.add(new Encounter(current));
 					count++;
 				}
-				index++;
 			}
-			current=null;
 			
-			if(last3.size() >=3){
+			if(last3.size() ==3){
 				Encounter last=last3.get(0);
 				Encounter oneBeforeLast=last3.get(1);
 				Encounter twoBeforeLast=last3.get(2);
 				
 				double currentlast=twoBeforeLast.getFinishingTime() -oneBeforeLast.getFinishingTime();
 				if(timelimit>0 && currentlast>timelimit){
-					last3.clear();last3=null;
+					last3.clear();last3=null;encounters=null;
 					return false;
 				}
 				double lastprev=(oneBeforeLast.getFinishingTime()-last.getFinishingTime());
 				if(lastprev/currentlast > divisor){
-					last3.clear();last3=null;
+					last3.clear();last3=null;encounters=null;
 					return true;//idle
 				}//end of lastprev/currentlast > divisor check
 				

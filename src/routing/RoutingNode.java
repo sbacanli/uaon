@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import dstruct.LimitedQueue;
 
 import simtoo.Lib;
 import simtoo.Position;
@@ -19,34 +21,23 @@ public class RoutingNode
 	private HashMap<Integer,Encounter> contacts;
 	//Receiver IDs as keys and Encounters as values.
 	//only one contact can be done with the receiver
-	private ArrayList<Encounter> encounterHistory;
-	private ArrayList<Integer> sents;
+	private LimitedQueue<Encounter> encounterHistory;
 	private int limit;
 	private boolean isIdle;
 	private String lastEnc;
 	private String mempolicy = "lrr";// this is not used
-
 	private boolean gotNewPacket;
-
 	private double probToSend;
-
-	private ArrayList<Encounter> encounterHistoryWithNodes;
-
-	private ArrayList<Encounter> last3WithNodes;
-
+	private LimitedQueue<Encounter> encounterHistoryWithNodes;
 	private HashMap<Integer, Encounter> uniqueEncsWithNodes;
-	private ArrayList<Encounter> ExtendedEncounters;
-
 	public RoutingNode(int givenid)
 	{
 		id = givenid;
 		contacts = new HashMap<Integer,Encounter>();
-		encounterHistory = new ArrayList<Encounter>();
-		encounterHistoryWithNodes = new ArrayList<Encounter>();
-		ExtendedEncounters = new ArrayList<Encounter>();
+		encounterHistory = new LimitedQueue<Encounter>(100);
+		encounterHistoryWithNodes = new LimitedQueue<Encounter>(100);
 		messageBuffer = new HashMap<Integer,Message>();
 		isIdle = false;
-		sents = new ArrayList<Integer>();
 		limit = -1;
 		mempolicy = "lrr";
 		lastEnc = null;
@@ -254,7 +245,7 @@ public class RoutingNode
 		for (int i = 0; i < messageIds.size(); i++) {
 			int mid = ((Integer)messageIds.get(i)).intValue();
 			if (searchBufferMessageId(mid)==false) {
-				ret.add(new Integer(mid));
+				ret.add(Integer.valueOf(mid));
 			}
 		}
 		messageIds=null;
@@ -499,7 +490,7 @@ public class RoutingNode
 		Collection<Message> messageCollection=messageBuffer.values();
 		for (Message mymessage:messageCollection) {
 			int el = mymessage.getId();
-			Integer intel = new Integer(el);
+			Integer intel = Integer.valueOf(el);
 			if ((!v.contains(intel)) && (mymessage.isSendable(time))) {
 				v.add(intel);
 			}
@@ -521,7 +512,7 @@ public class RoutingNode
 			int myMessageId = mymessage.getId();
 			if (mymessage.getPrevPacketId() == -1)
 			{
-				Integer intel = new Integer(myMessageId);
+				Integer intel = Integer.valueOf(myMessageId);
 				if ((!v.contains(intel)) && (mymessage.isSendable(time))) {
 					v.add(intel);
 				}
@@ -575,9 +566,13 @@ public class RoutingNode
 
 	public Encounter lastEncounterWith(int nodeId)
 	{
-		Encounter e = null;
-		for (int i = encounterHistory.size() - 1; i > -1; i--) {
-			e = (Encounter)encounterHistory.get(i);
+		ListIterator<Encounter> listIterator = encounterHistory.listIterator(encounterHistory.size());
+		int i=encounterHistory.size()-1;
+		Encounter e=null;
+		//traversing reversely so that we can find it easier
+		//we have 100 elements in this list. It is possible that we may not find it...
+		while (listIterator.hasPrevious()) {
+			e = (Encounter)listIterator.previous();
 
 			if ((e.getReceiverId() == nodeId) && (!e.isFinished()))
 			{
@@ -591,8 +586,9 @@ public class RoutingNode
 	public int encounterTimesWith(int nodeId) {
 		int num = 0;
 		Encounter e = null;
-		for (int i = 0; i < encounterHistory.size(); i++) {
-			e = (Encounter)encounterHistory.get(i);
+		Iterator<Encounter> iterator = encounterHistory.iterator();
+		while (iterator.hasNext()) {
+			e = (Encounter)iterator.next();
 			if (e.getReceiverId() == nodeId)
 			{
 				num++;
@@ -603,36 +599,38 @@ public class RoutingNode
 
 	public Encounter finishEncounter(int nodeId, long time) {
 		Encounter e = null;
-		for (int i = 0; i < encounterHistory.size(); i++) {
-			e = (Encounter)encounterHistory.get(i);
-			if ((e.getReceiverId() == nodeId) && (!e.isFinished()))
+		Iterator<Encounter> iterator = encounterHistory.iterator();
+		while (iterator.hasNext()) {
+			e = (Encounter)iterator.next();
+			//There should be only one encounter with that node
+			if (  (e.getReceiverId() == nodeId)  &&  !(e.isFinished())   )
 			{
 				e.setFinishingTime(time);
-				
+				break;
 			}
-			
-			//PUT Here
 		}
+		Encounter e1 = null;
+		//if the encounter wasnt with a node no need to check encounterHistoryWithNodes and uniqueEncsWithNodes
 		if (nodeId > 0) {
 			//encounter with a node
 			//The routing node that calls this. The caller might be uav or node
-			Encounter e1 = null;
-
-			for (int j = 0; j < encounterHistoryWithNodes.size(); j++) {
-				e1 = (Encounter)encounterHistoryWithNodes.get(j);
-				if ((e1.getReceiverId() == nodeId) && (!e1.isFinished())) {
+			
+			iterator = encounterHistoryWithNodes.iterator();
+			while (iterator.hasNext()) {
+				e1 = (Encounter)iterator.next();
+				if (  (e1.getReceiverId() == nodeId)   &&   !(e1.isFinished())  ) {
 					e1.setFinishingTime(time);
 					Integer recIdhere=Integer.valueOf(e1.getReceiverId());
 					if ( uniqueEncsWithNodes.containsKey(recIdhere) && !uniqueEncsWithNodes.get(recIdhere).isFinished() ) {
 						e1.setFinishingTime(time);
-						uniqueEncsWithNodes.put(Integer.valueOf(e1.getReceiverId()), e1);
+						uniqueEncsWithNodes.put(recIdhere, new Encounter(e1));
 					}
 					break;
 				}
-				
-			}
+			}//end of while
+			return e1;
 		}
-		//if the encounter wasnt with a node no need to check encounterHistoryWithNodes and uniqueEncsWithNodes
+		
 		return e;
 		//This may return null as sometimes encounters might be cleared before real encounters finish.
 	}
@@ -646,38 +644,47 @@ public class RoutingNode
 		}
 	}
 
-
-
-
-
-
-
-
-
-
 	public void clearEncountersWithLimit(int encounterTimeLimit, long currentTime)
 	{
-		for (int i = encounterHistory.size() - 1; i > 0; i--) {
-			Encounter e = (Encounter)encounterHistory.get(i);
-
-			if ((!e.isFinished()) || (currentTime - e.getFinishingTime() > encounterTimeLimit)) {
-				encounterHistory.remove(i);
+		Encounter e=null;
+		//the encounterHistory, encounterHistoryWithNodes, uniqueEncsWithNodes lists are linked list
+		//the new elements are added at the end. the end contains the newest ones
+		//the head contains the oldest ones.
+		//the encounters are sorted already. so if I find an unexpired element, all the others are also unexpired
+		// 
+		
+		for (Iterator<Encounter> listIterator = encounterHistory.iterator(); listIterator.hasNext();) {
+		    e = listIterator.next();
+		    //if ((!e.isFinished()) || (currentTime - e.getFinishingTime() > encounterTimeLimit)) {
+		    if (currentTime - e.getFinishingTime() > encounterTimeLimit) {
+		    	if( e.isFinished() ) {
+		    		listIterator.remove();
+		    	}		    	
+			}else {
+				break;
 			}
 		}
-
-		for (int i = encounterHistoryWithNodes.size() - 1; i >= 0; i--) {
-			Encounter e = (Encounter)encounterHistoryWithNodes.get(i);
-			if ((!e.isFinished()) || (currentTime - e.getFinishingTime() > encounterTimeLimit)) {
-				encounterHistoryWithNodes.remove(i);
+		
+		e=null;
+		for (Iterator<Encounter> listIterator = encounterHistoryWithNodes.iterator(); listIterator.hasNext();) {
+		    e = listIterator.next();
+		    //if ((!e.isFinished()) || (currentTime - e.getFinishingTime() > encounterTimeLimit)) {
+		    if (currentTime - e.getFinishingTime() > encounterTimeLimit) {
+		    	if( e.isFinished() ) {
+		    		listIterator.remove();
+		    	}		    	
+			}else {
+				break;
 			}
 		}
-
+		e=null;
 		Iterator<Map.Entry<Integer, Encounter>> it = uniqueEncsWithNodes.entrySet().iterator();
 		while (it.hasNext())
 		{
-			Map.Entry<Integer, Encounter> e = (Map.Entry<Integer, Encounter>)it.next();
-			Encounter currentEnc = (Encounter)e.getValue();
-			if ((!currentEnc.isFinished()) || (currentTime - currentEnc.getFinishingTime() > encounterTimeLimit)) {
+			Map.Entry<Integer, Encounter> emap = (Map.Entry<Integer, Encounter>)it.next();
+			Encounter currentEnc = (Encounter)emap.getValue();
+			//if ((!currentEnc.isFinished()) || (currentTime - currentEnc.getFinishingTime() > encounterTimeLimit)) {
+			if ((currentEnc.isFinished()) && (currentTime - currentEnc.getFinishingTime() > encounterTimeLimit)) {
 				it.remove();
 			}
 		}
@@ -690,11 +697,11 @@ public class RoutingNode
 		uniqueEncsWithNodes.clear();
 	}
 
-	public ArrayList<Encounter> getEncounterHistory() {
+	public LimitedQueue<Encounter> getEncounterHistory() {
 		return encounterHistory;
 	}
 
-	public ArrayList<Encounter> getEncounterHistoryWithNodes() {
+	public LimitedQueue<Encounter> getEncounterHistoryWithNodes() {
 		return encounterHistoryWithNodes;
 	}
 
@@ -707,29 +714,36 @@ public class RoutingNode
 	}
 
 	public void printHist() {
-		for (int i = 0; i < encounterHistoryWithNodes.size(); i++) {
-			System.out.println(((Encounter)encounterHistoryWithNodes.get(i)).toString());
+		Iterator<Encounter> iterator = encounterHistoryWithNodes.iterator();
+		while (iterator.hasNext()) {
+			System.out.println(((Encounter)iterator.next()).toString());
 		}
+		iterator=null;
 	}
 
 	public ArrayList<Encounter> uniqueEncounters()
 	{
+		ArrayList<Encounter> allencs = new ArrayList<Encounter>(uniqueEncsWithNodes.values());
+		/*
 		ArrayList<Encounter> allencs = new ArrayList<Encounter>();
 		Iterator<Map.Entry<Integer, Encounter>> it = uniqueEncsWithNodes.entrySet().iterator();
 		while (it.hasNext())
 		{
-			Map.Entry<Integer, Encounter> e = (Map.Entry)it.next();
+			Map.Entry<Integer, Encounter> e = (Map.Entry<Integer, Encounter>)it.next();
 			Encounter currentEnc = (Encounter)e.getValue();
 			allencs.add(currentEnc);
 		}
 		it=null;
+		*/
 		return allencs;
 	}
-
+	
+	//This is not used
 	private void eavesdrop(Air air, String time)
 	{
 		ArrayList<Message> allmes = null;//air.receiveEnvironmentMessages(time);
-		if (allmes != null) { allmes.isEmpty();
+		if (allmes != null) { 
+			allmes.isEmpty();
 		}
 
 

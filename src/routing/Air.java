@@ -1,9 +1,5 @@
 package routing;
 
-import java.util.LinkedList;
-import java.util.ListIterator;
-
-import simtoo.Lib;
 
 public class Air {
 
